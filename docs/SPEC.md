@@ -95,7 +95,7 @@ One screen, `ConsultationScreen`, written once.
 
 - **v1.0.0:** plain list, loaded in one request with `useSpecialists` (§6.1).
 - **v1.1.0:** infinite scroll with `useInfiniteSpecialists` (§6.2), which **replaces** the plain list; there is no mode switch. Layout, cards and sections are unchanged; the list footer adds the next-page spinner and next-page error.
-- The two behaviours are compared by checking out the `v1.0.0` and `v1.1.0` tags; the README shows the v1.1.0 screenshots and demo video (§6.3, §14).
+- The two behaviours are compared by checking out the `v1.0.0` and `v1.1.0` tags; the README shows the screenshots and both releases' demo videos (§6.3, §14).
 
 Structure (ADR-012, superseding ADR-005):
 
@@ -610,7 +610,7 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 >   2. PR `dev` → `main`, merged with the merge commit message **"Release vX.Y.Z"**
 >   3. Annotated tag `vX.Y.Z` on that merge commit, and a GitHub Release with release notes and demo videos
 >      - `v1.0.0` is released without videos. The author records the videos and screenshots of both releases once `v1.1.0` is done, puts them in the final README, and the `v1.0.0` Release is then edited to attach its videos (the tag does not move)
->      - In the end only `v1.1.0` was recorded, after its tag. Tags never move, so the README demo ships as `v1.1.1`, a docs-only patch release through the same flow (`feats/v1.1.1` → `dev` → `main`, tag, Release with the video and screenshots attached)
+>      - In the end both videos were recorded after the `v1.1.0` tag. Tags never move, so the README demo ships as `v1.1.1`, a docs-only patch release through the same flow (`feats/v1.1.1` → `dev` → `main`, tag, Release with the video and screenshots attached)
 >   4. The next release branch is cut from `dev`
 > - Submission: the `v1.1.0` PR `dev` → `main` is the one handed to the interviewer. `v1.0.0` is merged and released by the author beforehand; the README explains both releases so the interviewer can check out either tag
 > - Small Conventional Commits while a ticket is in progress. Before a release branch is first pushed, each ticket's commits are squashed into one commit per ticket, so the release PR reads ticket by ticket. After that, respond to review with new commits (no force-push during review)

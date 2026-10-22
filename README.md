@@ -21,9 +21,11 @@ The full specification is [`docs/SPEC.md`](docs/SPEC.md); decisions are recorded
   </tr>
 </table>
 
-The demo video: `v1.1.1` on an iPhone, 3 min 52 s. The same video is in [`demo/premium-consultation-demo.mp4`](demo/premium-consultation-demo.mp4).
+The demo videos, recorded on an iPhone.
 
-https://github.com/user-attachments/assets/56acbc5f-8d82-497a-ac5d-52ecfbebc55e
+**`v1.1.1`** (3 min 52 s, also in [`demo/demo_v111.mp4`](demo/demo_v111.mp4))
+
+https://github.com/user-attachments/assets/afec765b-be11-4283-a7c4-b0bdfa1e1e2f
 
 | From | What it shows |
 |---|---|
@@ -36,6 +38,17 @@ https://github.com/user-attachments/assets/56acbc5f-8d82-497a-ac5d-52ecfbebc55e
 | 2:00 | Dialog de-duplication and the queue switched off: the same dialog stacks |
 | 2:28 | The press throttle switched off: every press shows a toast |
 | 2:56 | Simulated loading failure: the error view on a failed page, and Retry |
+
+**`v1.0.0`** (1 min 4 s, also in [`demo/demo_v100.mp4`](demo/demo_v100.mp4))
+
+https://github.com/user-attachments/assets/b7251e2b-9eae-4d74-a805-68791c25cc78
+
+| From | What it shows |
+|---|---|
+| 0:00 | The app opens on the Consultation screen: the 3 Specialists, then the contact info and agreements |
+| 0:15 | The hotline and email links |
+| 0:30 | Book appointment (in-app browser) |
+| 0:39 | WhatsApp us (pre-filled message) |
 
 ## Quick start
 
@@ -199,7 +212,7 @@ Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Da
 ├── index.ts                      Entry point: registers App
 ├── app.json                      Expo config: name, version, icons, splash, plugins
 ├── assets/                       App icons, splash, the hero image, SVG icons (back, info)
-├── demo/                         The README's screenshots and demo video
+├── demo/                         The README's screenshots and demo videos
 ├── docs/
 │   ├── SPEC.md                   The full specification
 │   └── adr/                      Architecture decision records
