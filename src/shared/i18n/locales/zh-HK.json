@@ -1,0 +1,20 @@
+{
+  "consultation": {
+    "header": {
+      "overline": "有更多問題嗎？",
+      "title": "GUM 專家為你服務！",
+      "description": "我們提供專業同中立嘅意見， 幫你作出最合適嘅選擇 。"
+    },
+    "specialists": {
+      "empty": "暫時未有專家提供服務。"
+    },
+    "bottomSection": {
+      "serviceHours": "服務時間：\n星期一至五：上午9:30 - 下午5:30\n星期六、日及公眾假期：休息",
+      "bookAppointment": "立即預約諮詢",
+      "whatsAppUs": "WhatsApp",
+      "whatsAppMessage": "你好，我想了解更多有關強積金嘅資訊"
+    },
+    "contactInfo": "如有一般查詢，歡迎致電本公司熱線 <hotline>{{hotline}}</hotline> 或電郵至 <email>{{email}}</email> 與我們聯絡。",
+    "agreements": "閣下使用本公司之預約服務或透過 WhatsApp 與本公司聯絡，即表示同意本公司根據私隱政策所載條款，收集及使用閣下之個人資料。"
+  }
+}
