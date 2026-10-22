@@ -72,16 +72,17 @@ Delivered in two releases (ADR-011):
 
 ### 4.1 Home (entry point, v1.1.0) — not in Figma / PRD
 
-Minimal screen that exists to satisfy the senior requirement. It does not exist in v1.0.0. It reuses the Consultation hero (image and gradient) at the top, on the hero's background colour (LY2) so the gradient fades into the screen, with the entry button at the bottom, placed like the Consultation screen's last button (on Android both sit 10 dp higher, §4.2).
+Minimal screen that exists to satisfy the senior requirement. It does not exist in v1.0.0. It reuses the Consultation hero (image and gradient) at the top, on the hero's background colour (LY2) so the gradient fades into the screen, with two buttons at the bottom: the entry button, placed like the Consultation screen's last button (on Android both sit 10 dp higher, §4.2), and the dialog demo's button above it.
 
-- One entry button: **"Premium consultation"** / **「尊尚諮詢」** (`home.premiumConsultation`), behind the feature flag `premiumConsultation`:
+- **Entry button:** **"Premium consultation"** / **「尊尚諮詢」** (`home.premiumConsultation`), behind the feature flag `premiumConsultation`:
   - **enabled** → navigate to `ConsultationScreen`
   - **disabled** → show the "Coming soon" dialog (see §8)
+- **Dialog demo entry:** above it, **"Test multiple dialogs"** / **「測試多個對話框」** (`home.testMultipleDialogs`), not behind the flag. It opens the **Dialog demo** screen: Home's background, the back nav bar, and three buttons at the bottom that demo the brief's bonus question (§8): **"One dialog"** / 「一個對話框」, **"Press two buttons, same dialog"** / 「觸發兩個按鈕，同一個對話框」 and **"Three dialogs at once"** / 「同時三個對話框」. Its copy (`dialogDemo.*`) is written by the author; the test dialogs read "Dialog A" / 「對話框 A」, "Test dialog A (ID: demoA)." / 「測試對話框 A（ID：demoA）。」 and "OK" / 「知道了」 (likewise B and C)
 - **Demo settings menu:** a hamburger button at the top right of Home, shown in every build (it is a demo app, and the README tells reviewers about it). It opens a `BottomSheetModal` (`@gorhom/bottom-sheet`, no new dependency) titled **"Demo settings"** with two switches, each with a one-line description below it. Both values live in memory only (no persistence; an app restart resets them). All its copy is localized:
   - **Enable Premium consultation** (feature flag): default **on**; turns `premiumConsultation` on or off (§7). On by default so the Infinite scroll button works straight away; switch it off to demo the coming-soon dialog
   - **Simulate loading failure**: default **off**; makes Specialist loading fail so the error view and Retry can be shown (§10)
 
-The brief's general requirements make the Figma screen the entry point, while the senior section asks for a button-based entry. Both are met in turn (ADR-011): in **v1.0.0** the app opens straight on the Consultation screen; **v1.1.0** adds Home in front of it, because the flag gating, the coming-soon dialog and the double-press guard all need a button to press and to demo. The Figma screen stays the feature's main screen; Home only hosts the entry button and the demo settings menu.
+The brief's general requirements make the Figma screen the entry point, while the senior section asks for a button-based entry. Both are met in turn (ADR-011): in **v1.0.0** the app opens straight on the Consultation screen; **v1.1.0** adds Home in front of it, because the flag gating, the coming-soon dialog and the double-press guard all need a button to press and to demo. The Figma screen stays the feature's main screen; Home only hosts the entry button, the dialog demo's button and the demo settings menu.
 
 ### 4.2 Consultation screen
 
@@ -139,7 +140,7 @@ ConsultationScreen
 | WhatsApp us | Open WhatsApp chat with the ES number and a pre-filled, localized message | `Linking.openURL` with a `wa.me` universal link; message from i18n, URL-encoded; falls back to the browser if WhatsApp is not installed |
 | Hotline | Open the dialer with the number pre-filled | `Linking.openURL('tel:…')` |
 | Email | Open the default mail app with the recipient pre-filled | `Linking.openURL('mailto:…')` |
-| Back (nav bar) | v1.0.0: does nothing (PRD). v1.1.0: returns to Home | v1.0.0: no handler. v1.1.0: `useGuardedNavigation().goBack`, ignored once the screen is no longer focused (§8a). Accessibility label "Back" / 「返回」 (`consultation.navBar.back`) |
+| Back (nav bar) | v1.0.0: does nothing (PRD). v1.1.0: returns to Home | v1.0.0: no handler. v1.1.0: `useGuardedNavigation().goBack`, ignored once the screen is no longer focused (§8a). Accessibility label "Back" / 「返回」 (`navBar.back`, shared by every screen with a back button) |
 
 Booking URL, WhatsApp number, hotline and email come from the PRD and live in a single config module, never inline in components.
 
@@ -293,7 +294,7 @@ Pressing the entry button twice quickly (including programmatically in tests) mu
 
 ### Coming-soon dialog
 
-A custom, centred dialog component, not the native `Alert.alert`: `DialogManager` must control showing and queueing, and native alerts behave differently on iOS and Android. Not in Figma or the PRD; copy:
+A custom, centred dialog component, not the native `Alert.alert`: `DialogManager` must control showing and queueing, and native alerts behave differently on iOS and Android. It dims the screen behind it and blocks it until its button is pressed (the brief's dialog: one that has to be dismissed, which is what makes showing it twice a problem); the Android back button also closes it. Not in Figma or the PRD; copy:
 
 | | English | Chinese (`zh-HK`) |
 |---|---|---|
@@ -305,29 +306,37 @@ The button uses the black primary button style.
 
 ### Approach
 
-- A central `DialogManager` (context + hook) owns which dialog is open.
-- `show(id, content)` checks a **ref-based** registry of open dialog IDs **synchronously** and ignores the call if `id` is already open.
-- The visible UI is driven by state, but the guard uses a ref.
+- A central `DialogManager` (`DialogProvider` + `useDialog`) owns which dialog is open.
+- Its guard is the **queue** (`dialogQueue`): a plain array created once per provider and read and written **synchronously**, like a ref. `show(id, content)` ignores the call if `id` is already showing or queued, and otherwise queues it, showing it at once if nothing else is.
+- `close(id)` closes that dialog only if it is the one on screen, so a second close (the Android back button and the dialog's button together) can't drop the next dialog.
+- The visible UI is driven by state (the dialog on screen), but the guard is the queue.
 
 ### Why a ref, not state
 
-Two presses can be handled before React re-renders. A `useState` check would read the same stale `false` in both handlers and open twice. A ref is updated immediately and is visible to the second call.
+Two presses can be handled before React re-renders. A `useState` check would read the same stale `false` in both handlers and open twice. The queue, like a ref, is updated immediately and is visible to the second call.
 
 ### Bonus: multiple buttons and multiple dialogs
 
-The app has a single entry button, so this is answered in the PR and README and covered by `DialogManager` tests rather than shown in the app.
+The bonus question is answered in the PR and README, proven by the `DialogManager` and Dialog demo tests (§13), and shown on the **Dialog demo** screen (§4.1). A dialog blocks the screen, so requests that would come from several buttons or events at the same moment are sent in the same tick:
+
+| Button | Requests | Shown |
+|---|---|---|
+| One dialog (pressed twice quickly) | A, A | A once |
+| Press two buttons, same dialog | A, A (from two entry points) | A once |
+| Three dialogs at once | A, B, C (from three features) | A, then B, then C as each closes |
 
 - Dialogs are identified by ID; the same ID cannot be shown twice regardless of which button triggered it.
 - Policy, decided by state rather than time:
-  - **Same ID** already showing or already queued → the request is ignored.
+  - **Same ID** already showing or already queued → the request is ignored. Once that dialog has closed, the same ID is a new request again.
   - **Different ID** while another dialog is showing → queued; shown when the current one closes.
   - Otherwise → shown immediately.
 - Considered and rejected: a time-based throttle as the dialog's guarantee (buttons do have a throttle, §8a, but only against hand jitter). It would let a duplicate through once the window passes while the dialog is still open, and block a legitimate press right after the dialog closes. Dropping or replacing on a different ID were also rejected: they lose or cut short a message.
 
 ### Test
 
-- `DialogManager` on its own: call `show` twice with the same ID → one dialog (§13).
-- Integration: render Home with the flag disabled, call `fireEvent.press` twice synchronously, assert exactly one dialog is rendered. The button throttle (§8a) also blocks the second press here, which is why `DialogManager` is tested on its own as well.
+- `DialogManager` on its own (§13): `show` twice with the same ID → one dialog; the same ID while queued → ignored; different IDs → queued; the same ID after it closed → shown again; a second close of a closed dialog → the next one stays.
+- Dialog demo screen (§13): the three buttons in the Bonus table, pressed past the button throttle.
+- Integration (T-0011): render Home with the flag disabled, call `fireEvent.press` twice synchronously, assert exactly one dialog is rendered. The button throttle (§8a) also blocks the second press here, which is why `DialogManager` is tested on its own as well.
 
 ---
 
@@ -373,7 +382,7 @@ Protection against repeated presses is layered. Each layer has one job and is te
 - Typography per language follows the Figma text styles (read via MCP, §11). Figma defines only one Chinese style (Chinese/Header/Header 2, Noto Sans TC Bold) for the title; Chinese text in the English body styles (Inter, which has no CJK glyphs) uses the system font (PingFang on iOS). Each extra Noto Sans TC weight would add about 7 MB
 - **Copy comes from the PRD** (EN + ZH for every section); it is not duplicated here (§11a)
 - The error view's copy is defined by this spec, not the PRD (§10)
-- Copy not defined by the PRD (Home screen, coming-soon dialog, demo settings menu) is written by the author in both languages and listed in the PR; the error view and empty state copy is in §10
+- Copy not defined by the PRD (Home screen, coming-soon dialog, demo settings menu, dialog demo) is written by the author in both languages and listed in the PR; the error view and empty state copy is in §10
 
 ---
 
@@ -460,6 +469,9 @@ src/
     home/
       view/HomeScreen.tsx
       viewmodel/useConsultationEntry.ts
+    dialogDemo/                 v1.1.0
+      view/DialogDemoScreen.tsx
+      viewmodel/useDemoDialogs.ts          the bonus question's three request patterns
     consultation/
       view/ConsultationScreen.tsx          one screen; v1.0.0 plain, v1.1.0 infinite
       view/ConsultationHeader.tsx          title, divider, description
@@ -480,10 +492,12 @@ src/
       specialists.fixture.ts
       RepositoryProvider.tsx
   shared/
-    ui/                         ThrottledPressable, PrimaryButton, HeroBanner (Home and Consultation), bottomControlsPadding
+    ui/                         ThrottledPressable, PrimaryButton, HeroBanner, BackNavBar, bottomControlsPadding
+  test/
+    renderApp.tsx               test helper: the app's providers and navigator, a fake repository, a clock past the press throttle
     navigation/                 navigationGuard (guardedNavigate), NavigationGuardProvider + useGuardedNavigation (v1.1.0)
     featureFlags/
-    dialog/                     DialogManager
+    dialog/                     dialogQueue (the guard and queue), DialogProvider + useDialog, DialogView
     i18n/                       setup + locales/en.json, zh-HK.json
     config/                     contact info, booking URL, flag defaults
     theme.ts
@@ -537,7 +551,8 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 | `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved; simulated failure (v1.1.0): first request after entering the screen succeeds, a later request fails when the injected random value is below 0.3 and succeeds otherwise |
 | `ThrottledPressable` | Component | Two presses within 300 ms → one call; a press after 300 ms → a second call; the first press fires immediately |
 | `guardedNavigate` (v1.1.0) | Unit | Called twice in the same tick (directly, not through a button) → one navigation; called from a screen that is not focused → ignored; after a screen gains focus → a new call navigates; `guardedGoBack` from a screen that is not focused → ignored |
-| `DialogManager` | Unit | `show` twice with the same ID (called directly, not through a button) → one dialog; same ID while queued → ignored; different IDs → queued; close → next shown |
+| `DialogManager` | Unit | `show` twice with the same ID (called directly, not through a button) → one dialog; same ID while queued → ignored; different IDs → queued; close → next shown; the same ID requested after it closed → shown again; closing an already closed dialog leaves the next one showing |
+| Dialog demo screen | Component | One dialog pressed twice quickly → A once; Press two buttons, same dialog → A once; Three dialogs at once → A, then B, then C as each closes |
 | `useConsultationEntry` | Hook | Flag on → navigate; flag off → dialog |
 | Home screen | Component | Double press with flag off → exactly one dialog |
 | `useInfiniteSpecialists` | Hook | Loads first page; `fetchNextPage` appends; no fetch when `!hasNextPage` or already fetching; duplicate IDs across pages are removed |

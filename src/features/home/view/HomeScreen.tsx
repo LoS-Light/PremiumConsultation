@@ -10,8 +10,8 @@ import { HeroBanner } from '../../../shared/ui/HeroBanner';
 import { PrimaryButton } from '../../../shared/ui/PrimaryButton';
 
 // The app's entry point in v1.1.0 (SPEC §4.1). Not in Figma: it reuses the hero banner, whose
-// gradient fades into the screen's background, and holds the one entry button, placed like the
-// Consultation screen's last button.
+// gradient fades into the screen's background, and holds the entry button, placed like the
+// Consultation screen's last button, with the dialog demo's button above it.
 export function HomeScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -21,6 +21,10 @@ export function HomeScreen() {
     <View style={styles.screen}>
       <HeroBanner />
       <View style={[styles.actions, { paddingBottom: bottomControlsPadding(insets.bottom) }]}>
+        <PrimaryButton
+          label={t('home.testMultipleDialogs')}
+          onPress={() => navigate('DialogDemo')}
+        />
         <PrimaryButton
           label={t('home.premiumConsultation')}
           onPress={() => navigate('Consultation')}
@@ -39,5 +43,6 @@ const styles = StyleSheet.create({
   },
   actions: {
     paddingHorizontal: 16,
+    gap: 20,
   },
 });

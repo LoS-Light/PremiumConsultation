@@ -1,16 +1,11 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { I18nextProvider } from 'react-i18next';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Linking } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { type RootStackParamList, RootNavigator } from '../../../app/navigation';
+import type { RootStackParamList } from '../../../app/navigation';
 import type { Specialist } from '../../../data/specialist/Specialist';
 import type { SpecialistRepository } from '../../../data/specialist/SpecialistRepository';
-import { RepositoryProvider } from '../../../data/specialist/RepositoryProvider';
-import { createI18n } from '../../../shared/i18n/createI18n';
 import type { AppLanguage } from '../../../shared/i18n/resolveLanguage';
+import { controllableClock, fakeRepository, renderApp } from '../../../test/renderApp';
 
 const FIGMA_SPECIALISTS: Specialist[] = [
   { id: '1', name: 'Kan Chung' },
@@ -18,42 +13,13 @@ const FIGMA_SPECIALISTS: Specialist[] = [
   { id: '3', name: 'Justin Liu' },
 ];
 
-// A fake repository that answers at once with the given Specialists.
-function fakeRepository(specialists: Specialist[]): SpecialistRepository {
-  return {
-    getSpecialists: async ({ offset, limit }) => ({
-      items: specialists.slice(offset, offset + limit),
-      offset,
-      limit,
-      total: specialists.length,
-    }),
-  };
-}
-
-// Renders the app's navigator, opened on the Consultation screen unless told otherwise.
+// Renders the app opened on the Consultation screen unless told otherwise.
 async function renderScreen(
   language: AppLanguage,
   repository: SpecialistRepository = fakeRepository(FIGMA_SPECIALISTS),
   initialRouteName: keyof RootStackParamList = 'Consultation',
 ) {
-  // A fresh QueryClient per test, with retries off (SPEC §13). gcTime: Infinity stops the
-  // cache from scheduling a clean-up timer that would keep Jest from exiting.
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
-  });
-  await render(
-    <GestureHandlerRootView>
-      <QueryClientProvider client={queryClient}>
-        <RepositoryProvider repository={repository}>
-          <I18nextProvider i18n={createI18n(language)}>
-            <NavigationContainer>
-              <RootNavigator initialRouteName={initialRouteName} />
-            </NavigationContainer>
-          </I18nextProvider>
-        </RepositoryProvider>
-      </QueryClientProvider>
-    </GestureHandlerRootView>,
-  );
+  await renderApp({ language, repository, initialRouteName });
 }
 
 describe('ConsultationScreen header', () => {
@@ -99,11 +65,9 @@ describe('ConsultationScreen back button', () => {
   });
 
   test('opens again after a back that interrupts the opening transition', async () => {
-    // Move the clock past the entry button's 300 ms throttle between the two presses, so only
-    // the navigation guard can block the second one.
-    const realNow = Date.now.bind(Date);
-    let clockOffset = 0;
-    jest.spyOn(Date, 'now').mockImplementation(() => realNow() + clockOffset);
+    // Move the clock past the entry button's throttle between the two presses, so only the
+    // navigation guard can block the second one.
+    const clock = controllableClock();
     await renderScreen('en', undefined, 'Home');
 
     await fireEvent.press(screen.getByText('Premium consultation'));
@@ -112,7 +76,7 @@ describe('ConsultationScreen back button', () => {
     await waitFor(() =>
       expect(screen.queryByText('GUM Specialists are here!')).not.toBeOnTheScreen(),
     );
-    clockOffset += 1000;
+    clock.passThrottle();
     await fireEvent.press(screen.getByText('Premium consultation'));
 
     expect(await screen.findByText('GUM Specialists are here!')).toBeOnTheScreen();

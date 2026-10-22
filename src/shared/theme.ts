@@ -17,6 +17,7 @@ export const COLORS = {
   noticeBorder: '#F5E6A7', // Light Secounday/LY1
   textOnPrimary: '#FFFFFF', // Info/I1
   skeleton: '#F7F7F7', // Neutral/N2
+  dialogBackdrop: 'rgba(0, 0, 0, 0.4)', // dims the screen behind a dialog (not in Figma)
 } as const;
 
 // The design is drawn on a 390 pt wide frame.

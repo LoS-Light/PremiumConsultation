@@ -1,11 +1,12 @@
 {
+  "navBar": {
+    "back": "Back"
+  },
   "home": {
-    "premiumConsultation": "Premium consultation"
+    "premiumConsultation": "Premium consultation",
+    "testMultipleDialogs": "Test multiple dialogs"
   },
   "consultation": {
-    "navBar": {
-      "back": "Back"
-    },
     "header": {
       "overline": "Got more questions?",
       "title": "GUM Specialists are here!",
@@ -22,5 +23,13 @@
     },
     "contactInfo": "For general enquiries, please feel free to reach out to us using the method below:\nHotline: <hotline>{{hotline}}</hotline>\nEmail address: <email>{{email}}</email>",
     "agreements": "Your use of our appointment service or communication via WhatsApp constitutes your agreement to our collection and use of personal data as outlined in our privacy policy."
+  },
+  "dialogDemo": {
+    "oneDialog": "One dialog",
+    "dialogTitle": "Dialog {{name}}",
+    "dialogBody": "Test dialog {{name}} (ID: {{id}}).",
+    "ok": "OK",
+    "sameFromTwoButtons": "Press two buttons, same dialog",
+    "threeAtOnce": "Three dialogs at once"
   }
 }

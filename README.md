@@ -11,7 +11,7 @@ The assignment's general and senior requirements disagree on the entry point (th
 | Release | Entry point | Contents |
 |---|---|---|
 | `v1.0.0` (general requirements) | The Consultation screen | Hero and content bottom sheet matching Figma; the three base Specialists loaded through TanStack Query from a swappable repository; loading skeleton and empty state; Book appointment (in-app browser), WhatsApp us (pre-filled message per language), tappable hotline and email; English and Chinese (Hong Kong) copy from the PRD; a back button that is shown but does nothing |
-| `v1.1.0` (senior requirements) | A Home screen with one entry button | A feature flag that gates the entry, a de-duplicated "coming soon" dialog, infinite scroll over 103 Specialists, a working back button, a demo settings menu, and **error handling** |
+| `v1.1.0` (senior requirements) | A Home screen with the entry button | A feature flag that gates the entry, a de-duplicated "coming soon" dialog and a dialog demo screen for the bonus question, infinite scroll over 103 Specialists, a working back button, a demo settings menu, and **error handling** |
 
 **Error handling ships in `v1.1.0`.** `v1.0.0` reads hardcoded data that cannot fail, so the error view, Retry and the switch that simulates failures arrive together in `v1.1.0` ([ADR-011](docs/adr/0011-two-releases.md)). In `v1.0.0`, a failed load still shows the header, contact info and bottom section, with no list and no message.
 

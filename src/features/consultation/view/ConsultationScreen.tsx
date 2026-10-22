@@ -9,19 +9,21 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaFrame, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS } from '../../../shared/theme';
+import {
+  BackNavBar,
+  NAV_BAR_BOTTOM_PADDING,
+  NAV_BAR_ROW_HEIGHT,
+} from '../../../shared/ui/BackNavBar';
 import { HeroBanner } from '../../../shared/ui/HeroBanner';
 import { useSpecialists } from '../viewmodel/useSpecialists';
 import { AgreementsNotice } from './AgreementsNotice';
 import { ConsultationBottomSection } from './ConsultationBottomSection';
 import { ConsultationHeader } from './ConsultationHeader';
-import { ConsultationNavBar } from './ConsultationNavBar';
 import { ContactInfo } from './ContactInfo';
 import {
   collapsedSheetTop,
   CONTENT_GAP,
   CONTENT_PADDING_HORIZONTAL,
-  NAV_BAR_BOTTOM_PADDING,
-  NAV_BAR_ROW_HEIGHT,
   VERTICAL_DRAG_THRESHOLD,
 } from './layout';
 import { SpecialistCard } from './SpecialistCard';
@@ -93,7 +95,7 @@ export function ConsultationScreen() {
           overScrollMode="always"
         />
       </BottomSheet>
-      <ConsultationNavBar />
+      <BackNavBar />
       <StatusBar style="dark" />
     </View>
   );

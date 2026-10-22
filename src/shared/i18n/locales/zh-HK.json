@@ -1,11 +1,12 @@
 {
+  "navBar": {
+    "back": "返回"
+  },
   "home": {
-    "premiumConsultation": "尊尚諮詢"
+    "premiumConsultation": "尊尚諮詢",
+    "testMultipleDialogs": "測試多個對話框"
   },
   "consultation": {
-    "navBar": {
-      "back": "返回"
-    },
     "header": {
       "overline": "有更多問題嗎？",
       "title": "GUM 專家為你服務！",
@@ -22,5 +23,13 @@
     },
     "contactInfo": "如有一般查詢，歡迎致電本公司熱線 <hotline>{{hotline}}</hotline> 或電郵至 <email>{{email}}</email> 與我們聯絡。",
     "agreements": "閣下使用本公司之預約服務或透過 WhatsApp 與本公司聯絡，即表示同意本公司根據私隱政策所載條款，收集及使用閣下之個人資料。"
+  },
+  "dialogDemo": {
+    "oneDialog": "一個對話框",
+    "dialogTitle": "對話框 {{name}}",
+    "dialogBody": "測試對話框 {{name}}（ID：{{id}}）。",
+    "ok": "知道了",
+    "sameFromTwoButtons": "觸發兩個按鈕，同一個對話框",
+    "threeAtOnce": "同時三個對話框"
   }
 }

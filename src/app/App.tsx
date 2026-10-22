@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { RepositoryProvider } from '../data/specialist/RepositoryProvider';
+import { DialogProvider } from '../shared/dialog/DialogProvider';
 import { useAppLanguage } from '../shared/i18n/useAppLanguage';
 import { RootNavigator } from './navigation';
 import { specialistRepository } from './specialistRepository';
@@ -63,9 +64,11 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
           <RepositoryProvider repository={specialistRepository}>
             <I18nextProvider i18n={i18n}>
-              <NavigationContainer>
-                <RootNavigator />
-              </NavigationContainer>
+              <DialogProvider>
+                <NavigationContainer>
+                  <RootNavigator />
+                </NavigationContainer>
+              </DialogProvider>
             </I18nextProvider>
           </RepositoryProvider>
         </QueryClientProvider>

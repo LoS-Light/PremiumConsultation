@@ -3,16 +3,20 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useGuardedNavigation } from '../../../shared/navigation/NavigationGuardProvider';
-import { SHADOWS } from '../../../shared/theme';
-import { ThrottledPressable } from '../../../shared/ui/ThrottledPressable';
-import { NAV_BAR_BOTTOM_PADDING, NAV_BAR_ROW_HEIGHT } from './layout';
+import { useGuardedNavigation } from '../navigation/NavigationGuardProvider';
+import { SHADOWS } from '../theme';
+import { ThrottledPressable } from './ThrottledPressable';
 
-const BACK_ICON = require('../../../../assets/icons/back.svg');
+// Nav bar below the status bar: a 42 pt row plus 6 pt bottom padding (Figma "Fix Nav").
+export const NAV_BAR_ROW_HEIGHT = 42;
+export const NAV_BAR_BOTTOM_PADDING = 6;
 
-// Transparent bar fixed over the hero. The back button returns to Home (v1.1.0), as do the swipe
-// back from the left edge and the Android back button (SPEC §4.2).
-export function ConsultationNavBar() {
+const BACK_ICON = require('../../../assets/icons/back.svg');
+
+// Transparent bar fixed over the hero with the back button (Figma "Fix Nav"), on every screen
+// behind Home. The back button returns to the previous screen, as do the swipe back from the
+// left edge and the Android back button.
+export function BackNavBar() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { goBack } = useGuardedNavigation();
@@ -21,9 +25,8 @@ export function ConsultationNavBar() {
     <View style={[styles.bar, { paddingTop: insets.top }]} pointerEvents="box-none">
       <View style={styles.row} pointerEvents="box-none">
         <ThrottledPressable
-          testID="consultation-back"
           accessibilityRole="button"
-          accessibilityLabel={t('consultation.navBar.back')}
+          accessibilityLabel={t('navBar.back')}
           onPress={goBack}
           style={styles.backButton}
         >
