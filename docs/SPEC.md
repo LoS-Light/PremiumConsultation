@@ -372,7 +372,7 @@ Protection against repeated presses is layered. Each layer has one job and is te
 - **Every user-visible string** goes through i18n, including dialog text, error messages, button labels and accessibility labels
 - Phone numbers and email are data, not translated
 - The contact-info paragraph has a **different sentence structure per language** (EN: multi-line list; ZH: one sentence with the number and email inline). Use `<Trans>` with link components so each language controls its own word order while the hotline and email stay tappable
-- Typography per language follows the Figma text styles (read via MCP, §11)
+- Typography per language follows the Figma text styles (read via MCP, §11). Figma defines only one Chinese style (Chinese/Header/Header 2, Noto Sans TC Bold) for the title; Chinese text in the English body styles (Inter, which has no CJK glyphs) uses the system font (PingFang on iOS). Each extra Noto Sans TC weight would add about 7 MB
 - **Copy comes from the PRD** (EN + ZH for every section); it is not duplicated here (§11a)
 - The error view's copy is defined by this spec, not the PRD (§10)
 - Copy not defined by the PRD (Home screen, coming-soon dialog, demo settings menu) is written by the author in both languages and listed in the PR; the error view and empty state copy is in §10
@@ -437,6 +437,8 @@ Visual details (colors, typography, spacing, radii, shadows, assets) are **not d
 6. Bottom section uses a plain white background regardless of any glass/blur styling in Figma (PRD)
 
 MCP calls are rate-limited on the author's plan: read variables once, then fetch design context only for the components being built.
+
+**Visual checks** use a 390 pt wide device (e.g. the iPhone 17e simulator), the width of the Figma frames. Text columns follow the screen width, so on wider screens lines wrap later than in Figma; that is expected.
 
 ## 11a. PRD source (PDF)
 
@@ -533,7 +535,7 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 
 | Seam | Type | Cases |
 |---|---|---|
-| `App` smoke test (T-0003) | Component | Renders the placeholder screen; only proves the Jest / jest-expo / React Native Testing Library setup works. Replaced as real screens arrive |
+| `App` smoke test | Component | The app boots with its providers and opens on the Consultation screen (since T-0004; in T-0003 it only proved the test setup worked) |
 | `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved; simulated failure (v1.1.0): first request after entering the screen succeeds, a later request fails when the injected random value is below 0.3 and succeeds otherwise |
 | `ThrottledPressable` | Component | Two presses within 300 ms → one call; a press after 300 ms → a second call; the first press fires immediately |
 | `guardedNavigate` (v1.1.0) | Unit | Called twice in the same tick (directly, not through a button) → one navigation; called from a screen that is not focused → ignored; after the target screen is focused and its transition ends → a new call navigates |
@@ -544,7 +546,8 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 | `useConsultationActions` | Hook | Book → `openBrowserAsync` with booking URL; WhatsApp → `wa.me` URL with encoded message in the current language; hotline → `tel:`; email → `mailto:` |
 | `ConsultationScreen` (v1.0.0, plain) | Component | Loading skeleton; empty; list renders the 3 base names in order; contact info and agreements present; back button has no effect |
 | `ConsultationScreen` (v1.1.0, infinite) | Component | Loading skeleton; first page renders; a failed first page shows the full-size inline error and Retry refetches; reaching the end loads the next page with a footer spinner; a failed next page shows the compact inline error in the footer with loaded Specialists still shown; Retry appends the page on success; back button returns to Home |
-| i18n | Component | Key strings render in both languages; contact links remain tappable in both languages |
+| i18n | Component | Key strings render in both languages; a string missing from `zh-HK` shows its English text; contact links remain tappable in both languages |
+| Locale resolution (T-0004) | Unit | Language `zh` with any script or region (`zh-Hant-HK`, `zh-Hant-TW`, `zh-Hant-MO`, `zh-Hans-CN`, `zh-Hans-SG`, `zh`) → `zh-HK`; `en-US`, `en-GB` → `en`; any other language (`ja-JP`, `fr-FR`, and `zha-CN`, Zhuang, whose code only starts with "zh") → `en` |
 
 Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (retries disabled). `Linking` and `expo-web-browser` are mocked.
 
