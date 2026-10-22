@@ -3,6 +3,7 @@
     "back": "Back"
   },
   "home": {
+    "featureToggle": "Feature Toggle",
     "premiumConsultation": "Premium consultation",
     "testMultipleDialogs": "Test multiple dialogs"
   },
@@ -31,5 +32,18 @@
     "ok": "OK",
     "sameFromTwoButtons": "Press two buttons, same dialog",
     "threeAtOnce": "Three dialogs at once"
+  },
+  "comingSoon": {
+    "title": "Coming soon",
+    "body": "Premium consultation will be available soon.",
+    "ok": "OK"
+  },
+  "featureToggles": {
+    "title": "Feature toggles",
+    "premiumConsultation": "Enable Premium consultation",
+    "premiumConsultationDescription": "Off: the entry button shows a coming-soon dialog.",
+    "premiumConsultationTip": "Tip: this switch is a quick way to enable or disable the Premium consultation screen for the demo, not the recommended practice. In production, control whether the screen is enabled with the CMS, Firebase Remote Config or similar.",
+    "pressThrottle": "Enable press throttle",
+    "pressThrottleDescription": "Off: buttons react to every press, so a quick double press is stopped only by navigate() and the dialog queue."
   }
 }

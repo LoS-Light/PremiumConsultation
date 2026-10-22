@@ -1,14 +1,13 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import { render } from '@testing-library/react-native';
-import { I18nextProvider } from 'react-i18next';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { AppProviders } from '../app/AppProviders';
 import { type RootStackParamList, RootNavigator } from '../app/navigation';
 import type { Specialist } from '../data/specialist/Specialist';
 import type { SpecialistRepository } from '../data/specialist/SpecialistRepository';
-import { RepositoryProvider } from '../data/specialist/RepositoryProvider';
-import { DialogProvider } from '../shared/dialog/DialogProvider';
+import { FEATURE_FLAG_DEFAULTS } from '../shared/config/featureFlags';
+import type { FeatureFlagService } from '../shared/featureFlags/FeatureFlagService';
+import { LocalFeatureFlagService } from '../shared/featureFlags/LocalFeatureFlagService';
 import { createI18n } from '../shared/i18n/createI18n';
 import type { AppLanguage } from '../shared/i18n/resolveLanguage';
 
@@ -29,10 +28,12 @@ export async function renderApp({
   language = 'en',
   repository = fakeRepository([]),
   initialRouteName = 'Home',
+  featureFlagService = new LocalFeatureFlagService(FEATURE_FLAG_DEFAULTS),
 }: {
   language?: AppLanguage;
   repository?: SpecialistRepository;
   initialRouteName?: keyof RootStackParamList;
+  featureFlagService?: FeatureFlagService;
 } = {}) {
   // A fresh QueryClient per test, with retries off (SPEC §13). gcTime: Infinity stops the
   // cache from scheduling a clean-up timer that would keep Jest from exiting.
@@ -40,19 +41,14 @@ export async function renderApp({
     defaultOptions: { queries: { retry: false, gcTime: Infinity } },
   });
   await render(
-    <GestureHandlerRootView>
-      <QueryClientProvider client={queryClient}>
-        <RepositoryProvider repository={repository}>
-          <I18nextProvider i18n={createI18n(language)}>
-            <DialogProvider>
-              <NavigationContainer>
-                <RootNavigator initialRouteName={initialRouteName} />
-              </NavigationContainer>
-            </DialogProvider>
-          </I18nextProvider>
-        </RepositoryProvider>
-      </QueryClientProvider>
-    </GestureHandlerRootView>,
+    <AppProviders
+      queryClient={queryClient}
+      repository={repository}
+      i18n={createI18n(language)}
+      featureFlagService={featureFlagService}
+    >
+      <RootNavigator initialRouteName={initialRouteName} />
+    </AppProviders>,
   );
 }
 

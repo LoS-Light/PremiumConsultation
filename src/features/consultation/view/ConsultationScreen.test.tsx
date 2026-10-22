@@ -1,11 +1,13 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Linking } from 'react-native';
 
 import type { RootStackParamList } from '../../../app/navigation';
 import type { Specialist } from '../../../data/specialist/Specialist';
 import type { SpecialistRepository } from '../../../data/specialist/SpecialistRepository';
 import type { AppLanguage } from '../../../shared/i18n/resolveLanguage';
-import { controllableClock, fakeRepository, renderApp } from '../../../test/renderApp';
+import { FEATURE_FLAG_DEFAULTS } from '../../../shared/config/featureFlags';
+import { LocalFeatureFlagService } from '../../../shared/featureFlags/LocalFeatureFlagService';
+import { fakeRepository, renderApp } from '../../../test/renderApp';
 
 const FIGMA_SPECIALISTS: Specialist[] = [
   { id: '1', name: 'Kan Chung' },
@@ -47,10 +49,6 @@ describe('ConsultationScreen header', () => {
 });
 
 describe('ConsultationScreen back button', () => {
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
   test('returns to Home', async () => {
     await renderScreen('en', undefined, 'Home');
     await fireEvent.press(screen.getByText('Premium consultation'));
@@ -62,24 +60,6 @@ describe('ConsultationScreen back button', () => {
       expect(screen.queryByText('GUM Specialists are here!')).not.toBeOnTheScreen(),
     );
     expect(screen.getByText('Premium consultation')).toBeOnTheScreen();
-  });
-
-  test('opens again after a back that interrupts the opening transition', async () => {
-    // Move the clock past the entry button's throttle between the two presses, so only the
-    // navigation guard can block the second one.
-    const clock = controllableClock();
-    await renderScreen('en', undefined, 'Home');
-
-    await fireEvent.press(screen.getByText('Premium consultation'));
-    // Back before the Consultation screen has finished sliding in.
-    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
-    await waitFor(() =>
-      expect(screen.queryByText('GUM Specialists are here!')).not.toBeOnTheScreen(),
-    );
-    clock.passThrottle();
-    await fireEvent.press(screen.getByText('Premium consultation'));
-
-    expect(await screen.findByText('GUM Specialists are here!')).toBeOnTheScreen();
   });
 });
 
@@ -189,4 +169,43 @@ describe('ConsultationScreen contact info and agreements', () => {
       expect(Linking.openURL).toHaveBeenCalledWith('mailto:memberservice@gumhk.com');
     },
   );
+});
+
+describe('ConsultationScreen feature flag', () => {
+  // e.g. a deep link straight to the screen: it can't bypass the flag (SPEC §7).
+  test('shows the coming-soon dialog and returns to Home when opened while disabled', async () => {
+    await renderApp({
+      initialRouteName: 'Consultation',
+      featureFlagService: new LocalFeatureFlagService({
+        ...FEATURE_FLAG_DEFAULTS,
+        premiumConsultation: false,
+      }),
+    });
+
+    expect(
+      await screen.findByText('Premium consultation will be available soon.'),
+    ).toBeOnTheScreen();
+    expect(await screen.findByRole('button', { name: 'Premium consultation' })).toBeOnTheScreen();
+    expect(screen.queryByText('GUM Specialists are here!')).not.toBeOnTheScreen();
+  });
+
+  test('shows the coming-soon dialog and goes back to Home when disabled while open', async () => {
+    const featureFlagService = new LocalFeatureFlagService({
+      ...FEATURE_FLAG_DEFAULTS,
+      premiumConsultation: true,
+    });
+    await renderApp({ featureFlagService });
+    await fireEvent.press(screen.getByRole('button', { name: 'Premium consultation' }));
+    expect(await screen.findByText('GUM Specialists are here!')).toBeOnTheScreen();
+
+    // e.g. a remote flag turned off mid-session
+    await act(() => featureFlagService.setEnabled('premiumConsultation', false));
+
+    expect(
+      await screen.findByText('Premium consultation will be available soon.'),
+    ).toBeOnTheScreen();
+    await waitFor(() =>
+      expect(screen.queryByText('GUM Specialists are here!')).not.toBeOnTheScreen(),
+    );
+  });
 });

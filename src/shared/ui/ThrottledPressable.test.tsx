@@ -1,6 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
+import { FEATURE_FLAG_DEFAULTS } from '../config/featureFlags';
+import { FeatureFlagProvider } from '../featureFlags/FeatureFlagProvider';
+import { LocalFeatureFlagService } from '../featureFlags/LocalFeatureFlagService';
 import { ThrottledPressable } from './ThrottledPressable';
 
 // The throttle reads the clock through Date.now, so the tests set the time directly.
@@ -13,11 +16,17 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-async function renderButton(onPress: () => void) {
+async function renderButton(onPress: () => void, { isThrottleOn = true } = {}) {
+  const featureFlagService = new LocalFeatureFlagService({
+    ...FEATURE_FLAG_DEFAULTS,
+    pressThrottle: isThrottleOn,
+  });
   await render(
-    <ThrottledPressable onPress={onPress}>
-      <Text>Press me</Text>
-    </ThrottledPressable>,
+    <FeatureFlagProvider service={featureFlagService}>
+      <ThrottledPressable onPress={onPress}>
+        <Text>Press me</Text>
+      </ThrottledPressable>
+    </FeatureFlagProvider>,
   );
   return screen.getByText('Press me');
 }
@@ -49,6 +58,18 @@ describe('ThrottledPressable', () => {
 
     await fireEvent.press(button);
     now += 300;
+    await fireEvent.press(button);
+
+    expect(onPress).toHaveBeenCalledTimes(2);
+  });
+
+  // The Feature toggles sheet can switch the throttle off, to show the other layers alone.
+  test('with the press throttle off, a second press within 300 ms fires too', async () => {
+    const onPress = jest.fn();
+    const button = await renderButton(onPress, { isThrottleOn: false });
+
+    await fireEvent.press(button);
+    now += 1;
     await fireEvent.press(button);
 
     expect(onPress).toHaveBeenCalledTimes(2);

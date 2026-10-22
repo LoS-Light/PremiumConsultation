@@ -18,6 +18,9 @@ export const COLORS = {
   textOnPrimary: '#FFFFFF', // Info/I1
   skeleton: '#F7F7F7', // Neutral/N2
   dialogBackdrop: 'rgba(0, 0, 0, 0.4)', // dims the screen behind a dialog (not in Figma)
+  switchOn: '#34C759', // iOS system green, the switch's track when on (not in Figma)
+  switchOff: '#E9E9EA', // iOS switch track when off (not in Figma)
+  sheetHandle: '#C7C7CC', // the bottom sheet's drag handle (not in Figma)
 } as const;
 
 // The design is drawn on a 390 pt wide frame.
@@ -72,6 +75,14 @@ export const SHADOWS = {
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
+  },
+  // Switch thumb: iOS's soft shadow under the white knob.
+  switchThumb: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
   },
   // Nav bar content: drop shadow 0 4 10 rgba(0, 0, 0, 0.05)
   navBar: {

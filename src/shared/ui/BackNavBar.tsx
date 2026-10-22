@@ -1,9 +1,9 @@
+import { useNavigation } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useGuardedNavigation } from '../navigation/NavigationGuardProvider';
 import { SHADOWS } from '../theme';
 import { ThrottledPressable } from './ThrottledPressable';
 
@@ -19,7 +19,15 @@ const BACK_ICON = require('../../../assets/icons/back.svg');
 export function BackNavBar() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { goBack } = useGuardedNavigation();
+  const navigation = useNavigation();
+  // goBack() has no de-duplication of its own: a second press while the screen is already
+  // leaving would go back from a screen that is gone (a dev-mode "GO_BACK was not handled"
+  // error). It is no longer focused then, so ignore the press.
+  const handleBackPress = () => {
+    if (navigation.isFocused()) {
+      navigation.goBack();
+    }
+  };
 
   return (
     <View style={[styles.bar, { paddingTop: insets.top }]} pointerEvents="box-none">
@@ -27,7 +35,7 @@ export function BackNavBar() {
         <ThrottledPressable
           accessibilityRole="button"
           accessibilityLabel={t('navBar.back')}
-          onPress={goBack}
+          onPress={handleBackPress}
           style={styles.backButton}
         >
           <Image source={BACK_ICON} style={styles.backIconImage} contentFit="contain" />

@@ -15,6 +15,7 @@ import {
   NAV_BAR_ROW_HEIGHT,
 } from '../../../shared/ui/BackNavBar';
 import { HeroBanner } from '../../../shared/ui/HeroBanner';
+import { useConsultationGate } from '../viewmodel/useConsultationGate';
 import { useSpecialists } from '../viewmodel/useSpecialists';
 import { AgreementsNotice } from './AgreementsNotice';
 import { ConsultationBottomSection } from './ConsultationBottomSection';
@@ -27,13 +28,21 @@ import {
   VERTICAL_DRAG_THRESHOLD,
 } from './layout';
 import { SpecialistCard } from './SpecialistCard';
+import { useContentSheetAnimationConfigs } from './useContentSheetAnimationConfigs';
 import { EmptyState } from './states/EmptyState';
 import { SpecialistSkeleton } from './states/SpecialistSkeleton';
+
+// The Consultation screen, behind the premiumConsultation flag (SPEC §7). While the flag is
+// off it shows nothing and leaves (useConsultationGate), so it never loads the Specialists.
+export function ConsultationScreen() {
+  const isEnabled = useConsultationGate();
+  return isEnabled ? <ConsultationContent /> : <View style={styles.screen} />;
+}
 
 // The hero is a fixed background; the content is a bottom sheet over it (ADR-012). The sheet
 // opens collapsed at Figma's card position and can only grow, up to just below the nav bar.
 // Once it is expanded, dragging scrolls its list. The service hours and buttons are its footer.
-export function ConsultationScreen() {
+function ConsultationContent() {
   const { data: specialists = [], isPending, isError } = useSpecialists();
   // The sheet measures its container, which fills the whole screen. useWindowDimensions() leaves
   // out the status and navigation bars on Android (edge-to-edge), which put the sheet about
@@ -43,6 +52,7 @@ export function ConsultationScreen() {
   // The list's bottom padding equals the sheet footer's (bottom section's) height, so nothing
   // hides behind it.
   const [footerHeight, setFooterHeight] = useState(0);
+  const animationConfigs = useContentSheetAnimationConfigs();
 
   const snapPoints = useMemo(() => {
     const expandedTop = insets.top + NAV_BAR_ROW_HEIGHT + NAV_BAR_BOTTOM_PADDING;
@@ -64,6 +74,7 @@ export function ConsultationScreen() {
       <BottomSheet
         index={0}
         snapPoints={snapPoints}
+        animationConfigs={animationConfigs}
         // Appear already collapsed, without sliding up on mount.
         animateOnMount={false}
         enableDynamicSizing={false}

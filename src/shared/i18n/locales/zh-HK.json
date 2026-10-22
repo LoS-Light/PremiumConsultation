@@ -3,6 +3,7 @@
     "back": "返回"
   },
   "home": {
+    "featureToggle": "功能開關",
     "premiumConsultation": "尊尚諮詢",
     "testMultipleDialogs": "測試多個對話框"
   },
@@ -31,5 +32,18 @@
     "ok": "知道了",
     "sameFromTwoButtons": "觸發兩個按鈕，同一個對話框",
     "threeAtOnce": "同時三個對話框"
+  },
+  "comingSoon": {
+    "title": "即將推出",
+    "body": "尊尚諮詢服務即將推出，敬請期待。",
+    "ok": "知道了"
+  },
+  "featureToggles": {
+    "title": "功能開關",
+    "premiumConsultation": "啟用尊尚諮詢",
+    "premiumConsultationDescription": "關閉時，入口按鈕會顯示「即將推出」對話框。",
+    "premiumConsultationTip": "提示：這個開關只是在 demo 中快速模擬啟用／停用尊尚諮詢頁面，並非最佳實務。正式環境應透過 CMS 或 Firebase Remote Config 等方式控管頁面是否啟用。",
+    "pressThrottle": "啟用按鈕節流",
+    "pressThrottleDescription": "關閉時，按鈕每次點擊都會反應，快速連點只靠 navigate() 和對話框佇列擋下。"
   }
 }
