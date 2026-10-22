@@ -31,6 +31,7 @@ Delivered in two releases (ADR-011):
 
 - **v1.0.0 — general requirements:** everything below except the senior bullet. The Consultation screen is the app's entry point.
 - **v1.1.0 — senior requirements:** Home entry button, feature flag, de-duplicated dialog, infinite scroll. Also error handling, moved from v1.0.0 (ADR-011).
+- **v1.1.1 — docs only:** the v1.1.0 app, unchanged, with the demo screenshots and video and a quick start in the README, so `main` shows them (§14).
 
 - Consultation screen matching the Figma design and PRD behaviour
 - Data loading via TanStack Query, with loading and empty states (error state in v1.1.0)
@@ -94,7 +95,7 @@ One screen, `ConsultationScreen`, written once.
 
 - **v1.0.0:** plain list, loaded in one request with `useSpecialists` (§6.1).
 - **v1.1.0:** infinite scroll with `useInfiniteSpecialists` (§6.2), which **replaces** the plain list; there is no mode switch. Layout, cards and sections are unchanged; the list footer adds the next-page spinner and next-page error.
-- The two behaviours are compared by checking out the `v1.0.0` and `v1.1.0` tags; the README shows screenshots of both side by side (§6.3).
+- The two behaviours are compared by checking out the `v1.0.0` and `v1.1.0` tags; the README shows the v1.1.0 screenshots and demo video (§6.3, §14).
 
 Structure (ADR-012, superseding ADR-005):
 
@@ -246,7 +247,7 @@ Hooks live in the viewmodel layer and depend only on `SpecialistRepository`.
 
 Key point: **virtualization limits rendered views; pagination limits fetched data and network cost.** They solve different problems.
 
-The table compares both approaches for the same list size *n*. In the app they live in different releases: check out `v1.0.0` for the plain list (3 Specialists) and `v1.1.0` for infinite scroll (103 Specialists). The README shows screenshots of both side by side, and the PR explains the differences.
+The table compares both approaches for the same list size *n*. In the app they live in different releases: check out `v1.0.0` for the plain list (3 Specialists) and `v1.1.0` for infinite scroll (103 Specialists). The README compares them in a table, and the PR explains the differences.
 
 ### 6.4 Offset vs cursor pagination (ADR-007)
 
@@ -609,6 +610,7 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 >   2. PR `dev` → `main`, merged with the merge commit message **"Release vX.Y.Z"**
 >   3. Annotated tag `vX.Y.Z` on that merge commit, and a GitHub Release with release notes and demo videos
 >      - `v1.0.0` is released without videos. The author records the videos and screenshots of both releases once `v1.1.0` is done, puts them in the final README, and the `v1.0.0` Release is then edited to attach its videos (the tag does not move)
+>      - In the end only `v1.1.0` was recorded, after its tag. Tags never move, so the README demo ships as `v1.1.1`, a docs-only patch release through the same flow (`feats/v1.1.1` → `dev` → `main`, tag, Release with the video and screenshots attached)
 >   4. The next release branch is cut from `dev`
 > - Submission: the `v1.1.0` PR `dev` → `main` is the one handed to the interviewer. `v1.0.0` is merged and released by the author beforehand; the README explains both releases so the interviewer can check out either tag
 > - Small Conventional Commits while a ticket is in progress. Before a release branch is first pushed, each ticket's commits are squashed into one commit per ticket, so the release PR reads ticket by ticket. After that, respond to review with new commits (no force-push during review)
@@ -625,7 +627,7 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 
 ### README
 
-Releases (what `v1.0.0` and `v1.1.0` each cover, and how to check out either tag), setup (Node version, `npm ci`, `npx expo start`), architecture overview, how to swap to CMS, the feature toggles sheet (feature flag and simulated failure) and why the in-app flag switch is a demo shortcut rather than the production approach (Firebase Remote Config or the CMS, §7), how to run tests.
+Releases (what `v1.0.0` and `v1.1.0` each cover, and how to check out either tag), setup (Node version, `npm ci`, `npx expo start`), architecture overview, how to swap to CMS, the feature toggles sheet (feature flag and simulated failure) and why the in-app flag switch is a demo shortcut rather than the production approach (Firebase Remote Config or the CMS, §7), how to run tests. Demo screenshots and the demo video live in `demo/` and are shown at the top of the README, with a quick start for the reviewer; the video is compressed to H.264 so it stays small enough for git.
 
 ### PR description (release PRs `dev` → `main`)
 

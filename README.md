@@ -4,7 +4,81 @@ The Premium Consultation screen of the GUM app, built with React Native (Expo SD
 
 The full specification is [`docs/SPEC.md`](docs/SPEC.md); decisions are recorded as ADRs in [`docs/adr/`](docs/adr/), and domain terms in [`GLOSSARY.md`](GLOSSARY.md).
 
-<!-- Demo: add the demo videos and the v1.0.0 / v1.1.0 screenshots side by side here. -->
+## Demo
+
+<table>
+  <tr>
+    <th>Consultation screen</th>
+    <th>Contact info and agreements</th>
+    <th>A failed page, with Retry</th>
+    <th>Feature switched off</th>
+  </tr>
+  <tr>
+    <td><img src="demo/01-consultation.png" width="200" alt="The Consultation screen: hero image, the content sheet with Specialist cards, and the Book appointment and WhatsApp us buttons"></td>
+    <td><img src="demo/02-contact-and-agreements.png" width="200" alt="The end of the list: hotline, email and the agreements notice"></td>
+    <td><img src="demo/03-next-page-error.png" width="200" alt="A next page that failed to load: the error view with a small Retry button below the loaded Specialists"></td>
+    <td><img src="demo/04-coming-soon.png" width="200" alt="Home with the Coming soon dialog, shown when Premium consultation is switched off"></td>
+  </tr>
+</table>
+
+**[▶ Watch the demo video](demo/premium-consultation-demo.mp4)** (`v1.1.0` on an iPhone, 3 min 52 s, MP4)
+
+| From | What it shows |
+|---|---|
+| 0:00 | Infinite scroll: 10 Specialists per page, a spinner below the last card while the next page loads |
+| 0:30 | The hotline and email links |
+| 0:44 | Book appointment (in-app browser) and WhatsApp us (pre-filled message) |
+| 1:08 | Home, then the Dialog demo: one dialog, two buttons asking for the same dialog, three dialogs in turn |
+| 1:28 | The Toast demo with the press throttle on: presses within 500 ms show nothing |
+| 1:48 | Premium consultation switched off: the "Coming soon" dialog |
+| 2:00 | Dialog de-duplication and the queue switched off: the same dialog stacks |
+| 2:28 | The press throttle switched off: every press shows a toast |
+| 2:56 | Simulated loading failure: the error view on a failed page, and Retry |
+
+## Quick start
+
+You need:
+
+- **Node 24**: the exact version is in [`.nvmrc`](.nvmrc). With [nvm](https://github.com/nvm-sh/nvm), step 1 installs it.
+- **Xcode** (macOS) for the iOS simulator, or **Android Studio** for an Android emulator.
+
+1. Get the code and install the dependencies:
+
+   ```sh
+   git clone https://github.com/LoS-Light/PremiumConsultation.git
+   cd PremiumConsultation
+   nvm install   # installs and switches to the Node version in .nvmrc
+   npm ci
+   ```
+
+2. Start the app:
+
+   ```sh
+   npx expo start
+   ```
+
+3. In the same terminal, press **`i`** for the iOS simulator or **`a`** for the Android emulator. Expo CLI installs the matching Expo Go and opens the app on Home.
+
+Then see [Trying `v1.1.0`](#trying-v110) for what each button does.
+
+`main` is `v1.1.1`: the `v1.1.0` app with this README's demo. To run the general requirements (`v1.0.0`, which opens straight on the Consultation screen):
+
+```sh
+git checkout v1.0.0
+npm ci
+npx expo start
+```
+
+### On a phone
+
+The project uses Expo SDK 58, and each Expo Go release supports one SDK only.
+
+| Device | How |
+|---|---|
+| Android | Connect it with USB debugging on and press `a`, or scan the QR code with Expo Go. Expo CLI installs the matching Expo Go on connected devices. |
+| iPhone | When writing this, the App Store's Expo Go only supports SDK 57, so it reports "Project is incompatible with this version of Expo Go". Either wait until Expo Go for SDK 58 reaches the App Store and scan the QR code, or build the app onto the phone with Xcode: turn on Developer Mode on the iPhone, connect it, and run `npx expo run:ios --device` (needs an Apple ID signed in to Xcode). |
+
+To see the Chinese copy, set the device language to Chinese (any `zh` locale shows Traditional Chinese, Hong Kong); every other language shows English.
 
 ## Releases
 
@@ -14,34 +88,11 @@ The assignment's general and senior requirements disagree on the entry point (th
 |---|---|---|
 | `v1.0.0` (general requirements) | The Consultation screen | Hero and content bottom sheet matching Figma; the three base Specialists loaded in one request through TanStack Query from a swappable repository; loading skeleton and empty state; Book appointment (in-app browser), WhatsApp us (pre-filled message per language), tappable hotline and email; English and Chinese (Hong Kong) copy from the PRD; a back button that is shown but does nothing |
 | `v1.1.0` (senior requirements) | A Home screen | The Consultation screen behind a feature flag, with a de-duplicated "coming soon" dialog; infinite scroll over 103 Specialists; **error handling** (error view and Retry); a working back button; a Feature toggles sheet and two demo screens for duplicate-press protection; Android matching iOS (transitions, swipe back, fonts, spinner, switches) |
+| `v1.1.1` (docs) | A Home screen | The `v1.1.0` app, unchanged; the README adds the demo screenshots and video and a quick start |
 
 **Error handling ships in `v1.1.0`.** `v1.0.0` reads hardcoded data that cannot fail, so the error view, Retry and the switch that simulates failures arrive together in `v1.1.0` ([ADR-011](docs/adr/0011-two-releases.md)).
 
-To run a release, check out its tag:
-
-```sh
-git checkout v1.0.0   # or v1.1.0
-```
-
-## Setup
-
-Requirements: Node 24 (the exact version is in [`.nvmrc`](.nvmrc)), and Xcode for the iOS simulator or Android Studio for an Android emulator.
-
-```sh
-nvm use        # Node 24.22.1 from .nvmrc
-npm ci
-npx expo start
-```
-
-Then choose where to run it. The project uses Expo SDK 58, and each Expo Go release supports one SDK only.
-
-| Target | How |
-|---|---|
-| iOS simulator | Press `i`. Expo CLI installs the matching Expo Go in the simulator. |
-| Android emulator or device | Press `a`, or scan the QR code with Expo Go. Expo CLI installs the matching Expo Go on emulators and connected devices. |
-| iPhone | When writing this, the App Store's Expo Go only supports SDK 57, so it reports "Project is incompatible with this version of Expo Go". Either wait until Expo Go for SDK 58 reaches the App Store and scan the QR code, or build the app onto the phone with Xcode: turn on Developer Mode on the iPhone, connect it, and run `npx expo run:ios --device` (needs an Apple ID signed in to Xcode). |
-
-To see the Chinese copy, set the device language to Chinese (any `zh` locale shows Traditional Chinese, Hong Kong); every other language shows English.
+To run a release, check out its tag (`git checkout v1.0.0` or `v1.1.0`), then `npm ci` and `npx expo start` as in [Quick start](#quick-start).
 
 ## Trying `v1.1.0`
 
