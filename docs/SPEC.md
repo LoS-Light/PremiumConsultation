@@ -408,6 +408,17 @@ Layering: **View** (components, no logic) → **ViewModel** (custom hooks) → *
 
 ## 13. Testing strategy (TDD seams)
 
+All behaviour is developed **test-first** with `/tdd` (ADR-010):
+
+- **Red before green.** Write one failing test, then only enough code to make it pass.
+- **Vertical slices.** One seam, one test, one minimal implementation per cycle. Never write all tests first and then all code.
+- **Public interfaces only.** Tests observe behaviour at the seams below, never internals. Expected values come from the PRD, the spec or a worked example, never recomputed the way the code does.
+- **Agreed seams only.** The table below lists the agreed seams. A new seam is confirmed with the author before any test is written for it, then added to this table in the same PR.
+- **Bugs start with a failing test** that reproduces them.
+- **Refactor at review**, not inside the red → green loop.
+- **Commits stay green.** Each commit holds a slice's test and its implementation together, so every commit passes `tsc`, lint and tests.
+- **Exceptions:** project scaffolding and config (`T-0003`), and pure styling with no behaviour (checked against Figma instead). The PR states which changes were not test-driven and why.
+
 | Seam | Type | Cases |
 |---|---|---|
 | `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved, configured failure |
@@ -487,7 +498,7 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 1. Start from an up-to-date `dev`:
    `git checkout dev && git pull && git checkout -b feats/T-XXXX-[TicketName]`
 2. Do not start a ticket until every ticket it is blocked by has been merged into `dev`.
-3. Implement only this ticket's scope; use `/tdd` at the seams listed in the ticket.
+3. Implement only this ticket's scope, **test-first with `/tdd`** at the seams listed in the ticket, following the rules in §13 (ADR-010).
 4. Before each commit: `npx tsc --noEmit`, lint, and the relevant test files. Before opening the PR: the full test suite.
 5. Commit with Conventional Commits, referencing the ticket (e.g. `chore(T-0003): add Jest and React Native Testing Library`).
 6. Push the branch and open a PR **into `dev`** titled `T-XXXX: [TicketName]`. PR body: summary, spec sections covered, acceptance criteria checklist, tests added, screenshots/video for UI changes, decisions (link ADRs).

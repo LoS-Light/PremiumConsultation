@@ -18,6 +18,8 @@ Ticket: #<!-- issue number -->
 
 <!-- Test files and what each one proves. Write "None" with a reason if there are none. -->
 
+Not test-driven: <!-- changes written without a failing test first (scaffolding, config, pure styling) and why, per ADR-010. Write "None" otherwise. -->
+
 ## Checks
 
 - [ ] `npx tsc --noEmit`
