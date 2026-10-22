@@ -21,9 +21,7 @@ The full specification is [`docs/SPEC.md`](docs/SPEC.md); decisions are recorded
   </tr>
 </table>
 
-## Video Demo
-
-`v1.1.1` on an iPhone, 3 min 52 s. The same video is in [`demo/premium-consultation-demo.mp4`](demo/premium-consultation-demo.mp4).
+The demo video: `v1.1.1` on an iPhone, 3 min 52 s. The same video is in [`demo/premium-consultation-demo.mp4`](demo/premium-consultation-demo.mp4).
 
 https://github.com/user-attachments/assets/56acbc5f-8d82-497a-ac5d-52ecfbebc55e
 
