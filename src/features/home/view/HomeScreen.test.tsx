@@ -46,7 +46,7 @@ describe('HomeScreen entry button', () => {
   });
 
   // The brief: pressing the button twice quickly must not open the dialog twice. The clock
-  // moves past the button's 300 ms throttle between the presses, so the second press reaches
+  // moves past the button's 500 ms throttle between the presses, so the second press reaches
   // the DialogManager and only its guard can stop the second dialog (SPEC §8).
   test('opens the coming-soon dialog once when pressed twice quickly', async () => {
     const clock = controllableClock();
@@ -96,6 +96,20 @@ describe('HomeScreen press throttle toggle', () => {
 
     expect(toggle).not.toBeChecked();
     expect(service.isEnabled('pressThrottle')).toBe(false);
+  });
+});
+
+describe('HomeScreen dialog rule toggles', () => {
+  test('switches dialog de-duplication and the dialog queue off from the Feature toggles sheet', async () => {
+    const service = featureFlagServiceWith({ isPremiumConsultationEnabled: true });
+    await renderApp({ featureFlagService: service });
+    await fireEvent.press(screen.getByRole('button', { name: 'Feature Toggle' }));
+
+    await fireEvent.press(screen.getByRole('switch', { name: 'Enable dialog de-duplication' }));
+    await fireEvent.press(screen.getByRole('switch', { name: 'Enable dialog queue' }));
+
+    expect(service.isEnabled('dialogDeduplication')).toBe(false);
+    expect(service.isEnabled('dialogQueue')).toBe(false);
   });
 });
 

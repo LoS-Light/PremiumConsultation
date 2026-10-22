@@ -52,7 +52,7 @@ export async function renderApp({
   );
 }
 
-// Lets a test move the clock past the 300 ms press throttle (SPEC §8a), so a second press on
+// Lets a test move the clock past the 500 ms press throttle (SPEC §8a), so a second press on
 // the same button reaches the code under test. Restore with jest.restoreAllMocks().
 export function controllableClock() {
   const realNow = Date.now.bind(Date);

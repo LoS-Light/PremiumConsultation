@@ -53,6 +53,16 @@ export function FeatureTogglesSheet({ ref }: { ref: Ref<BottomSheetModal> }) {
         />
         <Text style={styles.tip}>{t('featureToggles.premiumConsultationTip')}</Text>
         <FeatureToggleRow
+          flag="dialogDeduplication"
+          label={t('featureToggles.dialogDeduplication')}
+          description={t('featureToggles.dialogDeduplicationDescription')}
+        />
+        <FeatureToggleRow
+          flag="dialogQueue"
+          label={t('featureToggles.dialogQueue')}
+          description={t('featureToggles.dialogQueueDescription')}
+        />
+        <FeatureToggleRow
           flag="pressThrottle"
           label={t('featureToggles.pressThrottle')}
           description={t('featureToggles.pressThrottleDescription')}

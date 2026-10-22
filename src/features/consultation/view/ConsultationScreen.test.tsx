@@ -61,6 +61,31 @@ describe('ConsultationScreen back button', () => {
     );
     expect(screen.getByText('Premium consultation')).toBeOnTheScreen();
   });
+
+  // The stack stops touches on a screen that is leaving, so the second press goes nowhere.
+  test('a double press goes back once, with the press throttle off', async () => {
+    const consoleError = jest.spyOn(console, 'error');
+    await renderApp({
+      repository: fakeRepository(FIGMA_SPECIALISTS),
+      featureFlagService: new LocalFeatureFlagService({
+        ...FEATURE_FLAG_DEFAULTS,
+        pressThrottle: false,
+      }),
+    });
+    await fireEvent.press(screen.getByText('Premium consultation'));
+    const backButton = await screen.findByRole('button', { name: 'Back' });
+
+    await fireEvent.press(backButton);
+    await fireEvent.press(backButton);
+
+    await waitFor(() =>
+      expect(screen.queryByText('GUM Specialists are here!')).not.toBeOnTheScreen(),
+    );
+    expect(screen.getByText('Premium consultation')).toBeOnTheScreen();
+    // React Navigation reports a go back from a screen that is gone as an error.
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
 });
 
 // A repository whose request never finishes, to hold the screen in its loading state.

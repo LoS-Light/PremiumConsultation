@@ -5,7 +5,8 @@
   "home": {
     "featureToggle": "Feature Toggle",
     "premiumConsultation": "Premium consultation",
-    "testMultipleDialogs": "Test multiple dialogs"
+    "testMultipleDialogs": "Test multiple dialogs",
+    "testToasts": "Test toasts"
   },
   "consultation": {
     "header": {
@@ -44,6 +45,14 @@
     "premiumConsultationDescription": "Off: the entry button shows a coming-soon dialog.",
     "premiumConsultationTip": "Tip: this switch is a quick way to enable or disable the Premium consultation screen for the demo, not the recommended practice. In production, control whether the screen is enabled with the CMS, Firebase Remote Config or similar.",
     "pressThrottle": "Enable press throttle",
-    "pressThrottleDescription": "Off: buttons react to every press, so a quick double press is stopped only by navigate() and the dialog queue."
+    "pressThrottleDescription": "Off: buttons react to every press, so a quick double press is stopped only by navigate() and the dialog queue.",
+    "dialogDeduplication": "Enable dialog de-duplication",
+    "dialogDeduplicationDescription": "Off: a dialog asked for while it is already showing or waiting shows again.",
+    "dialogQueue": "Enable dialog queue",
+    "dialogQueueDescription": "Off: dialogs no longer wait their turn; they stack on top of each other."
+  },
+  "toastDemo": {
+    "button": "Toast {{name}}",
+    "message": "Toast {{name}} (press {{count}})"
   }
 }

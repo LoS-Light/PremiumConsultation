@@ -7,4 +7,7 @@ export const FEATURE_FLAG_DEFAULTS: FeatureFlags = {
   // The press throttle starts on; switch it off to show that navigate() and the DialogManager
   // stop a double press on their own.
   pressThrottle: true,
+  // The DialogManager's rules start on; switch them off to show a dialog over-shown.
+  dialogDeduplication: true,
+  dialogQueue: true,
 };

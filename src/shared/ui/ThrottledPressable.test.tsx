@@ -41,30 +41,30 @@ describe('ThrottledPressable', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  test('a second press within 300 ms is ignored', async () => {
+  test('a second press within 500 ms is ignored', async () => {
     const onPress = jest.fn();
     const button = await renderButton(onPress);
 
     await fireEvent.press(button);
-    now += 299;
+    now += 499;
     await fireEvent.press(button);
 
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  test('a press 300 ms after the last one fires again', async () => {
+  test('a press 500 ms after the last one fires again', async () => {
     const onPress = jest.fn();
     const button = await renderButton(onPress);
 
     await fireEvent.press(button);
-    now += 300;
+    now += 500;
     await fireEvent.press(button);
 
     expect(onPress).toHaveBeenCalledTimes(2);
   });
 
   // The Feature toggles sheet can switch the throttle off, to show the other layers alone.
-  test('with the press throttle off, a second press within 300 ms fires too', async () => {
+  test('with the press throttle off, a second press within 500 ms fires too', async () => {
     const onPress = jest.fn();
     const button = await renderButton(onPress, { isThrottleOn: false });
 

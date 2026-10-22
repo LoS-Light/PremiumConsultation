@@ -1,7 +1,10 @@
 export type FeatureFlag =
   | 'premiumConsultation'
   // Layer 1 of the duplicate-press protection (SPEC §8a); off shows the other layers alone.
-  | 'pressThrottle';
+  | 'pressThrottle'
+  // The DialogManager's two rules (SPEC §8); off shows what each prevents.
+  | 'dialogDeduplication'
+  | 'dialogQueue';
 
 export type FeatureFlags = Record<FeatureFlag, boolean>;
 

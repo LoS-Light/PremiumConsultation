@@ -72,18 +72,21 @@ Delivered in two releases (ADR-011):
 
 ### 4.1 Home (entry point, v1.1.0) — not in Figma / PRD
 
-Minimal screen that exists to satisfy the senior requirement. It does not exist in v1.0.0. It reuses the Consultation hero (image and gradient) at the top, on the hero's background colour (LY2) so the gradient fades into the screen, with three buttons at the bottom, from the top: the entry button, the feature toggles' button and the dialog demo's button, the last one placed like the Consultation screen's last button (on Android both sit 10 dp higher, §4.2).
+Minimal screen that exists to satisfy the senior requirement. It does not exist in v1.0.0. It reuses the Consultation hero (image and gradient) at the top, on the hero's background colour (LY2) so the gradient fades into the screen, with four buttons at the bottom, from the top: the entry button, the feature toggles' button, the dialog demo's button and the toast demo's button, the last one placed like the Consultation screen's last button (on Android both sit 10 dp higher, §4.2).
 
 - **Entry button:** **"Premium consultation"** / **「尊尚諮詢」** (`home.premiumConsultation`), behind the feature flag `premiumConsultation`:
   - **enabled** → navigate to `ConsultationScreen`
   - **disabled** → show the "Coming soon" dialog (see §8)
-- **Dialog demo entry:** the bottom button, **"Test multiple dialogs"** / **「測試多個對話框」** (`home.testMultipleDialogs`), not behind the flag. It opens the **Dialog demo** screen: Home's background, the back nav bar, and three buttons at the bottom that demo the brief's bonus question (§8): **"One dialog"** / 「一個對話框」, **"Press two buttons, same dialog"** / 「觸發兩個按鈕，同一個對話框」 and **"Three dialogs at once"** / 「同時三個對話框」. Its copy (`dialogDemo.*`) is written by the author; the test dialogs read "Dialog A" / 「對話框 A」, "Test dialog A (ID: demoA)." / 「測試對話框 A（ID：demoA）。」 and "OK" / 「知道了」 (likewise B and C)
-- **Feature toggles:** the middle button, **"Feature Toggle"** / **「功能開關」** (`home.featureToggle`), shown in every build (it is a demo app, and the README tells reviewers about it). It opens a `BottomSheetModal` (`@gorhom/bottom-sheet`, no new dependency) titled **"Feature toggles"** / **「功能開關」**, sized to its content and closed by dragging it down or tapping outside it. Each switch is an iOS-style `ToggleSwitch` on both platforms, with a one-line description below it. The values live in memory only (no persistence; an app restart resets them). All its copy is localized (`featureToggles.*`) and written by the author:
+- **Dialog demo entry:** the third button, **"Test multiple dialogs"** / **「測試多個對話框」** (`home.testMultipleDialogs`), not behind the flag. It opens the **Dialog demo** screen: Home's background, the back nav bar, and three buttons at the bottom that demo the brief's bonus question (§8): **"One dialog"** / 「一個對話框」, **"Press two buttons, same dialog"** / 「觸發兩個按鈕，同一個對話框」 and **"Three dialogs at once"** / 「同時三個對話框」. Its copy (`dialogDemo.*`) is written by the author; the test dialogs read "Dialog A" / 「對話框 A」, "Test dialog A (ID: demoA)." / 「測試對話框 A（ID：demoA）。」 and "OK" / 「知道了」 (likewise B and C)
+- **Toast demo entry:** the bottom button, **"Test toasts"** / **「測試連發 Toast」** (`home.testToasts`), not behind the flag. It opens the **Toast demo** screen (Home's background, the back nav bar) with three buttons, **"Toast A"**, **"Toast B"** and **"Toast C"**, that demo the press throttle (§8a, layer 1). Every press that gets through shows a toast at once, "Toast A (press 3)" / 「Toast A（第 3 次）」, counting the toasts shown; there is no queue or de-duplication. Toasts are dark rounded labels that stack above the buttons, newest at the bottom, each fading in, staying 2 s and fading out, the same on both platforms (no native Toast). With the throttle on, presses within 500 ms make no toast; with it off, every press does
+- **Feature toggles:** the second button, **"Feature Toggle"** / **「功能開關」** (`home.featureToggle`), shown in every build (it is a demo app, and the README tells reviewers about it). It opens a `BottomSheetModal` (`@gorhom/bottom-sheet`, no new dependency) titled **"Feature toggles"** / **「功能開關」**, sized to its content and closed by dragging it down or tapping outside it. Each switch is an iOS-style `ToggleSwitch` on both platforms, with a one-line description below it. The values live in memory only (no persistence; an app restart resets them). All its copy is localized (`featureToggles.*`) and written by the author:
   - **Enable Premium consultation** / **「啟用尊尚諮詢」** (feature flag): default **on**; turns `premiumConsultation` on or off (§7). On by default so the entry button works straight away; switch it off to demo the coming-soon dialog. Description: "Off: the entry button shows a coming-soon dialog." / 「關閉時，入口按鈕會顯示「即將推出」對話框。」 Below it, a muted tip that this is a demo shortcut, not the recommended practice, which is Firebase Remote Config or the CMS: "Tip: this switch is a quick way to enable or disable the Premium consultation screen for the demo, not the recommended practice. In production, control whether the screen is enabled with the CMS, Firebase Remote Config or similar." / 「提示：這個開關只是在 demo 中快速模擬啟用／停用尊尚諮詢頁面，並非最佳實務。正式環境應透過 CMS 或 Firebase Remote Config 等方式控管頁面是否啟用。」
+  - **Enable dialog de-duplication** / **「啟用對話框去重」** (`dialogDeduplication`): default **on**. Off, a dialog asked for while it is already showing or queued shows again (§8). Description: "Off: a dialog asked for while it is already showing or waiting shows again." / 「關閉時，同一個對話框正在顯示或排隊時再次觸發，會再出現一次。」
+  - **Enable dialog queue** / **「啟用對話框排隊」** (`dialogQueue`): default **on**. Off, dialogs no longer wait their turn and stack at once (§8). Description: "Off: dialogs no longer wait their turn; they stack on top of each other." / 「關閉時，對話框不再依序出現，而是疊在一起。」
   - **Enable press throttle** / **「啟用按鈕節流」** (`pressThrottle`): default **on**; switches layer 1 of the duplicate-press protection off (§8a), to show that `navigate()` and the dialog queue stop a double press alone. Description: "Off: buttons react to every press, so a quick double press is stopped only by navigate() and the dialog queue." / 「關閉時，按鈕每次點擊都會反應，快速連點只靠 navigate() 和對話框佇列擋下。」
   - **Simulate loading failure** (T-0013): default **off**; makes Specialist loading fail so the error view and Retry can be shown (§10)
 
-The brief's general requirements make the Figma screen the entry point, while the senior section asks for a button-based entry. Both are met in turn (ADR-011): in **v1.0.0** the app opens straight on the Consultation screen; **v1.1.0** adds Home in front of it, because the flag gating, the coming-soon dialog and the double-press guard all need a button to press and to demo. The Figma screen stays the feature's main screen; Home only hosts the entry button, the dialog demo's button and the feature toggles.
+The brief's general requirements make the Figma screen the entry point, while the senior section asks for a button-based entry. Both are met in turn (ADR-011): in **v1.0.0** the app opens straight on the Consultation screen; **v1.1.0** adds Home in front of it, because the flag gating, the coming-soon dialog and the double-press guard all need a button to press and to demo. The Figma screen stays the feature's main screen; Home only hosts the entry button, the feature toggles and the dialog and toast demos.
 
 ### 4.2 Consultation screen
 
@@ -111,7 +114,7 @@ ConsultationScreen
     └─ footerComponent: persistent bottom section (service hours, two buttons)
 ```
 
-**Sheet behaviour:** it appears already collapsed, with no opening animation, and can only grow: it never rests below the collapsed point and cannot be closed. Pulling down at the collapsed point stretches the sheet a little with resistance and springs it back (gorhom's over-drag). Once a drag starts with the list scrolled, it only scrolls the list; collapsing needs a new drag (gorhom's design). Dragging moves the sheet until it is expanded; after that the list scrolls (gorhom's built-in hand-off). Pulling past the end of the list bounces on iOS and stretches on Android (the platform's native overscroll; gorhom turns Android's off by default, so the list turns it back on). The sheet and the bottom section only claim vertical drags, so a swipe back from the left edge works over them too (ADR-013). Snap points are computed from the full screen frame, not the window, because Android's window size leaves out the status and navigation bars. Every bottom sheet (this one and the Feature toggles sheet, §4.1) opens and snaps with the library's iOS spring on both platforms; the library's own default is a 250 ms timing on Android, which moved at a different pace. The content sheet uses an instant animation until the screen's push transition ends (or 1 s passes): with `animateOnMount` off, the library still snaps to the initial index on mount, and from the second visit on that snap was animated, sliding the sheet up from the bottom. The bottom section keeps at least Figma's 34 pt home-indicator area below its content (more when the system's bottom inset is larger), so it looks the same on Android, whose gesture bar is shorter. On Android, the bottom controls of both screens (this section and Home's button) sit a further 10 dp higher, the author's visual choice.
+**Sheet behaviour:** it appears already collapsed, with no opening animation, and can only grow: it never rests below the collapsed point and cannot be closed. Pulling down at the collapsed point stretches the sheet a little with resistance and springs it back (gorhom's over-drag). Once a drag starts with the list scrolled, it only scrolls the list; collapsing needs a new drag (gorhom's design). Dragging moves the sheet until it is expanded; after that the list scrolls (gorhom's built-in hand-off). Pulling past the end of the list bounces on iOS and stretches on Android (the platform's native overscroll; gorhom turns Android's off by default, so the list turns it back on). The sheet and the bottom section only claim vertical drags, so a swipe back from the left edge works over them too (ADR-013). Snap points are computed from the full screen frame, not the window, because Android's window size leaves out the status and navigation bars. Every bottom sheet (this one and the Feature toggles sheet, §4.1) opens and snaps with the library's iOS spring on both platforms; the library's own default is a 250 ms timing on Android, which moved at a different pace. The content sheet uses an instant animation until the screen's push transition ends (or 1 s passes, when the app opened on this screen; a drag in that first second snaps without animation): with `animateOnMount` off, the library still snaps to the initial index on mount, and from the second visit on that snap was animated, sliding the sheet up from the bottom. The bottom section keeps at least Figma's 34 pt home-indicator area below its content (more when the system's bottom inset is larger), so it looks the same on Android, whose gesture bar is shorter. On Android, the bottom controls of both screens (this section and Home's button) sit a further 10 dp higher, the author's visual choice.
 
 **Back button:**
 
@@ -141,7 +144,7 @@ ConsultationScreen
 | WhatsApp us | Open WhatsApp chat with the ES number and a pre-filled, localized message | `Linking.openURL` with a `wa.me` universal link; message from i18n, URL-encoded; falls back to the browser if WhatsApp is not installed |
 | Hotline | Open the dialer with the number pre-filled | `Linking.openURL('tel:…')` |
 | Email | Open the default mail app with the recipient pre-filled | `Linking.openURL('mailto:…')` |
-| Back (nav bar) | v1.0.0: does nothing (PRD). v1.1.0: returns to Home | v1.0.0: no handler. v1.1.0: `navigation.goBack()`, ignored once the screen is no longer focused (§8a). Accessibility label "Back" / 「返回」 (`navBar.back`, shared by every screen with a back button) |
+| Back (nav bar) | v1.0.0: does nothing (PRD). v1.1.0: returns to Home | v1.0.0: no handler. v1.1.0: `navigation.goBack()` (§8a). Accessibility label "Back" / 「返回」 (`navBar.back`, shared by every screen with a back button) |
 
 Booking URL, WhatsApp number, hotline and email come from the PRD and live in a single config module, never inline in components.
 
@@ -270,7 +273,11 @@ In infinite mode, the contact info and agreements in the list footer are only re
 ## 7. Feature flag (senior)
 
 ```ts
-type FeatureFlag = 'premiumConsultation' | 'pressThrottle'; // pressThrottle: §8a, layer 1
+type FeatureFlag =
+  | 'premiumConsultation'
+  | 'pressThrottle' // §8a, layer 1
+  | 'dialogDeduplication' // §8, the DialogManager's rules
+  | 'dialogQueue';
 
 interface FeatureFlagService {
   isEnabled(flag: FeatureFlag): boolean;
@@ -332,6 +339,17 @@ The bonus question is answered in the PR and README, proven by the `DialogManage
 | Press two buttons, same dialog | A, A (from two entry points) | A once |
 | Three dialogs at once | A, B, C (from three features) | A, then B, then C as each closes |
 
+Switching the DialogManager's rules off in the Feature toggles sheet shows what each one prevents (the press throttle doesn't matter here: each button sends its requests in the same tick):
+
+| De-duplication | Queue | Press two buttons, same dialog | Three dialogs at once |
+|---|---|---|---|
+| on | on | A once | A, then B, then C |
+| off | on | A, then A again | A, then B, then C |
+| on | off | A once | A, B and C stacked |
+| off | off | two A stacked: the brief's "over-shown" dialog | A, B and C stacked |
+
+Stacked dialogs show at once on one dimmed backdrop, each older one peeking out above the next; only the top one can be pressed, and closing it reveals the one below.
+
 - Dialogs are identified by ID; the same ID cannot be shown twice regardless of which button triggered it.
 - Policy, decided by state rather than time:
   - **Same ID** already showing or already queued → the request is ignored. Once that dialog has closed, the same ID is a new request again.
@@ -341,8 +359,8 @@ The bonus question is answered in the PR and README, proven by the `DialogManage
 
 ### Test
 
-- `DialogManager` on its own (§13): `show` twice with the same ID → one dialog; the same ID while queued → ignored; different IDs → queued; the same ID after it closed → shown again; a second close of a closed dialog → the next one stays.
-- Dialog demo screen (§13): the three buttons in the Bonus table, pressed past the button throttle.
+- `DialogManager` on its own (§13): `show` twice with the same ID → one dialog; the same ID while queued → ignored; different IDs → queued; the same ID after it closed → shown again; a second close of a closed dialog → the next one stays. With its rules switched off: without de-duplication, the same ID twice → shown twice; without the queue, different IDs → stacked; a stacked dialog closed twice → the one below with the same ID stays; the queue switched while dialogs wait → they still close.
+- Dialog demo screen (§13): the three buttons in the Bonus table, pressed past the button throttle, and with both rules switched off.
 - Integration (Home screen, §13): with the flag disabled, press the entry button twice, moving the clock past the button throttle (§8a) in between so the second press reaches the `DialogManager`; then close the dialog and assert no second one follows (a duplicate would wait in the queue). Without the throttle pass, the throttle alone would stop the second press and the test couldn't show the dialog guard works.
 
 ---
@@ -353,14 +371,14 @@ Protection against repeated presses is layered. Each layer has one job and is te
 
 | Layer | Guards against | Decided by | Scope | Release |
 |---|---|---|---|---|
-| 1. Button throttle | Hand jitter, rapid double taps | Time: leading edge, then presses within **300 ms** are ignored | Every pressable | v1.0.0 |
+| 1. Button throttle | Hand jitter, rapid double taps | Time: leading edge, then presses within **500 ms** are ignored (300 ms in v1.0.0) | Every pressable | v1.0.0 |
 | 2. `navigate()` de-duplication (React Navigation) | Stacking the same screen | State: a screen already in the stack is gone to, not pushed again | Every navigation to a screen | v1.1.0 |
 | 3. Dialog de-duplication | The same dialog opening twice | State: same ID showing or queued (§8) | Every dialog | v1.1.0 |
 
-- **Layer 1, `ThrottledPressable`.** A shared press component; the first press fires immediately and further presses within 300 ms (a config value) are ignored. Every pressable in the app uses it: primary buttons, the back button, the feature toggles' switch, Retry. The hotline and email links are `Text` inside `<Trans>` (§9), so they use the same throttle through its `useThrottledPress` hook. Never use `Pressable` or `TouchableOpacity` directly (§14a).
+- **Layer 1, `ThrottledPressable`.** A shared press component; the first press fires immediately and further presses within 500 ms (a config value; 300 ms in v1.0.0, raised in v1.1.0 so the Toast demo shows the throttle clearly) are ignored. Every pressable in the app uses it: primary buttons, the back button, the feature toggles' switch, Retry. The hotline and email links are `Text` inside `<Trans>` (§9), so they use the same throttle through its `useThrottledPress` hook. Never use `Pressable` or `TouchableOpacity` directly (§14a).
 - **Layer 2, React Navigation's `navigate()`.** Screens are opened with `navigation.navigate(name)`, never `push`. When a screen of that name is already in the stack, `navigate()` goes to it instead of pushing it again, so a double press can't stack the Consultation screen even with layer 1 switched off. No app-level guard is needed (unlike Flutter's `Navigator.push`, which always pushes): a `guardedNavigate` with an in-flight ref was built in T-0009 and removed in T-0011 as redundant. Opening a screen with `push`, or the same screen with different params, would need a guard again.
-- **Back.** `goBack()` has no such de-duplication: a second press while the screen is already leaving would go back from a screen that is gone (a dev-mode "GO_BACK was not handled" error). The back button therefore ignores a press once its screen is no longer focused. The Consultation route's flag gate (§7) goes back, or resets the stack to Home when there is nothing to go back to.
-- **Demo.** The Feature toggles sheet (§4.1) can switch layer 1 off (`pressThrottle`), to show that layers 2 and 3 stop a double press on their own.
+- **Back.** The back button just calls `navigation.goBack()`. A second press can't go back twice: the stack stops touches on a screen that is leaving, so the press never reaches the button (checked in a test with the press throttle off). An earlier focus check before `goBack()` was dropped as redundant. The Consultation route's flag gate (§7) goes back, or resets the stack to Home when there is nothing to go back to.
+- **Demo.** The Feature toggles sheet (§4.1) can switch layer 1 off (`pressThrottle`), to show that layers 2 and 3 stop a double press on their own, and switch layer 3's rules off (`dialogDeduplication`, `dialogQueue`, §8) to show the problem they solve. Layer 1 alone is shown on the Toast demo screen, whose toasts have no other protection. A hand can't double-press a dialog's button, since the dialog covers the screen within a frame; that is why the brief's double press is done programmatically (in tests and on the Dialog demo screen).
 - The bottom section's actions (Book appointment, WhatsApp us, hotline, email) rely on layer 1 only: once the in-app browser or the external app opens, it covers the screen.
 - Layers 2 and 3 provide the guarantees; layer 1 only smooths out jitter.
 
@@ -379,7 +397,7 @@ Protection against repeated presses is layered. Each layer has one job and is te
 - Typography per language follows the Figma text styles (read via MCP, §11). Figma defines only one Chinese style (Chinese/Header/Header 2, Noto Sans TC Bold) for the title; Chinese text in the English body styles (Inter, which has no CJK glyphs) uses the system font (PingFang on iOS). Each extra Noto Sans TC weight would add about 7 MB
 - **Copy comes from the PRD** (EN + ZH for every section); it is not duplicated here (§11a)
 - The error view's copy is defined by this spec, not the PRD (§10)
-- Copy not defined by the PRD (Home screen, coming-soon dialog, feature toggles, dialog demo) is written by the author in both languages and listed in the PR; the error view and empty state copy is in §10
+- Copy not defined by the PRD (Home screen, coming-soon dialog, feature toggles, dialog demo, toast demo) is written by the author in both languages and listed in the PR; the error view and empty state copy is in §10
 
 ---
 
@@ -460,7 +478,7 @@ MCP calls are rate-limited on the author's plan: read variables once, then fetch
 ```
 src/
   app/
-    App.tsx                     providers: QueryClient, Repository, FeatureFlags, Dialog, i18n
+    App.tsx                     fonts, splash, the app's services; renders AppProviders + RootNavigator
     navigation.tsx              v1.1.0
     featureFlagService.ts       the app's flags: the one statement to swap for a remote source (v1.1.0)
     AppProviders.tsx            every provider, shared by App and the test helper
@@ -470,6 +488,10 @@ src/
       view/FeatureTogglesSheet.tsx         the Feature toggles bottom sheet
       viewmodel/useConsultationEntry.ts    flag on → navigate, off → coming-soon dialog
       viewmodel/useFeatureToggle.ts       one switch of the Feature toggles sheet
+    toastDemo/                  v1.1.0
+      view/ToastDemoScreen.tsx
+      view/ToastMessage.tsx                one toast: fade in, 2 s, fade out
+      viewmodel/useToastStack.ts           every press adds a toast
     dialogDemo/                 v1.1.0
       view/DialogDemoScreen.tsx
       viewmodel/useDemoDialogs.ts          the bonus question's three request patterns
@@ -480,6 +502,7 @@ src/
       view/ContactInfo.tsx
       view/AgreementsNotice.tsx
       view/ConsultationBottomSection.tsx
+      view/useContentSheetAnimationConfigs.ts  instant until the push transition ends, then the spring
       view/states/              Skeleton, EmptyState; InlineErrorView (v1.1.0)
       viewmodel/useSpecialists.ts          plain (v1.0.0; removed in v1.1.0)
       viewmodel/useInfiniteSpecialists.ts  infinite (v1.1.0)
@@ -495,7 +518,7 @@ src/
       specialists.fixture.ts
       RepositoryProvider.tsx
   shared/
-    ui/                         ThrottledPressable, PrimaryButton, ToggleSwitch, HeroBanner, BackNavBar, bottomControlsPadding
+    ui/                         ThrottledPressable, PrimaryButton, ToggleSwitch, HeroBanner, BackNavBar, HeroActionsScreen (Home and demo layout), bottomControlsPadding, useSheetAnimationConfigs (both sheets' spring)
     featureFlags/               FeatureFlagService, LocalFeatureFlagService, FeatureFlagProvider + useFeatureFlag (v1.1.0)
     dialog/                     dialogQueue (the guard and queue), DialogProvider + useDialog, DialogView
     i18n/                       setup + locales/en.json, zh-HK.json
@@ -551,16 +574,16 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 |---|---|---|
 | `App` smoke test | Component | The app boots with its providers and opens on the Consultation screen (T-0004 to v1.0.0), then on the Home screen (v1.1.0, T-0009; in T-0003 it only proved the test setup worked) |
 | `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved; simulated failure (v1.1.0): first request after entering the screen succeeds, a later request fails when the injected random value is below 0.3 and succeeds otherwise |
-| `ThrottledPressable` | Component | Two presses within 300 ms → one call; a press after 300 ms → a second call; the first press fires immediately; with the press throttle switched off (`pressThrottle`), a second press within 300 ms fires too |
-
-| `DialogManager` | Unit | `show` twice with the same ID (called directly, not through a button) → one dialog; same ID while queued → ignored; different IDs → queued; close → next shown; the same ID requested after it closed → shown again; closing an already closed dialog leaves the next one showing |
-| Dialog demo screen | Component | One dialog pressed twice quickly → A once; Press two buttons, same dialog → A once; Three dialogs at once → A, then B, then C as each closes |
+| `ThrottledPressable` | Component | Two presses within 500 ms → one call; a press after 500 ms → a second call; the first press fires immediately; with the press throttle switched off (`pressThrottle`), a second press within 500 ms fires too |
+| `DialogManager` | Unit | `show` twice with the same ID (called directly, not through a button) → one dialog; same ID while queued → ignored; different IDs → queued; close → next shown; the same ID requested after it closed → shown again; closing an already closed dialog leaves the next one showing; with de-duplication off, the same ID twice → shown twice in turn; with the queue off, different IDs → stacked at once, closing the top one leaves the others; with both off, the same ID twice → stacked twice; a stacked dialog closed twice → the one below with the same ID stays; the queue switched while dialogs wait → they still close |
+| Dialog demo screen | Component | One dialog pressed twice quickly → A once; Press two buttons, same dialog → A once; Three dialogs at once → A, then B, then C as each closes; with de-duplication and the queue switched off, Press two buttons, same dialog → two A stacked |
+| Toast demo screen | Component | Two quick presses on Toast A → one toast with the press throttle on, two with it off; each toast fades out on its own schedule while new ones arrive |
 | `useConsultationEntry` | Hook (through the Home screen, its only caller) | Flag on → the Consultation screen opens; flag off → the coming-soon dialog shows |
-| Home screen | Component | Double press with flag off (past the press throttle) → exactly one dialog, and none after it closes; switching Premium consultation off in the Feature toggles sheet → the entry button shows the coming-soon dialog; the press throttle switched off there; with the press throttle off, a double press still opens the Consultation screen once |
+| Home screen | Component | Double press with flag off (past the press throttle) → exactly one dialog, and none after it closes; switching Premium consultation off in the Feature toggles sheet → the entry button shows the coming-soon dialog; the press throttle switched off there; dialog de-duplication and the dialog queue switched off there; with the press throttle off, a double press still opens the Consultation screen once |
 | `useInfiniteSpecialists` | Hook | Loads first page; `fetchNextPage` appends; no fetch when `!hasNextPage` or already fetching; duplicate IDs across pages are removed |
 | `useConsultationActions` | Hook | Book → `openBrowserAsync` with booking URL; WhatsApp → `wa.me` URL with encoded message in the current language; hotline → `tel:`; email → `mailto:`; an action whose link the device cannot open does not throw |
 | `ConsultationScreen` (v1.0.0, plain) | Component | Loading skeleton; empty; a failed load does not show the empty state; list renders the 3 base names in order; contact info and agreements present; back button has no effect |
-| `ConsultationScreen` (v1.1.0, infinite) | Component | Loading skeleton; first page renders; a failed first page shows the full-size inline error and Retry refetches; reaching the end loads the next page with a footer spinner; a failed next page shows the compact inline error in the footer with loaded Specialists still shown; Retry appends the page on success; back button returns to Home; opened while the flag is off (a deep link) → coming-soon dialog and reset to Home; the flag turned off while it is open → coming-soon dialog and back to Home |
+| `ConsultationScreen` (v1.1.0, infinite) | Component | Loading skeleton; first page renders; a failed first page shows the full-size inline error and Retry refetches; reaching the end loads the next page with a footer spinner; a failed next page shows the compact inline error in the footer with loaded Specialists still shown; Retry appends the page on success; back button returns to Home; a double press on it (press throttle off) goes back once; opened while the flag is off (a deep link) → coming-soon dialog and reset to Home; the flag turned off while it is open → coming-soon dialog and back to Home |
 | i18n | Component | Key strings render in both languages; a string missing from `zh-HK` shows its English text; contact links remain tappable in both languages |
 | Locale resolution (T-0004) | Unit | Language `zh` with any script or region (`zh-Hant-HK`, `zh-Hant-TW`, `zh-Hant-MO`, `zh-Hans-CN`, `zh-Hans-SG`, `zh`) → `zh-HK`; `en-US`, `en-GB` → `en`; any other language (`ja-JP`, `fr-FR`, and `zha-CN`, Zhuang, whose code only starts with "zh") → `en` |
 
