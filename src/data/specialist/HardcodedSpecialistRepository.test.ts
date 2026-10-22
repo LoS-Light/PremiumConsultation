@@ -1,5 +1,5 @@
 import { HardcodedSpecialistRepository } from './HardcodedSpecialistRepository';
-import { BASE_SPECIALISTS } from './specialists.fixture';
+import { BASE_SPECIALISTS, EXTENDED_SPECIALISTS } from './specialists.fixture';
 
 const DATASET = [
   { id: 'a', name: 'Specialist A' },
@@ -60,5 +60,77 @@ describe('HardcodedSpecialistRepository', () => {
       'Alisa Mak',
       'Justin Liu',
     ]);
+  });
+
+  // v1.1.0's dataset: the 3 base Specialists followed by 100 generated ones (SPEC §5.3).
+  describe('over the extended dataset', () => {
+    function createExtendedRepository() {
+      return new HardcodedSpecialistRepository({ specialists: EXTENDED_SPECIALISTS, latencyMs: 0 });
+    }
+
+    test('holds 103 Specialists, starting with the base three', async () => {
+      const page = await createExtendedRepository().getSpecialists({ offset: 0, limit: 10 });
+
+      expect(page.total).toBe(103);
+      expect(page.items.slice(0, 3).map((specialist) => specialist.name)).toEqual([
+        'Kan Chung',
+        'Alisa Mak',
+        'Justin Liu',
+      ]);
+      expect(page.items[3]).toMatchObject({ id: 'specialist-004' });
+    });
+
+    test('ends with specialist-103 on the eleventh page of 10', async () => {
+      const page = await createExtendedRepository().getSpecialists({ offset: 100, limit: 10 });
+
+      expect(page.items.map((specialist) => specialist.id)).toEqual([
+        'specialist-101',
+        'specialist-102',
+        'specialist-103',
+      ]);
+      expect(page.offset + page.items.length).toBe(page.total);
+    });
+
+    test('gives every Specialist its own ID, a name and no photo', () => {
+      expect(new Set(EXTENDED_SPECIALISTS.map((specialist) => specialist.id)).size).toBe(103);
+      for (const specialist of EXTENDED_SPECIALISTS) {
+        expect(specialist.name).toMatch(/^\S+ \S+$/);
+        expect(specialist.avatarUrl).toBeUndefined();
+      }
+    });
+  });
+
+  // For the demo (SPEC §10): with simulation on, each request fails when the injected random
+  // value is below 0.3.
+  describe('simulating failures', () => {
+    function createFailingRepository({ isOn, random }: { isOn: boolean; random: number }) {
+      return new HardcodedSpecialistRepository({
+        specialists: DATASET,
+        latencyMs: 0,
+        failureSimulation: { isOn: () => isOn, random: () => random },
+      });
+    }
+
+    test('fails a request when the random value is below 0.3', async () => {
+      const repository = createFailingRepository({ isOn: true, random: 0.29 });
+
+      await expect(repository.getSpecialists({ offset: 0, limit: 2 })).rejects.toThrow();
+    });
+
+    test('succeeds when the random value is 0.3 or above', async () => {
+      const repository = createFailingRepository({ isOn: true, random: 0.3 });
+
+      const page = await repository.getSpecialists({ offset: 0, limit: 2 });
+
+      expect(page.items).toHaveLength(2);
+    });
+
+    test('never fails while simulation is off', async () => {
+      const repository = createFailingRepository({ isOn: false, random: 0 });
+
+      const page = await repository.getSpecialists({ offset: 0, limit: 2 });
+
+      expect(page.items).toHaveLength(2);
+    });
   });
 });
