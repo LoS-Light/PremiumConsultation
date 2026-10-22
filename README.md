@@ -63,13 +63,28 @@ You need:
 
 Then see [Trying `v1.1.1`](#trying-v111) for what each button does.
 
-`main` is `v1.1.1`. To run the general requirements (`v1.0.0`, which opens straight on the Consultation screen):
+### `v1.1.1` or `v1.0.0`
+
+`main` is `v1.1.1`, the latest. The assignment's general and senior requirements disagree on the entry point, so they ship as two releases (see [Releases](#releases)):
+
+| | `v1.1.1` (`main`): senior requirements | `v1.0.0`: general requirements |
+|---|---|---|
+| Opens on | Home, with four buttons | The Consultation screen, as in Figma |
+| Specialists | 103, loaded 10 at a time as you scroll | The 3 from the PRD, loaded in one request |
+| Feature flag | The screen can be switched off; a "Coming soon" dialog shows instead | None |
+| Error handling | Error view and Retry; failures can be simulated | None: the hardcoded data can't fail |
+| Back button | Returns to Home | Shown but does nothing, as in the PRD |
+| Demo tools | Feature toggles sheet, Dialog and Toast demo screens | None |
+
+To run `v1.0.0`, check out its tag and install again, since its dependencies differ:
 
 ```sh
 git checkout v1.0.0
 npm ci
 npx expo start
 ```
+
+To return to the latest: `git checkout main && npm ci`.
 
 ### On a phone
 
