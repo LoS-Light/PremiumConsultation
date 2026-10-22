@@ -8,20 +8,24 @@ The full specification is [`docs/SPEC.md`](docs/SPEC.md); decisions are recorded
 
 <table>
   <tr>
-    <th>Consultation screen</th>
-    <th>Contact info and agreements</th>
-    <th>A failed page, with Retry</th>
-    <th>Feature switched off</th>
+    <th>Consultation</th>
+    <th>Contact info</th>
+    <th>Error and Retry</th>
+    <th>Feature off</th>
   </tr>
   <tr>
-    <td><img src="demo/01-consultation.png" width="200" alt="The Consultation screen: hero image, the content sheet with Specialist cards, and the Book appointment and WhatsApp us buttons"></td>
-    <td><img src="demo/02-contact-and-agreements.png" width="200" alt="The end of the list: hotline, email and the agreements notice"></td>
-    <td><img src="demo/03-next-page-error.png" width="200" alt="A next page that failed to load: the error view with a small Retry button below the loaded Specialists"></td>
-    <td><img src="demo/04-coming-soon.png" width="200" alt="Home with the Coming soon dialog, shown when Premium consultation is switched off"></td>
+    <td align="center"><img src="demo/01-consultation.png" width="170" alt="The Consultation screen: hero image, the content sheet with Specialist cards, and the Book appointment and WhatsApp us buttons"></td>
+    <td align="center"><img src="demo/02-contact-and-agreements.png" width="170" alt="The end of the list: hotline, email and the agreements notice"></td>
+    <td align="center"><img src="demo/03-next-page-error.png" width="170" alt="A next page that failed to load: the error view with a small Retry button below the loaded Specialists"></td>
+    <td align="center"><img src="demo/04-coming-soon.png" width="170" alt="Home with the Coming soon dialog, shown when Premium consultation is switched off"></td>
   </tr>
 </table>
 
-**[▶ Watch the demo video](demo/premium-consultation-demo.mp4)** (`v1.1.0` on an iPhone, 3 min 52 s, MP4)
+## Video Demo
+
+`v1.1.0` on an iPhone, 3 min 52 s. The same video is in [`demo/premium-consultation-demo.mp4`](demo/premium-consultation-demo.mp4).
+
+https://github.com/user-attachments/assets/56acbc5f-8d82-497a-ac5d-52ecfbebc55e
 
 | From | What it shows |
 |---|---|
