@@ -1,4 +1,13 @@
 {
+  "navBar": {
+    "back": "返回"
+  },
+  "home": {
+    "featureToggle": "功能開關",
+    "premiumConsultation": "尊尚諮詢",
+    "testMultipleDialogs": "測試多個對話框",
+    "testToasts": "測試連發 Toast"
+  },
   "consultation": {
     "header": {
       "overline": "有更多問題嗎？",
@@ -6,7 +15,8 @@
       "description": "我們提供專業同中立嘅意見， 幫你作出最合適嘅選擇 。"
     },
     "specialists": {
-      "empty": "暫時未有專家提供服務。"
+      "empty": "暫時未有專家提供服務。",
+      "loadingMore": "正在載入更多專家"
     },
     "bottomSection": {
       "serviceHours": "服務時間：\n星期一至五：上午9:30 - 下午5:30\n星期六、日及公眾假期：休息",
@@ -15,6 +25,42 @@
       "whatsAppMessage": "你好，我想了解更多有關強積金嘅資訊"
     },
     "contactInfo": "如有一般查詢，歡迎致電本公司熱線 <hotline>{{hotline}}</hotline> 或電郵至 <email>{{email}}</email> 與我們聯絡。",
-    "agreements": "閣下使用本公司之預約服務或透過 WhatsApp 與本公司聯絡，即表示同意本公司根據私隱政策所載條款，收集及使用閣下之個人資料。"
+    "agreements": "閣下使用本公司之預約服務或透過 WhatsApp 與本公司聯絡，即表示同意本公司根據私隱政策所載條款，收集及使用閣下之個人資料。",
+    "error": {
+      "title": "哎呀！",
+      "body": "出咗啲問題，請再試一次。",
+      "retry": "重試"
+    }
+  },
+  "dialogDemo": {
+    "oneDialog": "一個對話框",
+    "dialogTitle": "對話框 {{name}}",
+    "dialogBody": "測試對話框 {{name}}（ID：{{id}}）。",
+    "ok": "知道了",
+    "sameFromTwoButtons": "觸發兩個按鈕，同一個對話框",
+    "threeAtOnce": "同時三個對話框"
+  },
+  "comingSoon": {
+    "title": "即將推出",
+    "body": "尊尚諮詢服務即將推出，敬請期待。",
+    "ok": "知道了"
+  },
+  "featureToggles": {
+    "title": "功能開關",
+    "premiumConsultation": "啟用尊尚諮詢",
+    "premiumConsultationDescription": "關閉時，入口按鈕會顯示「即將推出」對話框。",
+    "premiumConsultationTip": "提示：這個開關只是在 demo 中快速模擬啟用／停用尊尚諮詢頁面，並非最佳實務。正式環境應透過 CMS 或 Firebase Remote Config 等方式控管頁面是否啟用。",
+    "pressThrottle": "啟用按鈕節流",
+    "pressThrottleDescription": "關閉時，按鈕每次點擊都會反應，快速連點只靠 navigate() 和對話框佇列擋下。",
+    "dialogDeduplication": "啟用對話框去重",
+    "dialogDeduplicationDescription": "關閉時，同一個對話框正在顯示或排隊時再次觸發，會再出現一次。",
+    "dialogQueue": "啟用對話框排隊",
+    "dialogQueueDescription": "關閉時，對話框不再依序出現，而是疊在一起。",
+    "simulateLoadingFailure": "模擬載入失敗",
+    "simulateLoadingFailureDescription": "開啟時，每次載入專家有 {{percent}}% 機率失敗，用來展示錯誤畫面和重試。"
+  },
+  "toastDemo": {
+    "button": "Toast {{name}}",
+    "message": "Toast {{name}}（第 {{count}} 次）"
   }
 }

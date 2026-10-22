@@ -17,22 +17,31 @@ export const COLORS = {
   noticeBorder: '#F5E6A7', // Light Secounday/LY1
   textOnPrimary: '#FFFFFF', // Info/I1
   skeleton: '#F7F7F7', // Neutral/N2
+  dialogBackdrop: 'rgba(0, 0, 0, 0.4)', // dims the screen behind a dialog (not in Figma)
+  switchOn: '#34C759', // iOS system green, the switch's track when on (not in Figma)
+  switchOff: '#E9E9EA', // iOS switch track when off (not in Figma)
+  sheetHandle: '#C7C7CC', // the bottom sheet's drag handle (not in Figma)
+  toastBackground: 'rgba(0, 0, 0, 0.8)', // the Toast demo's toasts (not in Figma)
+  spinner: '#8E8E93', // iOS's activity indicator grey, the loading spinner on both platforms (not in Figma)
 } as const;
 
 // The design is drawn on a 390 pt wide frame.
 export const DESIGN_WIDTH = 390;
 
+// Each loaded font file with its weight. The weight matters for text the font has no glyphs
+// for: Inter has no Chinese, so Chinese falls back to the system font, which picks its weight
+// from fontWeight. iOS infers it from the font file; Android shows Regular unless it is set.
 const FONTS = {
-  interMedium: 'Inter_500Medium',
-  interSemiBold: 'Inter_600SemiBold',
-  interBold: 'Inter_700Bold',
-  notoSansTcBold: 'NotoSansTC_700Bold',
-} as const;
+  interMedium: { fontFamily: 'Inter_500Medium', fontWeight: '500' },
+  interSemiBold: { fontFamily: 'Inter_600SemiBold', fontWeight: '600' },
+  interBold: { fontFamily: 'Inter_700Bold', fontWeight: '700' },
+  notoSansTcBold: { fontFamily: 'NotoSansTC_700Bold', fontWeight: '700' },
+} as const satisfies Record<string, Pick<TextStyle, 'fontFamily' | 'fontWeight'>>;
 
 const LINE_HEIGHT_RATIO = 1.5;
 
-function textStyle(fontFamily: string, fontSize: number): TextStyle {
-  return { fontFamily, fontSize, lineHeight: fontSize * LINE_HEIGHT_RATIO, letterSpacing: 0 };
+function textStyle(font: (typeof FONTS)[keyof typeof FONTS], fontSize: number): TextStyle {
+  return { ...font, fontSize, lineHeight: fontSize * LINE_HEIGHT_RATIO, letterSpacing: 0 };
 }
 
 // Hero overlay: top to bottom, from rgba(151, 144, 115, 0.8) to Light Secounday/LY2 at alpha 0.
@@ -68,6 +77,14 @@ export const SHADOWS = {
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
+  },
+  // Switch thumb: iOS's soft shadow under the white knob.
+  switchThumb: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2,
   },
   // Nav bar content: drop shadow 0 4 10 rgba(0, 0, 0, 0.05)
   navBar: {

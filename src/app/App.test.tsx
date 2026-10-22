@@ -6,9 +6,9 @@ import App from './App';
 // fake timers: they never keep Jest from exiting.
 jest.useFakeTimers();
 
-// Smoke test: the app boots with its providers and opens on the Consultation screen.
-test('opens on the Consultation screen', async () => {
+// Smoke test: the app boots with its providers and navigation and opens on the Home screen.
+test('opens on the Home screen', async () => {
   await render(<App />);
 
-  expect(await screen.findByText('GUM Specialists are here!')).toBeOnTheScreen();
+  expect(await screen.findByText('Premium consultation')).toBeOnTheScreen();
 });

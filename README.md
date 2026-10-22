@@ -4,16 +4,18 @@ The Premium Consultation screen of the GUM app, built with React Native (Expo SD
 
 The full specification is [`docs/SPEC.md`](docs/SPEC.md); decisions are recorded as ADRs in [`docs/adr/`](docs/adr/), and domain terms in [`GLOSSARY.md`](GLOSSARY.md).
 
+<!-- Demo: add the demo videos and the v1.0.0 / v1.1.0 screenshots side by side here. -->
+
 ## Releases
 
 The assignment's general and senior requirements disagree on the entry point (the Figma screen versus a flag-gated Home button), so the work ships in two releases ([ADR-011](docs/adr/0011-two-releases.md)).
 
 | Release | Entry point | Contents |
 |---|---|---|
-| `v1.0.0` (general requirements) | The Consultation screen | Hero and content bottom sheet matching Figma; the three base Specialists loaded through TanStack Query from a swappable repository; loading skeleton and empty state; Book appointment (in-app browser), WhatsApp us (pre-filled message per language), tappable hotline and email; English and Chinese (Hong Kong) copy from the PRD; a back button that is shown but does nothing |
-| `v1.1.0` (senior requirements) | A Home screen with one entry button | A feature flag that gates the entry, a de-duplicated "coming soon" dialog, infinite scroll over 103 Specialists, a working back button, a demo settings menu, and **error handling** |
+| `v1.0.0` (general requirements) | The Consultation screen | Hero and content bottom sheet matching Figma; the three base Specialists loaded in one request through TanStack Query from a swappable repository; loading skeleton and empty state; Book appointment (in-app browser), WhatsApp us (pre-filled message per language), tappable hotline and email; English and Chinese (Hong Kong) copy from the PRD; a back button that is shown but does nothing |
+| `v1.1.0` (senior requirements) | A Home screen | The Consultation screen behind a feature flag, with a de-duplicated "coming soon" dialog; infinite scroll over 103 Specialists; **error handling** (error view and Retry); a working back button; a Feature toggles sheet and two demo screens for duplicate-press protection; Android matching iOS (transitions, swipe back, fonts, spinner, switches) |
 
-**Error handling ships in `v1.1.0`.** `v1.0.0` reads hardcoded data that cannot fail, so the error view, Retry and the switch that simulates failures arrive together in `v1.1.0` ([ADR-011](docs/adr/0011-two-releases.md)). In `v1.0.0`, a failed load still shows the header, contact info and bottom section, with no list and no message.
+**Error handling ships in `v1.1.0`.** `v1.0.0` reads hardcoded data that cannot fail, so the error view, Retry and the switch that simulates failures arrive together in `v1.1.0` ([ADR-011](docs/adr/0011-two-releases.md)).
 
 To run a release, check out its tag:
 
@@ -41,6 +43,82 @@ Then choose where to run it. The project uses Expo SDK 58, and each Expo Go rele
 
 To see the Chinese copy, set the device language to Chinese (any `zh` locale shows Traditional Chinese, Hong Kong); every other language shows English.
 
+## Trying `v1.1.0`
+
+Home has four buttons:
+
+| Button | What it does |
+|---|---|
+| **Premium consultation** | Opens the Consultation screen, or the "Coming soon" dialog when the feature is switched off |
+| **Feature Toggle** | Opens the Feature toggles sheet (below) |
+| **Test multiple dialogs** | The Dialog demo screen, for the brief's bonus question |
+| **Test toasts** | The Toast demo screen, for the press throttle |
+
+### Feature toggles
+
+Every switch lives in memory only: restarting the app resets it.
+
+| Switch | Default | Off / on shows |
+|---|---|---|
+| Enable Premium consultation | on | Off: the entry button shows the "Coming soon" dialog, and the Consultation screen itself sends you back if reached another way (a deep link) |
+| Enable dialog de-duplication | on | Off: a dialog asked for while it is already showing or waiting shows again |
+| Enable dialog queue | on | Off: dialogs stop waiting their turn and stack on top of each other |
+| Enable press throttle | on | Off: buttons react to every press |
+| Simulate loading failure | off | On: each Specialist request fails 30% of the time, to show the error view and Retry |
+
+**The in-app flag switch is a demo shortcut, not the production approach.** In production, whether the screen is enabled would come from a source the business controls without an app release: the Q2 CMS, Firebase Remote Config or similar. The app reads flags only through the `FeatureFlagService` interface, so a remote implementation replaces the in-memory one in one statement ([`src/app/featureFlagService.ts`](src/app/featureFlagService.ts)), with a safe default (off) when the remote value is unavailable. No screen or hook changes.
+
+### Demo walkthroughs
+
+- **Feature flag:** switch *Enable Premium consultation* off, press *Premium consultation*: the "Coming soon" dialog shows. Switch it back on: the screen opens.
+- **Double press (the brief's "not over-shown"):** with the flag off, press the entry button twice quickly: one dialog. Switch *Enable press throttle* off and do it again: still one dialog, because the dialog manager stops it.
+- **Bonus question, several buttons and dialogs:** on *Test multiple dialogs*, *Press two buttons, same dialog* sends the same dialog from two entry points at once: it shows once. *Three dialogs at once*: A, then B, then C as each closes. Switch *dialog de-duplication* and *dialog queue* off and press *Press two buttons, same dialog* again: two copies stack, the brief's over-shown dialog.
+- **Press throttle:** on *Test toasts*, every press that gets through shows a toast. Tap *Toast A* quickly: with the throttle on, presses within 500 ms show nothing; with it off, every press shows a toast.
+- **Infinite scroll:** open the Consultation screen and scroll: 10 Specialists per page, a spinner below the last card while the next page loads, the contact info once all 103 are loaded.
+- **Error and Retry:** switch *Simulate loading failure* on, open the Consultation screen (again, if the first page loaded): a failed first page shows the error view in the list; a failed next page shows it below the loaded Specialists. Retry loads the page again.
+- **Both languages:** set the device language to Chinese and back.
+
+## Senior requirements
+
+### Feature flag ([SPEC §7](docs/SPEC.md))
+
+- `FeatureFlagService` (`isEnabled`, `subscribe`) behind a context, read with `useFeatureFlag(flag)`. Today it is `LocalFeatureFlagService`, in memory; see above for production.
+- **Guarded in two places:** the entry button (`useConsultationEntry`: navigate, or the "Coming soon" dialog), and the Consultation route itself (`useConsultationGate`), so reaching the screen another way (a deep link, a flag turned off while it is open) can't bypass the flag: it shows the dialog and goes back, loading nothing.
+
+### Dialog over-shown, and several buttons and dialogs ([SPEC §8](docs/SPEC.md))
+
+- A central **DialogManager** (`DialogProvider` + `useDialog`) shows dialogs by ID. Its guard is a queue kept in a plain array, read and written synchronously, so two presses in the same tick both see the first one (React state would read the same stale value twice).
+- **Same ID** showing or already queued → ignored, whichever button asked. Once closed, the same ID can show again.
+- **Different IDs** → queued: one dialog at a time, the next when the current one closes. Dropping or replacing the current one would lose or cut short a message; a time-based throttle would let a duplicate through once the window passes, and block a real request right after a dialog closes.
+- A dialog is closed by its own request key, so a double close (the Android back button and the dialog's button together) can't drop the next one.
+- The guard is proven by tests that press twice past the button throttle, so only the DialogManager can stop the second dialog.
+
+### Duplicate-press protection, three layers ([SPEC §8a](docs/SPEC.md))
+
+| Layer | Guards against | How |
+|---|---|---|
+| 1. Press throttle | Hand jitter, rapid taps | `ThrottledPressable`: the first press runs, presses within 500 ms are ignored. Every pressable uses it |
+| 2. `navigate()` | Stacking the same screen | React Navigation's `navigate()` goes to a screen already in the stack instead of pushing it again, so no app-level guard is needed (unlike Flutter's `Navigator.push`, which always pushes). Screens are never opened with `push` |
+| 3. DialogManager | The same dialog twice | By ID, as above |
+
+Layer 1 only smooths out jitter; layers 2 and 3 are the guarantees. The back button also ignores a press once its screen is leaving, since `goBack()` has no such de-duplication.
+
+### Plain vs infinite list ([SPEC §6.3](docs/SPEC.md))
+
+`v1.0.0` loads every Specialist in one request (`useQuery`); `v1.1.0` loads them 10 at a time (`useInfiniteQuery`, offset pagination, [ADR-007](docs/adr/0007-offset-pagination.md)).
+
+| | Plain (`v1.0.0`) | Infinite (`v1.1.0`) |
+|---|---|---|
+| Fetching | One request, all items | One request per page, when a fifth of a screen of list is left |
+| Time to first content | Grows with the list | Constant: the first page only |
+| Memory, data | O(n) | O(pages loaded × page size) |
+| Memory, rendered views | Bounded by FlatList virtualization | Same |
+| Scrolling | Scrollbar length known up front | Grows as pages load; a spinner below the last card |
+| Failure | One request fails → the whole list fails | First-page and next-page failures are handled separately |
+| Extra concerns | — | Duplicate `onEndReached` calls, retrying one page, overlapping pages (items de-duplicated by ID) |
+
+Virtualization limits rendered views; pagination limits fetched data and network cost. They solve different problems.
+
 ## Checks
 
 ```sh
@@ -52,7 +130,7 @@ npx expo-doctor
 
 CI runs `npm ci`, the type check, lint and tests on every pull request ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
-Behaviour is developed test-first at agreed seams ([ADR-010](docs/adr/0010-test-driven-development.md), SPEC §13): the repository, the press throttle, locale resolution and i18n fallback, the action hook, the app smoke test and the Consultation screen's states. Pure styling is checked against Figma instead.
+Behaviour is developed test-first at agreed seams ([ADR-010](docs/adr/0010-test-driven-development.md), SPEC §13). Pure styling, animations and gestures, which the mocked bottom sheet and the test renderer can't show, are checked on the iOS simulator and an Android emulator.
 
 ## Architecture
 
@@ -60,21 +138,29 @@ Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Da
 
 ```
 src/
-├── app/                     App (fonts, providers) and the one place that picks the data source
+├── app/                     App (fonts), AppProviders, the navigator, and the one place each
+│                            service is picked: the Specialist repository and the feature flags
 ├── data/specialist/         Specialist model, SpecialistRepository interface,
 │                            HardcodedSpecialistRepository, CmsSpecialistRepository (stub)
-├── features/consultation/
-│   ├── view/                ConsultationScreen and its parts (hero, header, cards,
-│   │                        contact info, agreements notice, bottom section, states)
-│   └── viewmodel/           useSpecialists (TanStack Query), useConsultationActions
-│                            (in-app browser, WhatsApp, tel:, mailto:)
-└── shared/                  theme, config (contact values, URLs), i18n, ThrottledPressable
+├── features/
+│   ├── home/                Home, the Feature toggles sheet, useConsultationEntry
+│   ├── consultation/        the Consultation screen (hero, content sheet, cards, contact info,
+│   │                        agreements, bottom section, loading / empty / error states),
+│   │                        useInfiniteSpecialists, useConsultationActions, useConsultationGate
+│   ├── dialogDemo/          the Dialog demo screen
+│   └── toastDemo/           the Toast demo screen
+├── shared/                  theme, config, i18n, feature flags, the DialogManager,
+│                            UI parts (ThrottledPressable, PrimaryButton, ToggleSwitch,
+│                            LoadingSpinner, HeroBanner, BackNavBar)
+└── test/                    test helpers: the app's providers, fake repositories, a clock
 ```
 
-- **Data** ([ADR-002](docs/adr/0002-specialist-repository.md)): screens read Specialists only through `SpecialistRepository`, provided by `RepositoryProvider`. The interface is paginated by offset ([ADR-007](docs/adr/0007-offset-pagination.md)) so `v1.1.0` can add infinite scroll without changing it. The hardcoded repository adds a short simulated delay so the loading state is visible.
+- **Data** ([ADR-002](docs/adr/0002-specialist-repository.md)): screens read Specialists only through `SpecialistRepository`, provided by `RepositoryProvider`. The interface is paginated by offset, so infinite scroll needed no new interface. The hardcoded repository adds a simulated delay (800 ms in `v1.0.0`, 1500 ms in `v1.1.0`) so the loading states are visible, and can fail at random for the demo.
 - **Layout** ([ADR-012](docs/adr/0012-content-bottom-sheet.md)): the hero image stays fixed and the content is a `@gorhom/bottom-sheet` over it. The sheet opens at Figma's card position, can grow up to the nav bar and never closes. Its list holds the header, Specialists, contact info and agreements notice; its footer is the persistent bottom section with the service hours and the two buttons.
-- **Actions**: every side effect (`expo-web-browser`, `Linking`) goes through `useConsultationActions`, so tests can mock it. Every pressable, including the inline hotline and email links, goes through a 300 ms leading-edge throttle (`ThrottledPressable` / `useThrottledPress`), so a double tap opens one browser or dialer.
+- **Navigation** ([ADR-013](docs/adr/0013-js-stack-with-ios-transitions.md)): React Navigation's JS stack with iOS's push, pop and swipe back on both platforms.
+- **Actions**: every side effect (`expo-web-browser`, `Linking`) goes through `useConsultationActions`, so tests can mock it.
 - **Localization**: `i18next` with `expo-localization`. Copy comes from the PRD; the contact sentence uses `<Trans>` so each language keeps its own sentence structure with tappable links.
+- **Android matches iOS:** the sheet's position, font weights, bottom insets, list overscroll, the bottom sheets' spring, the stack transitions, the switch and the loading spinner are all made to look and behave like iOS.
 
 ### Swapping to the CMS
 
@@ -84,11 +170,12 @@ The data source is chosen in one statement in [`src/app/specialistRepository.ts`
 export const specialistRepository: SpecialistRepository = new CmsSpecialistRepository();
 ```
 
-No screen, hook or test changes.
+No screen, hook or test changes. With a real API, also restore TanStack Query's automatic retries: they are off (`retry: false` in `App`) so a simulated failure reaches the error view at once.
 
-## Known limitations (`v1.0.0`)
+## Known limitations
 
-- No error view or Retry; they ship in `v1.1.0` (see above).
 - Once the list inside the expanded sheet has been scrolled, collapsing the sheet needs a new drag that starts at the top of the list. This is how `@gorhom/bottom-sheet` hands gestures between the sheet and its list.
+- The contact info and agreements notice are at the end of the list, so in `v1.1.0` they are reached only after all 103 Specialists have loaded (SPEC §6.5).
 - The hotline is shown as "+852 2893 4402" in both languages, from one config value; the PRD's Chinese copy writes it as "28934402".
 - If the system cannot open a link (for example, no mail app is set up), nothing is shown to the user.
+- The in-app feature toggles are for the demo (see above).
