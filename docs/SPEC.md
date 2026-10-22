@@ -428,7 +428,7 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 ### Repository and PR
 
 > **TODO — branching:** `main` ← `dev` ← `feats/T-XXXX-[TicketName]`
-> - `main`: initial commit with `README.md`, `.gitignore` and `CLAUDE.md` only (no code)
+> - `main`: initial commit with `README.md` only (no code). `.gitignore`, `CLAUDE.md` and this spec land through ticket `T-0001` (ADR-008)
 > - `dev`: branched from `main`; integration branch
 > - `feats/T-XXXX-[TicketName]`: one branch per ticket, merged into `dev` via PR. `XXXX` is an auto-incrementing, zero-padded 4-digit sequence number (`T-0001`, `T-0002`, …), assigned in ticket order and never reused (e.g. `feats/T-0003-SpecialistRepository`)
 > - Submission: PR `dev` → `main`, reviewed by the interviewer **[ASSUMPTION]**
@@ -436,7 +436,7 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 
 ### .gitignore
 
-> **TODO:** Create `.gitignore` in the initial commit (before scaffolding) and merge the Expo template's entries when scaffolding. It must exclude `.private/` (PRD zip, assignment PDF, extracted PRD), `__MACOSX/`, secrets and generated native folders, and must **not** exclude `package-lock.json`.
+> Created in `T-0001` (before scaffolding, ADR-008); merge the Expo template's entries when scaffolding in `T-0003`. It must exclude `.private/` (PRD zip, assignment PDF, extracted PRD), `__MACOSX/`, secrets and generated native folders, and must **not** exclude `package-lock.json`.
 
 ### CI (GitHub Actions on pull_request)
 
@@ -464,7 +464,7 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 
 > **Instructions for Claude Code.** Follow these rules automatically when breaking this spec into tickets and implementing them.
 >
-> **TODO — CLAUDE.md:** Create `CLAUDE.md` at the repo root (in the initial commit on `main`, alongside `README.md` and `.gitignore`) containing at least:
+> **CLAUDE.md:** `CLAUDE.md` at the repo root (added in `T-0001`, ADR-008) contains at least:
 > `Follow the workflow in docs/SPEC.md §14a for every ticket, branch, commit and PR.`
 > so every Claude Code session applies these rules without re-reading this spec first.
 
@@ -475,7 +475,11 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 - Ticket name: short PascalCase, used in the branch name (e.g. `T-0003 SpecialistRepository`).
 - Each ticket lists: the spec sections it covers, its acceptance criteria (from §16), its TDD seams (from §13), and the tickets it is blocked by.
 - One ticket = one branch = one PR. Keep tickets small enough to review in one sitting.
-- The first ticket covers project scaffolding (Expo, TypeScript, lint, test, CI, `.nvmrc`, merging the `.gitignore`); the last ticket covers README, final docs and the `dev` → `main` PR description.
+- Fixed opening tickets (ADR-008):
+  - `T-0001 RepoSetup`: `.gitignore`, `CLAUDE.md`, agent skills config, PR template and this spec. No app code.
+  - `T-0002 SpecRefinement`: refine this spec with `/grill-with-docs` against the PRD, assignment brief and Figma. No app code.
+  - `T-0003`: project scaffolding (Expo, TypeScript, lint, test, CI, `.nvmrc`, merging the `.gitignore`).
+- The last ticket covers README, final docs and the `dev` → `main` PR description.
 
 ### `/implement` — per ticket
 
