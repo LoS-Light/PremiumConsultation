@@ -21,11 +21,22 @@ The full specification is [`docs/SPEC.md`](docs/SPEC.md); decisions are recorded
   </tr>
 </table>
 
-The demo videos, recorded on an iPhone.
+The demo videos, recorded on an iPhone (also in [`demo/`](demo/)):
 
-**`v1.1.1`** (3 min 52 s, also in [`demo/demo_v111.mp4`](demo/demo_v111.mp4))
+<table>
+  <tr>
+    <th><code>v1.1.1</code>, 3 min 52 s</th>
+    <th width="24"></th>
+    <th><code>v1.0.0</code>, 1 min 4 s</th>
+  </tr>
+  <tr>
+    <td><video src="https://github.com/user-attachments/assets/afec765b-be11-4283-a7c4-b0bdfa1e1e2f" controls></video></td>
+    <td width="24"></td>
+    <td><video src="https://github.com/user-attachments/assets/b7251e2b-9eae-4d74-a805-68791c25cc78" controls></video></td>
+  </tr>
+</table>
 
-https://github.com/user-attachments/assets/afec765b-be11-4283-a7c4-b0bdfa1e1e2f
+What the `v1.1.1` video shows:
 
 | From | What it shows |
 |---|---|
@@ -39,9 +50,7 @@ https://github.com/user-attachments/assets/afec765b-be11-4283-a7c4-b0bdfa1e1e2f
 | 2:28 | The press throttle switched off: every press shows a toast |
 | 2:56 | Simulated loading failure: the error view on a failed page, and Retry |
 
-**`v1.0.0`** (1 min 4 s, also in [`demo/demo_v100.mp4`](demo/demo_v100.mp4))
-
-https://github.com/user-attachments/assets/b7251e2b-9eae-4d74-a805-68791c25cc78
+What the `v1.0.0` video shows:
 
 | From | What it shows |
 |---|---|
