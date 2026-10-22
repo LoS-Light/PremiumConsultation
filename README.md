@@ -97,38 +97,6 @@ The project uses Expo SDK 58, and each Expo Go release supports one SDK only.
 
 To see the Chinese copy, set the device language to Chinese (any `zh` locale shows Traditional Chinese, Hong Kong); every other language shows English.
 
-## Tech stack
-
-| Area | Choice | Used for |
-|---|---|---|
-| Framework | [Expo](https://docs.expo.dev/versions/v58.0.0/) SDK 58 (managed workflow), React Native 0.88, React 19.3 | The app on iOS and Android from one codebase; no native folders are committed |
-| Language | TypeScript 6.0, `strict` | Every source and test file |
-| Server state | [TanStack Query](https://tanstack.com/query/v5) v5 | Loading, caching and errors for the Specialist list: `useQuery` in `v1.0.0`, `useInfiniteQuery` (10 per page) in `v1.1.1` |
-| Navigation | [React Navigation](https://reactnavigation.org/) 7, JS stack (`@react-navigation/stack`) | Home → Consultation and the demo screens, with iOS's push, pop and swipe back on both platforms ([ADR-013](docs/adr/0013-js-stack-with-ios-transitions.md)). Not Expo Router: two screens don't need file-based routes |
-| Bottom sheets | [`@gorhom/bottom-sheet`](https://gorhom.dev/react-native-bottom-sheet/) 5, on Reanimated 4 and Gesture Handler 3 | The Consultation content sheet over the hero ([ADR-012](docs/adr/0012-content-bottom-sheet.md)) and the Feature toggles sheet |
-| Localization | i18next, react-i18next, `expo-localization` | English and Chinese (Hong Kong) copy, following the device language |
-| Expo modules | `expo-image`, `expo-linear-gradient`, `expo-web-browser`, `expo-font` with Inter and Noto Sans TC (`@expo-google-fonts`), `expo-splash-screen`, `expo-status-bar` | Images and SVG icons, the hero's fade, the booking page in an in-app browser, the Figma fonts, holding the splash screen until the fonts load |
-| Tests | Jest 30 (`jest-expo`), React Native Testing Library 14 | 94 tests, written test-first at agreed seams ([ADR-010](docs/adr/0010-test-driven-development.md)) |
-| Code quality | ESLint 9 (`eslint-config-expo`), Prettier 3, GitHub Actions | Lint and formatting; CI runs the type check, lint and tests on every pull request |
-| Tooling | Node 24.22.1 ([`.nvmrc`](.nvmrc)), npm | `npm ci` installs the exact versions in `package-lock.json` |
-
-No global state library: server data lives in TanStack Query, the feature flags in a small service read with `useSyncExternalStore`, and the dialog queue in a plain array inside the DialogManager. Every UI part (buttons, switch, spinner, dialogs, toasts) is a custom component, so iOS and Android look the same.
-
-## Releases
-
-The assignment's general and senior requirements disagree on the entry point (the Figma screen versus a flag-gated Home button), so the work ships in two releases ([ADR-011](docs/adr/0011-two-releases.md)). The latest is `v1.1.1`.
-
-| Release | Entry point | Contents |
-|---|---|---|
-| `v1.0.0` (general requirements) | The Consultation screen | Hero and content bottom sheet matching Figma; the three base Specialists loaded in one request through TanStack Query from a swappable repository; loading skeleton and empty state; Book appointment (in-app browser), WhatsApp us (pre-filled message per language), tappable hotline and email; English and Chinese (Hong Kong) copy from the PRD; a back button that is shown but does nothing |
-| `v1.1.1` (senior requirements, latest) | A Home screen | The Consultation screen behind a feature flag, with a de-duplicated "coming soon" dialog; infinite scroll over 103 Specialists; **error handling** (error view and Retry); a working back button; a Feature toggles sheet and two demo screens for duplicate-press protection; Android matching iOS (transitions, swipe back, fonts, spinner, switches) |
-
-`v1.1.0` is the same app as `v1.1.1`, released before the demo screenshots, the video and the quick start were added to this README.
-
-**Error handling ships in `v1.1.1`, not `v1.0.0`.** `v1.0.0` reads hardcoded data that cannot fail, so the error view, Retry and the switch that simulates failures arrive together in the senior release ([ADR-011](docs/adr/0011-two-releases.md)).
-
-To run a release, check out its tag (`git checkout v1.0.0` or `v1.1.1`), then `npm ci` and `npx expo start` as in [Quick start](#quick-start).
-
 ## Trying `v1.1.1`
 
 Home has four buttons:
@@ -205,18 +173,22 @@ Layer 1 only smooths out jitter; layers 2 and 3 are the guarantees. The back but
 
 Virtualization limits rendered views; pagination limits fetched data and network cost. They solve different problems.
 
-## Checks
+## Tech stack
 
-```sh
-npm run typecheck   # tsc --noEmit
-npm run lint        # ESLint and Prettier
-npm test            # Jest and React Native Testing Library
-npx expo-doctor
-```
+| Area | Choice | Used for |
+|---|---|---|
+| Framework | [Expo](https://docs.expo.dev/versions/v58.0.0/) SDK 58 (managed workflow), React Native 0.88, React 19.3 | The app on iOS and Android from one codebase; no native folders are committed |
+| Language | TypeScript 6.0, `strict` | Every source and test file |
+| Server state | [TanStack Query](https://tanstack.com/query/v5) v5 | Loading, caching and errors for the Specialist list: `useQuery` in `v1.0.0`, `useInfiniteQuery` (10 per page) in `v1.1.1` |
+| Navigation | [React Navigation](https://reactnavigation.org/) 7, JS stack (`@react-navigation/stack`) | Home → Consultation and the demo screens, with iOS's push, pop and swipe back on both platforms ([ADR-013](docs/adr/0013-js-stack-with-ios-transitions.md)). Not Expo Router: two screens don't need file-based routes |
+| Bottom sheets | [`@gorhom/bottom-sheet`](https://gorhom.dev/react-native-bottom-sheet/) 5, on Reanimated 4 and Gesture Handler 3 | The Consultation content sheet over the hero ([ADR-012](docs/adr/0012-content-bottom-sheet.md)) and the Feature toggles sheet |
+| Localization | i18next, react-i18next, `expo-localization` | English and Chinese (Hong Kong) copy, following the device language |
+| Expo modules | `expo-image`, `expo-linear-gradient`, `expo-web-browser`, `expo-font` with Inter and Noto Sans TC (`@expo-google-fonts`), `expo-splash-screen`, `expo-status-bar` | Images and SVG icons, the hero's fade, the booking page in an in-app browser, the Figma fonts, holding the splash screen until the fonts load |
+| Tests | Jest 30 (`jest-expo`), React Native Testing Library 14 | 94 tests, written test-first at agreed seams ([ADR-010](docs/adr/0010-test-driven-development.md)) |
+| Code quality | ESLint 9 (`eslint-config-expo`), Prettier 3, GitHub Actions | Lint and formatting; CI runs the type check, lint and tests on every pull request |
+| Tooling | Node 24.22.1 ([`.nvmrc`](.nvmrc)), npm | `npm ci` installs the exact versions in `package-lock.json` |
 
-CI runs `npm ci`, the type check, lint and tests on every pull request ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
-
-Behaviour is developed test-first at agreed seams ([ADR-010](docs/adr/0010-test-driven-development.md), SPEC §13). Pure styling, animations and gestures, which the mocked bottom sheet and the test renderer can't show, are checked on the iOS simulator and an Android emulator.
+No global state library: server data lives in TanStack Query, the feature flags in a small service read with `useSyncExternalStore`, and the dialog queue in a plain array inside the DialogManager. Every UI part (buttons, switch, spinner, dialogs, toasts) is a custom component, so iOS and Android look the same.
 
 ## Architecture
 
@@ -317,6 +289,34 @@ export const specialistRepository: SpecialistRepository = new CmsSpecialistRepos
 ```
 
 No screen, hook or test changes. With a real API, also restore TanStack Query's automatic retries: they are off (`retry: false` in `App`) so a simulated failure reaches the error view at once.
+
+## Checks
+
+```sh
+npm run typecheck   # tsc --noEmit
+npm run lint        # ESLint and Prettier
+npm test            # Jest and React Native Testing Library
+npx expo-doctor
+```
+
+CI runs `npm ci`, the type check, lint and tests on every pull request ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+
+Behaviour is developed test-first at agreed seams ([ADR-010](docs/adr/0010-test-driven-development.md), SPEC §13). Pure styling, animations and gestures, which the mocked bottom sheet and the test renderer can't show, are checked on the iOS simulator and an Android emulator.
+
+## Releases
+
+The assignment's general and senior requirements disagree on the entry point (the Figma screen versus a flag-gated Home button), so the work ships in two releases ([ADR-011](docs/adr/0011-two-releases.md)). The latest is `v1.1.1`.
+
+| Release | Entry point | Contents |
+|---|---|---|
+| `v1.0.0` (general requirements) | The Consultation screen | Hero and content bottom sheet matching Figma; the three base Specialists loaded in one request through TanStack Query from a swappable repository; loading skeleton and empty state; Book appointment (in-app browser), WhatsApp us (pre-filled message per language), tappable hotline and email; English and Chinese (Hong Kong) copy from the PRD; a back button that is shown but does nothing |
+| `v1.1.1` (senior requirements, latest) | A Home screen | The Consultation screen behind a feature flag, with a de-duplicated "coming soon" dialog; infinite scroll over 103 Specialists; **error handling** (error view and Retry); a working back button; a Feature toggles sheet and two demo screens for duplicate-press protection; Android matching iOS (transitions, swipe back, fonts, spinner, switches) |
+
+`v1.1.0` is the same app as `v1.1.1`, released before the demo screenshots, the video and the quick start were added to this README.
+
+**Error handling ships in `v1.1.1`, not `v1.0.0`.** `v1.0.0` reads hardcoded data that cannot fail, so the error view, Retry and the switch that simulates failures arrive together in the senior release ([ADR-011](docs/adr/0011-two-releases.md)).
+
+To run a release, check out its tag (`git checkout v1.0.0` or `v1.1.1`), then `npm ci` and `npx expo start` as in [Quick start](#quick-start).
 
 ## Known limitations
 
