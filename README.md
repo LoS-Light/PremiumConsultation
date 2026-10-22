@@ -23,7 +23,7 @@ The full specification is [`docs/SPEC.md`](docs/SPEC.md); decisions are recorded
 
 ## Video Demo
 
-`v1.1.0` on an iPhone, 3 min 52 s. The same video is in [`demo/premium-consultation-demo.mp4`](demo/premium-consultation-demo.mp4).
+`v1.1.1` on an iPhone, 3 min 52 s. The same video is in [`demo/premium-consultation-demo.mp4`](demo/premium-consultation-demo.mp4).
 
 https://github.com/user-attachments/assets/56acbc5f-8d82-497a-ac5d-52ecfbebc55e
 
@@ -63,9 +63,9 @@ You need:
 
 3. In the same terminal, press **`i`** for the iOS simulator or **`a`** for the Android emulator. Expo CLI installs the matching Expo Go and opens the app on Home.
 
-Then see [Trying `v1.1.0`](#trying-v110) for what each button does.
+Then see [Trying `v1.1.1`](#trying-v111) for what each button does.
 
-`main` is `v1.1.1`: the `v1.1.0` app with this README's demo. To run the general requirements (`v1.0.0`, which opens straight on the Consultation screen):
+`main` is `v1.1.1`. To run the general requirements (`v1.0.0`, which opens straight on the Consultation screen):
 
 ```sh
 git checkout v1.0.0
@@ -86,19 +86,20 @@ To see the Chinese copy, set the device language to Chinese (any `zh` locale sho
 
 ## Releases
 
-The assignment's general and senior requirements disagree on the entry point (the Figma screen versus a flag-gated Home button), so the work ships in two releases ([ADR-011](docs/adr/0011-two-releases.md)).
+The assignment's general and senior requirements disagree on the entry point (the Figma screen versus a flag-gated Home button), so the work ships in two releases ([ADR-011](docs/adr/0011-two-releases.md)). The latest is `v1.1.1`.
 
 | Release | Entry point | Contents |
 |---|---|---|
 | `v1.0.0` (general requirements) | The Consultation screen | Hero and content bottom sheet matching Figma; the three base Specialists loaded in one request through TanStack Query from a swappable repository; loading skeleton and empty state; Book appointment (in-app browser), WhatsApp us (pre-filled message per language), tappable hotline and email; English and Chinese (Hong Kong) copy from the PRD; a back button that is shown but does nothing |
-| `v1.1.0` (senior requirements) | A Home screen | The Consultation screen behind a feature flag, with a de-duplicated "coming soon" dialog; infinite scroll over 103 Specialists; **error handling** (error view and Retry); a working back button; a Feature toggles sheet and two demo screens for duplicate-press protection; Android matching iOS (transitions, swipe back, fonts, spinner, switches) |
-| `v1.1.1` (docs) | A Home screen | The `v1.1.0` app, unchanged; the README adds the demo screenshots and video and a quick start |
+| `v1.1.1` (senior requirements, latest) | A Home screen | The Consultation screen behind a feature flag, with a de-duplicated "coming soon" dialog; infinite scroll over 103 Specialists; **error handling** (error view and Retry); a working back button; a Feature toggles sheet and two demo screens for duplicate-press protection; Android matching iOS (transitions, swipe back, fonts, spinner, switches) |
 
-**Error handling ships in `v1.1.0`.** `v1.0.0` reads hardcoded data that cannot fail, so the error view, Retry and the switch that simulates failures arrive together in `v1.1.0` ([ADR-011](docs/adr/0011-two-releases.md)).
+`v1.1.0` is the same app as `v1.1.1`, released before the demo screenshots, the video and the quick start were added to this README.
 
-To run a release, check out its tag (`git checkout v1.0.0` or `v1.1.0`), then `npm ci` and `npx expo start` as in [Quick start](#quick-start).
+**Error handling ships in `v1.1.1`, not `v1.0.0`.** `v1.0.0` reads hardcoded data that cannot fail, so the error view, Retry and the switch that simulates failures arrive together in the senior release ([ADR-011](docs/adr/0011-two-releases.md)).
 
-## Trying `v1.1.0`
+To run a release, check out its tag (`git checkout v1.0.0` or `v1.1.1`), then `npm ci` and `npx expo start` as in [Quick start](#quick-start).
+
+## Trying `v1.1.1`
 
 Home has four buttons:
 
@@ -160,9 +161,9 @@ Layer 1 only smooths out jitter; layers 2 and 3 are the guarantees. The back but
 
 ### Plain vs infinite list ([SPEC §6.3](docs/SPEC.md))
 
-`v1.0.0` loads every Specialist in one request (`useQuery`); `v1.1.0` loads them 10 at a time (`useInfiniteQuery`, offset pagination, [ADR-007](docs/adr/0007-offset-pagination.md)).
+`v1.0.0` loads every Specialist in one request (`useQuery`); `v1.1.1` loads them 10 at a time (`useInfiniteQuery`, offset pagination, [ADR-007](docs/adr/0007-offset-pagination.md)).
 
-| | Plain (`v1.0.0`) | Infinite (`v1.1.0`) |
+| | Plain (`v1.0.0`) | Infinite (`v1.1.1`) |
 |---|---|---|
 | Fetching | One request, all items | One request per page, when a fifth of a screen of list is left |
 | Time to first content | Grows with the list | Constant: the first page only |
@@ -210,7 +211,7 @@ src/
 └── test/                    test helpers: the app's providers, fake repositories, a clock
 ```
 
-- **Data** ([ADR-002](docs/adr/0002-specialist-repository.md)): screens read Specialists only through `SpecialistRepository`, provided by `RepositoryProvider`. The interface is paginated by offset, so infinite scroll needed no new interface. The hardcoded repository adds a simulated delay (800 ms in `v1.0.0`, 1500 ms in `v1.1.0`) so the loading states are visible, and can fail at random for the demo.
+- **Data** ([ADR-002](docs/adr/0002-specialist-repository.md)): screens read Specialists only through `SpecialistRepository`, provided by `RepositoryProvider`. The interface is paginated by offset, so infinite scroll needed no new interface. The hardcoded repository adds a simulated delay (800 ms in `v1.0.0`, 1500 ms in `v1.1.1`) so the loading states are visible, and can fail at random for the demo.
 - **Layout** ([ADR-012](docs/adr/0012-content-bottom-sheet.md)): the hero image stays fixed and the content is a `@gorhom/bottom-sheet` over it. The sheet opens at Figma's card position, can grow up to the nav bar and never closes. Its list holds the header, Specialists, contact info and agreements notice; its footer is the persistent bottom section with the service hours and the two buttons.
 - **Navigation** ([ADR-013](docs/adr/0013-js-stack-with-ios-transitions.md)): React Navigation's JS stack with iOS's push, pop and swipe back on both platforms.
 - **Actions**: every side effect (`expo-web-browser`, `Linking`) goes through `useConsultationActions`, so tests can mock it.
@@ -230,7 +231,7 @@ No screen, hook or test changes. With a real API, also restore TanStack Query's 
 ## Known limitations
 
 - Once the list inside the expanded sheet has been scrolled, collapsing the sheet needs a new drag that starts at the top of the list. This is how `@gorhom/bottom-sheet` hands gestures between the sheet and its list.
-- The contact info and agreements notice are at the end of the list, so in `v1.1.0` they are reached only after all 103 Specialists have loaded (SPEC §6.5).
+- The contact info and agreements notice are at the end of the list, so in `v1.1.1` they are reached only after all 103 Specialists have loaded (SPEC §6.5).
 - The hotline is shown as "+852 2893 4402" in both languages, from one config value; the PRD's Chinese copy writes it as "28934402".
 - If the system cannot open a link (for example, no mail app is set up), nothing is shown to the user.
 - The in-app feature toggles are for the demo (see above).
