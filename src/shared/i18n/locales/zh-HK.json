@@ -4,6 +4,9 @@
       "overline": "有更多問題嗎？",
       "title": "GUM 專家為你服務！",
       "description": "我們提供專業同中立嘅意見， 幫你作出最合適嘅選擇 。"
+    },
+    "specialists": {
+      "empty": "暫時未有專家提供服務。"
     }
   }
 }

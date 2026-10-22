@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { COLORS, DESIGN_WIDTH, GRADIENTS, TYPOGRAPHY } from '../../../shared/theme';
+import { CONTENT_GAP, CONTENT_PADDING_HORIZONTAL } from './layout';
 
 const HERO_IMAGE = require('../../../../assets/images/consultation-hero.png');
 
@@ -19,7 +20,8 @@ export function ConsultationHeader() {
   const cardOverlap = width - (CARD_TOP_IN_DESIGN * width) / DESIGN_WIDTH;
 
   return (
-    <View>
+    // overflow: hidden stops the lower part of the hero spilling below the header.
+    <View style={styles.header}>
       <View style={[styles.hero, { width, height: width }]}>
         <Image source={HERO_IMAGE} style={StyleSheet.absoluteFill} contentFit="cover" />
         <LinearGradient
@@ -29,8 +31,7 @@ export function ConsultationHeader() {
         />
       </View>
 
-      {/* minHeight keeps the white card over the rest of the hero even when it is short. */}
-      <View style={[styles.card, { marginTop: -cardOverlap, minHeight: cardOverlap }]}>
+      <View style={[styles.card, { marginTop: -cardOverlap }]}>
         <Text style={styles.overline}>{t('consultation.header.overline')}</Text>
         <Text style={styles.title}>{t('consultation.header.title')}</Text>
         <View style={styles.divider} />
@@ -41,6 +42,9 @@ export function ConsultationHeader() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    overflow: 'hidden',
+  },
   hero: {
     backgroundColor: COLORS.heroBackground,
   },
@@ -51,8 +55,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     paddingTop: 32,
-    paddingHorizontal: 35,
-    gap: 7,
+    paddingBottom: CONTENT_GAP,
+    paddingHorizontal: CONTENT_PADDING_HORIZONTAL,
+    gap: CONTENT_GAP,
   },
   overline: {
     ...TYPOGRAPHY.subtitle3,
@@ -62,8 +67,10 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.header2,
     color: COLORS.textSecondary,
   },
+  // In Figma the divider is a 1 pt stroke on a zero-height line, so it takes no space.
   divider: {
     height: 1,
+    marginVertical: -0.5,
     backgroundColor: COLORS.divider,
   },
   description: {
