@@ -433,6 +433,7 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 > - `feats/T-XXXX-[TicketName]`: one branch per ticket, merged into `dev` via PR. `XXXX` is an auto-incrementing, zero-padded 4-digit sequence number (`T-0001`, `T-0002`, …), assigned in ticket order and never reused (e.g. `feats/T-0003-SpecialistRepository`)
 > - Submission: PR `dev` → `main`, reviewed by the interviewer **[ASSUMPTION]**
 > - Small Conventional Commits; respond to review with new commits (no force-push during review)
+> - PRs merge with a merge commit (`--no-ff`); squash and rebase merges are disabled on GitHub. Ticket branches are kept after merge, locally and on `origin`, so reviewers can clone and inspect each PR's branch (ADR-009)
 
 ### .gitignore
 
@@ -490,11 +491,12 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 4. Before each commit: `npx tsc --noEmit`, lint, and the relevant test files. Before opening the PR: the full test suite.
 5. Commit with Conventional Commits, referencing the ticket (e.g. `feat(T-0003): add offset pagination to repository`).
 6. Push the branch and open a PR **into `dev`** titled `T-XXXX: [TicketName]`. PR body: summary, spec sections covered, acceptance criteria checklist, tests added, screenshots/video for UI changes, decisions (link ADRs).
-7. Stop and wait for the author to review and merge. **Do not merge PRs yourself.**
+7. Stop and wait for the author to review and merge (merge commit, `--no-ff`). **Do not merge PRs yourself.** Keep the branch after merge (ADR-009).
 
 ### Always
 
 - Never commit directly to `main` or `dev`; never force-push a branch that has an open PR.
+- Never delete a ticket branch, locally or on `origin`, unless the author asks.
 - Never commit anything from `.private/` or secrets.
 - New or changed decisions → write an ADR in `docs/adr/` and update this spec in the same PR.
 - If the spec is ambiguous, stop and ask the author instead of guessing; record the answer as an ADR or an [ASSUMPTION].
