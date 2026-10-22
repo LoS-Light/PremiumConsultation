@@ -509,6 +509,7 @@ Code follows common TypeScript / React Native conventions, and domain names foll
 | Booleans | `is` / `has` / `should` / `can` prefix | `isEnabled`, `hasNextPage` |
 | Event props / handlers | `onX` for props, `handleX` for handlers | `onPress`, `handleRetry` |
 | Module-level constants | SCREAMING_SNAKE_CASE | `BOOKING_URL`, `PAGE_SIZE` |
+| React Native style sheets | camelCase `styles`, the React Native idiom (exception to the row above) | `const styles = StyleSheet.create({ … })` |
 | Enum-like unions and string literals | camelCase values | `'premiumConsultation'` |
 | Folders | camelCase | `featureFlags/`, `specialist/` |
 | Tests | `*.test.ts(x)` next to the code under test | `HardcodedSpecialistRepository.test.ts` |
@@ -532,6 +533,7 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 
 | Seam | Type | Cases |
 |---|---|---|
+| `App` smoke test (T-0003) | Component | Renders the placeholder screen; only proves the Jest / jest-expo / React Native Testing Library setup works. Replaced as real screens arrive |
 | `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved; simulated failure (v1.1.0): first request after entering the screen succeeds, a later request fails when the injected random value is below 0.3 and succeeds otherwise |
 | `ThrottledPressable` | Component | Two presses within 300 ms → one call; a press after 300 ms → a second call; the first press fires immediately |
 | `guardedNavigate` (v1.1.0) | Unit | Called twice in the same tick (directly, not through a button) → one navigation; called from a screen that is not focused → ignored; after the target screen is focused and its transition ends → a new call navigates |
@@ -552,15 +554,19 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 
 ### Repository and PR
 
-> **Branching:** `main` ← `dev` ← `feats/T-XXXX-[TicketName]`
+> **Branching:** `main` ← `dev` ← `feats/vX.Y.Z`
 > - `main`: initial commit with `README.md` only (no code). `.gitignore`, `CLAUDE.md` and this spec land through ticket `T-0001` (ADR-008)
 > - `dev`: branched from `main`; integration branch
-> - `feats/T-XXXX-[TicketName]`: one branch per ticket, merged into `dev` via PR. `XXXX` is an auto-incrementing, zero-padded 4-digit sequence number (`T-0001`, `T-0002`, …), assigned in ticket order and never reused (e.g. `feats/T-0003-ProjectScaffolding`)
-> - Releases (ADR-011): when every ticket of a release is merged into `dev`, open a PR `dev` → `main`, merge it with a merge commit, tag the merge commit with an annotated tag (`v1.0.0`, then `v1.1.0`) and publish a GitHub Release with release notes and demo videos. Development then continues on `dev`
-> - Each ticket belongs to a GitHub Milestone named after its release (`v1.0.0` or `v1.1.0`)
+> - `feats/vX.Y.Z`: **one branch per release** (`feats/v1.0.0`, then `feats/v1.1.0`), cut from an up-to-date `dev`. Every ticket of that release is built on it as a group of commits; tickets do not get their own branches. (`T-0001` and `T-0002`, done before this rule, kept their own `feats/T-XXXX-[TicketName]` branches.)
+> - Tickets: `T-XXXX`, an auto-incrementing, zero-padded 4-digit number (`T-0001`, `T-0002`, …), assigned in ticket order and never reused. Each ticket is a GitHub issue in the Milestone named after its release (`v1.0.0` or `v1.1.0`)
+> - Releases (ADR-011): when every ticket of a release is done and reviewed on its branch:
+>   1. PR `feats/vX.Y.Z` → `dev`, merged with GitHub's **default merge commit message**
+>   2. PR `dev` → `main`, merged with the merge commit message **"Release vX.Y.Z"**
+>   3. Annotated tag `vX.Y.Z` on that merge commit, and a GitHub Release with release notes and demo videos
+>   4. The next release branch is cut from `dev`
 > - Submission: the `v1.1.0` PR `dev` → `main` is the one handed to the interviewer. `v1.0.0` is merged and released by the author beforehand; the README explains both releases so the interviewer can check out either tag
 > - Small Conventional Commits; respond to review with new commits (no force-push during review)
-> - PRs merge with a merge commit (`--no-ff`); squash and rebase merges are disabled on GitHub. Ticket branches are kept after merge, locally and on `origin`, so reviewers can clone and inspect each PR's branch (ADR-009)
+> - PRs merge with a merge commit (`--no-ff`); squash and rebase merges are disabled on GitHub. Release branches (and the earlier ticket branches) are kept after merge, locally and on `origin`, so reviewers can clone and inspect each PR's branch (ADR-009)
 > - Code owner: `.github/CODEOWNERS` assigns every path to `@LoS-Light`, so PRs mark owned files and request the owner's review. Not enforced as a required review: the repo is private on a free plan, so branch protection is unavailable
 
 ### .gitignore
@@ -603,30 +609,31 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 
 - Source: this spec (`docs/SPEC.md`). Do not run `/to-spec`; this file is the single spec.
 - Ticket ID: `T-XXXX`, an auto-incrementing, zero-padded 4-digit number starting at `T-0001`, assigned in implementation order and never reused.
-- Ticket name: short PascalCase, used in the branch name (e.g. `T-0003 ProjectScaffolding`).
+- Ticket name: short PascalCase, used in the issue title `T-XXXX: [TicketName]` (e.g. `T-0003: ProjectScaffolding`).
 - Each ticket lists: the spec sections it covers, its acceptance criteria (from §15), its TDD seams (from §13), and the tickets it is blocked by.
-- One ticket = one branch = one PR. Keep tickets small enough to review in one sitting.
+- Tickets are built in order on their release branch (`feats/vX.Y.Z`); one ticket is a group of commits, not a branch or a PR. Keep tickets small enough to review in one sitting.
 - Fixed opening tickets (ADR-008):
   - `T-0001 RepoSetup`: `.gitignore`, `CLAUDE.md`, agent skills config, PR template and this spec. No app code.
   - `T-0002 SpecRefinement`: refine this spec with `/grill-with-docs` against the PRD, assignment brief and Figma. No app code.
   - `T-0003 ProjectScaffolding`: project scaffolding (Expo, TypeScript, lint, test, CI, `.nvmrc`, merging the `.gitignore`).
-- The last ticket covers README, final docs and the `dev` → `main` PR description.
+- The last ticket of each release covers the README, final docs and that release's PR descriptions (`T-0008 ReadmeAndDemo`, `T-0014 SeniorDocsAndDemo`).
 
 ### `/implement` — per ticket
 
-1. Start from an up-to-date `dev`:
-   `git checkout dev && git pull && git checkout -b feats/T-XXXX-[TicketName]`
-2. Do not start a ticket until every ticket it is blocked by has been merged into `dev`.
+1. Work on the release branch. The first ticket of a release creates it from an up-to-date `dev`:
+   `git checkout dev && git pull && git checkout -b feats/vX.Y.Z`
+2. Do not start a ticket until every ticket it is blocked by is done and reviewed.
 3. Implement only this ticket's scope, **test-first with `/tdd`** at the seams listed in the ticket, following the rules in §13 (ADR-010).
 4. Before each commit: `npx tsc --noEmit`, lint, and the relevant test files. Before opening the PR: the full test suite.
 5. Commit with Conventional Commits, referencing the ticket (e.g. `chore(T-0003): add Jest and React Native Testing Library`).
-6. Push the branch and open a PR **into `dev`** titled `T-XXXX: [TicketName]`. PR body: summary, spec sections covered, acceptance criteria checklist, tests added, screenshots/video for UI changes, decisions (link ADRs).
-7. Stop and wait for the author to review and merge (merge commit, `--no-ff`). **Do not merge PRs yourself.** Keep the branch after merge (ADR-009).
+6. **Stop after each ticket.** Commit locally and report to the author; do not push. Start the next ticket only after the author has reviewed this one.
+7. Push and open PRs only when the author asks. The release PR `feats/vX.Y.Z` → `dev` lists every ticket it closes; its body follows the PR template: summary, spec sections covered, acceptance criteria per ticket, tests added, screenshots/video for UI changes, decisions (link ADRs).
+8. **Do not merge PRs yourself.** The author merges with a merge commit (`--no-ff`); branches are kept after merge (ADR-009).
 
 ### Always
 
 - Never commit directly to `main` or `dev`; never force-push a branch that has an open PR.
-- Never delete a ticket branch, locally or on `origin`, unless the author asks.
+- Never delete a release branch (or an earlier ticket branch), locally or on `origin`, unless the author asks.
 - Never commit anything from `.private/` or secrets.
 - Record every new or changed decision in this spec, in the same PR, and list it in the PR's Decisions section.
 - Also write an ADR in `docs/adr/` only when all three hold: hard to reverse, surprising without context, and the result of a real trade-off. Otherwise the spec is enough.
@@ -639,11 +646,12 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 
 ### Final submission
 
-For each release (ADR-011), when all of its tickets are merged into `dev`:
+For each release (ADR-011), when all of its tickets are done and reviewed on `feats/vX.Y.Z`:
 
 1. Complete the pre-submit checklist (§14).
-2. Open the PR `dev` → `main` titled `Release vX.Y.Z`, using the PR description outline in §14.
-3. After the author merges it: tag the merge commit (`git tag -a vX.Y.Z`), push the tag, and publish the GitHub Release.
+2. When the author asks: open the PR `feats/vX.Y.Z` → `dev`. The author merges it with GitHub's default merge message.
+3. Open the PR `dev` → `main` titled `Release vX.Y.Z`, using the PR description outline in §14. The author merges it with the merge commit message "Release vX.Y.Z".
+4. Tag that merge commit (`git tag -a vX.Y.Z`), push the tag, and publish the GitHub Release.
 
 `v1.0.0` covers the general requirements; `v1.1.0` covers the senior requirements and is the PR handed to the interviewer.
 

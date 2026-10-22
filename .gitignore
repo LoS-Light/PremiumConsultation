@@ -2,7 +2,7 @@
 .private/
 __MACOSX/
 
-# Secrets
+# Secrets and signing
 .env
 .env*
 !.env.example
@@ -20,9 +20,28 @@ Thumbs.db
 # Dependencies (package-lock.json is committed on purpose)
 node_modules/
 
-# Expo and generated native folders (template entries merged in T-0002)
+# Expo
 .expo/
 dist/
 web-build/
+expo-env.d.ts
+
+# Generated native folders (Continuous Native Generation)
 /ios
 /android
+.kotlin/
+*.orig.*
+
+# Metro
+.metro-health-check*
+
+# Debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# TypeScript
+*.tsbuildinfo
+
+# Test coverage
+coverage/

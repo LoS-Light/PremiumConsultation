@@ -1,0 +1,3 @@
+# Prettier already skips node_modules and everything in .gitignore.
+# package-lock.json is committed but generated, so it is skipped here.
+package-lock.json
