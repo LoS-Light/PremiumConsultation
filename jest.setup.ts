@@ -6,12 +6,11 @@ jest.mock(
   () => jest.requireActual('react-native-safe-area-context/jest/mock').default,
 );
 // Reanimated 4's own Jest mock still starts its CSS runtime, which fails under Jest. Only
-// Gesture Handler touches Reanimated here (the bottom sheet itself is mocked below), through
-// createAnimatedComponent, so stub just that.
-jest.mock('react-native-reanimated', () => ({
-  __esModule: true,
-  default: { createAnimatedComponent: (component: unknown) => component },
-}));
+// Gesture Handler loads Reanimated here (the bottom sheet itself is mocked below), and it
+// falls back to plain JS when Reanimated is missing, so make it look not installed.
+jest.mock('react-native-reanimated', () => {
+  throw new Error('react-native-reanimated is not available under Jest');
+});
 // The bottom-sheet mock exports `default` without __esModule, so mark it for Babel's interop.
 // Its BottomSheet drops `footerComponent`, so render the footer after the content as the real
 // sheet does. It also lacks BottomSheetFooter, which renders its children as-is here.

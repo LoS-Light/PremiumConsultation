@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { I18nextProvider } from 'react-i18next';
 import { Linking } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import type { Specialist } from '../../../data/specialist/Specialist';
 import type { SpecialistRepository } from '../../../data/specialist/SpecialistRepository';
@@ -38,13 +39,15 @@ async function renderScreen(
     defaultOptions: { queries: { retry: false, gcTime: Infinity } },
   });
   await render(
-    <QueryClientProvider client={queryClient}>
-      <RepositoryProvider repository={repository}>
-        <I18nextProvider i18n={createI18n(language)}>
-          <ConsultationScreen />
-        </I18nextProvider>
-      </RepositoryProvider>
-    </QueryClientProvider>,
+    <GestureHandlerRootView>
+      <QueryClientProvider client={queryClient}>
+        <RepositoryProvider repository={repository}>
+          <I18nextProvider i18n={createI18n(language)}>
+            <ConsultationScreen />
+          </I18nextProvider>
+        </RepositoryProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>,
   );
 }
 

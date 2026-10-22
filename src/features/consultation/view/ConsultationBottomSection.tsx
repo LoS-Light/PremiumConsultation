@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS, SHADOWS, TYPOGRAPHY } from '../../../shared/theme';
@@ -19,22 +21,28 @@ export function ConsultationBottomSection({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const actions = useConsultationActions();
+  // The sheet's drag gesture covers its footer too. This pan does nothing but claims drags that
+  // start on the bottom section, so the section stays fixed and the sheet doesn't move. Taps
+  // still reach the buttons.
+  const blockSheetDrag = useMemo(() => Gesture.Pan(), []);
 
   return (
-    <View
-      style={[styles.section, { paddingBottom: insets.bottom + CONTENT_BOTTOM_PADDING }]}
-      onLayout={(event: LayoutChangeEvent) => onHeightChange(event.nativeEvent.layout.height)}
-    >
-      <Text style={styles.serviceHours}>{t('consultation.bottomSection.serviceHours')}</Text>
-      <PrimaryButton
-        label={t('consultation.bottomSection.bookAppointment')}
-        onPress={actions.bookAppointment}
-      />
-      <PrimaryButton
-        label={t('consultation.bottomSection.whatsAppUs')}
-        onPress={actions.whatsAppUs}
-      />
-    </View>
+    <GestureDetector gesture={blockSheetDrag}>
+      <View
+        style={[styles.section, { paddingBottom: insets.bottom + CONTENT_BOTTOM_PADDING }]}
+        onLayout={(event: LayoutChangeEvent) => onHeightChange(event.nativeEvent.layout.height)}
+      >
+        <Text style={styles.serviceHours}>{t('consultation.bottomSection.serviceHours')}</Text>
+        <PrimaryButton
+          label={t('consultation.bottomSection.bookAppointment')}
+          onPress={actions.bookAppointment}
+        />
+        <PrimaryButton
+          label={t('consultation.bottomSection.whatsAppUs')}
+          onPress={actions.whatsAppUs}
+        />
+      </View>
+    </GestureDetector>
   );
 }
 

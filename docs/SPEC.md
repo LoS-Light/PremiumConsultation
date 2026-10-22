@@ -562,9 +562,10 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 >   1. PR `feats/vX.Y.Z` → `dev`, merged with GitHub's **default merge commit message**
 >   2. PR `dev` → `main`, merged with the merge commit message **"Release vX.Y.Z"**
 >   3. Annotated tag `vX.Y.Z` on that merge commit, and a GitHub Release with release notes and demo videos
+>      - `v1.0.0` is released without videos. The author records the videos and screenshots of both releases once `v1.1.0` is done, puts them in the final README, and the `v1.0.0` Release is then edited to attach its videos (the tag does not move)
 >   4. The next release branch is cut from `dev`
 > - Submission: the `v1.1.0` PR `dev` → `main` is the one handed to the interviewer. `v1.0.0` is merged and released by the author beforehand; the README explains both releases so the interviewer can check out either tag
-> - Small Conventional Commits; respond to review with new commits (no force-push during review)
+> - Small Conventional Commits while a ticket is in progress. Before a release branch is first pushed, each ticket's commits are squashed into one commit per ticket, so the release PR reads ticket by ticket. After that, respond to review with new commits (no force-push during review)
 > - PRs merge with a merge commit (`--no-ff`); squash and rebase merges are disabled on GitHub. Release branches (and the earlier ticket branches) are kept after merge, locally and on `origin`, so reviewers can clone and inspect each PR's branch (ADR-009)
 > - Code owner: `.github/CODEOWNERS` assigns every path to `@LoS-Light`, so PRs mark owned files and request the owner's review. Not enforced as a required review: the repo is private on a free plan, so branch protection is unavailable
 
@@ -673,7 +674,7 @@ For each release (ADR-011), when all of its tickets are done and reviewed on `fe
 - [ ] All visible text localized in English and Chinese (Hong Kong) using PRD copy, following the device language
 - [ ] Swapping hardcoded data for CMS requires changing only the provider setup
 - [ ] Reproducible build, CI green, README explains both releases and that error handling ships in v1.1.0
-- [ ] Release PR merged into `main`, tagged `v1.0.0`, GitHub Release published with demo videos
+- [ ] Release PR merged into `main`, tagged `v1.0.0`, GitHub Release published (demo videos attached after `v1.1.0`, §14)
 
 ### v1.1.0 — senior requirements
 
