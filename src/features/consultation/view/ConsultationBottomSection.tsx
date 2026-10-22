@@ -8,8 +8,11 @@ import { COLORS, SHADOWS, TYPOGRAPHY } from '../../../shared/theme';
 import { PrimaryButton } from '../../../shared/ui/PrimaryButton';
 import { useConsultationActions } from '../viewmodel/useConsultationActions';
 
-// Figma: 10 pt between the content and the home indicator, which the safe-area inset covers.
+// Figma: 10 pt between the content and the 34 pt home indicator area. The bottom inset covers
+// that area, but Android's gesture bar is shorter, so keep at least Figma's 34 pt everywhere
+// and the section looks the same on both platforms.
 const CONTENT_BOTTOM_PADDING = 10;
+const MIN_BOTTOM_INSET = 34;
 
 // Service hours and the two actions (PRD: they persist at the bottom of the page). Rendered as
 // the content sheet's footer, so it stays at the bottom of the screen (ADR-012).
@@ -29,7 +32,10 @@ export function ConsultationBottomSection({
   return (
     <GestureDetector gesture={blockSheetDrag}>
       <View
-        style={[styles.section, { paddingBottom: insets.bottom + CONTENT_BOTTOM_PADDING }]}
+        style={[
+          styles.section,
+          { paddingBottom: Math.max(insets.bottom, MIN_BOTTOM_INSET) + CONTENT_BOTTOM_PADDING },
+        ]}
         onLayout={(event: LayoutChangeEvent) => onHeightChange(event.nativeEvent.layout.height)}
       >
         <Text style={styles.serviceHours}>{t('consultation.bottomSection.serviceHours')}</Text>

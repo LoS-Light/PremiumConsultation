@@ -5,8 +5,8 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
+import { useSafeAreaFrame, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS } from '../../../shared/theme';
 import { useSpecialists } from '../viewmodel/useSpecialists';
@@ -32,7 +32,10 @@ import { SpecialistSkeleton } from './states/SpecialistSkeleton';
 // Once it is expanded, dragging scrolls its list. The service hours and buttons are its footer.
 export function ConsultationScreen() {
   const { data: specialists = [], isPending, isError } = useSpecialists();
-  const { width, height } = useWindowDimensions();
+  // The sheet measures its container, which fills the whole screen. useWindowDimensions() leaves
+  // out the status and navigation bars on Android (edge-to-edge), which put the sheet about
+  // 75 dp too low there, so use the full frame instead.
+  const { width, height } = useSafeAreaFrame();
   const insets = useSafeAreaInsets();
   // The list's bottom padding equals the sheet footer's (bottom section's) height, so nothing
   // hides behind it.
@@ -80,6 +83,9 @@ export function ConsultationScreen() {
           ListEmptyComponent={<ListBodyState isPending={isPending} isError={isError} />}
           ListFooterComponent={<ListEnd />}
           contentContainerStyle={{ paddingBottom: footerHeight }}
+          // The library turns Android's overscroll off; turn it back on so the end of the list
+          // stretches and springs back there, as iOS bounces.
+          overScrollMode="always"
         />
       </BottomSheet>
       <ConsultationNavBar />

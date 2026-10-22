@@ -22,17 +22,20 @@ export const COLORS = {
 // The design is drawn on a 390 pt wide frame.
 export const DESIGN_WIDTH = 390;
 
+// Each loaded font file with its weight. The weight matters for text the font has no glyphs
+// for: Inter has no Chinese, so Chinese falls back to the system font, which picks its weight
+// from fontWeight. iOS infers it from the font file; Android shows Regular unless it is set.
 const FONTS = {
-  interMedium: 'Inter_500Medium',
-  interSemiBold: 'Inter_600SemiBold',
-  interBold: 'Inter_700Bold',
-  notoSansTcBold: 'NotoSansTC_700Bold',
-} as const;
+  interMedium: { fontFamily: 'Inter_500Medium', fontWeight: '500' },
+  interSemiBold: { fontFamily: 'Inter_600SemiBold', fontWeight: '600' },
+  interBold: { fontFamily: 'Inter_700Bold', fontWeight: '700' },
+  notoSansTcBold: { fontFamily: 'NotoSansTC_700Bold', fontWeight: '700' },
+} as const satisfies Record<string, Pick<TextStyle, 'fontFamily' | 'fontWeight'>>;
 
 const LINE_HEIGHT_RATIO = 1.5;
 
-function textStyle(fontFamily: string, fontSize: number): TextStyle {
-  return { fontFamily, fontSize, lineHeight: fontSize * LINE_HEIGHT_RATIO, letterSpacing: 0 };
+function textStyle(font: (typeof FONTS)[keyof typeof FONTS], fontSize: number): TextStyle {
+  return { ...font, fontSize, lineHeight: fontSize * LINE_HEIGHT_RATIO, letterSpacing: 0 };
 }
 
 // Hero overlay: top to bottom, from rgba(151, 144, 115, 0.8) to Light Secounday/LY2 at alpha 0.

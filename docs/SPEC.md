@@ -109,7 +109,7 @@ ConsultationScreen
     └─ footerComponent: persistent bottom section (service hours, two buttons)
 ```
 
-**Sheet behaviour:** it appears already collapsed, with no opening animation, and can only grow: it never rests below the collapsed point and cannot be closed. Pulling down at the collapsed point stretches the sheet a little with resistance and springs it back (gorhom's over-drag). Once a drag starts with the list scrolled, it only scrolls the list; collapsing needs a new drag (gorhom's design). Dragging moves the sheet until it is expanded; after that the list scrolls (gorhom's built-in hand-off).
+**Sheet behaviour:** it appears already collapsed, with no opening animation, and can only grow: it never rests below the collapsed point and cannot be closed. Pulling down at the collapsed point stretches the sheet a little with resistance and springs it back (gorhom's over-drag). Once a drag starts with the list scrolled, it only scrolls the list; collapsing needs a new drag (gorhom's design). Dragging moves the sheet until it is expanded; after that the list scrolls (gorhom's built-in hand-off). Pulling past the end of the list bounces on iOS and stretches on Android (the platform's native overscroll; gorhom turns Android's off by default, so the list turns it back on). Snap points are computed from the full screen frame, not the window, because Android's window size leaves out the status and navigation bars. The bottom section keeps at least Figma's 34 pt home-indicator area below its content (more when the system's bottom inset is larger), so it looks the same on Android, whose gesture bar is shorter.
 
 **Back button:**
 
@@ -434,7 +434,7 @@ Visual details (colors, typography, spacing, radii, shadows, assets) are **not d
 
 MCP calls are rate-limited on the author's plan: read variables once, then fetch design context only for the components being built.
 
-**Visual checks** use a 390 pt wide device (e.g. the iPhone 17e simulator), the width of the Figma frames. Text columns follow the screen width, so on wider screens lines wrap later than in Figma; that is expected.
+**Visual checks** use a 390 pt wide device (e.g. the iPhone 17e simulator), the width of the Figma frames. Text columns follow the screen width, so on wider screens lines wrap later than in Figma; that is expected. Sizes are not scaled to the screen: Android dp and iOS pt are the same unit, so text and controls have the same size on both, and a larger screen (e.g. a 411 dp Pixel 8) simply shows them smaller relative to the screen. This keeps the platforms' conventions and the system font-size setting working. To compare Android with Figma, use a device about 390 dp wide (e.g. Pixel 5).
 
 ## 11a. PRD source (PDF)
 
