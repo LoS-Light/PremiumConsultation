@@ -1,13 +1,13 @@
 # Premium Consultation — Specification
 
 > Take-home assignment: React Native (Expo + TypeScript).
-> Status: draft. Items marked **[ASSUMPTION]** are pending confirmation from the interviewer (see §15).
+> Status: refined in T-0002 (`/grill-with-docs`). No open assumptions; decisions are recorded in this spec and, where they pass the three-part test (§14a), as ADRs in `docs/adr/`.
 
 ---
 
 ## 1. Overview
 
-Build the **Premium Consultation** screen of the GUM app. The screen introduces GUM Specialists (ES team), lists them, and offers two actions — **Book appointment** and **WhatsApp us** — in a persistent bottom section. The goal (per PRD) is a clear, approachable contact section similar to Bowtie's consultation UI, and pre-filled WhatsApp messages so the ES team can identify and prioritise app users.
+Build the **Premium Consultation** screen of the GUM app. The screen introduces the ES team's Specialists (see `GLOSSARY.md`), lists them, and offers two actions — **Book appointment** and **WhatsApp us** — in a persistent bottom section. The goal (per PRD) is a clear, approachable contact section similar to Bowtie's consultation UI, and pre-filled WhatsApp messages so the ES team can identify and prioritise app users.
 
 The work is submitted as a **pull request** against an empty repository and reviewed by the interviewer. AI-written code is allowed, but every design decision must be explainable by the author. Decisions are recorded as ADRs in `docs/adr/`.
 
@@ -16,7 +16,7 @@ The work is submitted as a **pull request** against an empty repository and revi
 | Source | Notes |
 |---|---|
 | Assignment brief | Epic ticket (PDF) — technical requirements and senior tasks |
-| PRD | Confluence "Premium Consultation" — behaviour, copy, URLs and contact values. Provided as a zip; read it during implementation (see §11a) |
+| PRD | Confluence "Premium Consultation", provided as a PDF capture — behaviour, copy, URLs and contact values. Read through its transcription (see §11a) |
 | Figma | Visual design; read via Figma MCP during implementation (see §11) |
 
 When the PRD and Figma disagree on **behaviour or copy**, the PRD wins. Figma is the source for **visuals**.
@@ -27,12 +27,17 @@ When the PRD and Figma disagree on **behaviour or copy**, the PRD wins. Figma is
 
 ### Goals
 
+Delivered in two releases (ADR-011):
+
+- **v1.0.0 — general requirements:** everything below except the senior bullet. The Consultation screen is the app's entry point.
+- **v1.1.0 — senior requirements:** Home entry button, feature flag, de-duplicated dialog, infinite scroll. Also error handling, moved from v1.0.0 (ADR-011).
+
 - Consultation screen matching the Figma design and PRD behaviour
-- Data loading via TanStack Query, with loading, error and empty states
+- Data loading via TanStack Query, with loading and empty states (error state in v1.1.0)
 - Persistent bottom section via `@gorhom/bottom-sheet`
 - Localization: English and Traditional Chinese (Hong Kong), copy from the PRD
 - Specialist data source behind an abstraction so the hardcoded list can be swapped for a CMS (planned for Q2) without touching UI or hooks
-- **Senior:** feature flag gating the screen, de-duplicated "coming soon" dialog, infinite-scroll specialist list
+- **Senior (v1.1.0):** Home entry button, feature flag gating the screen, de-duplicated "coming soon" dialog, infinite-scroll specialist list
 - Reproducible build, CI on the PR, clear README
 
 ### Non-goals
@@ -50,12 +55,12 @@ When the PRD and Figma disagree on **behaviour or copy**, the PRD wins. Figma is
 | Concern | Choice | Reason |
 |---|---|---|
 | Framework | Expo (managed), TypeScript, blank template | Reproducible build with minimal native setup; no custom native code required |
-| Navigation | React Navigation (native stack) **[ASSUMPTION]** | Two screens only; explicit and easy to explain. Expo Router is an acceptable alternative |
+| Navigation | v1.0.0: none. v1.1.0: React Navigation (native stack) | v1.0.0 has a single screen, and its top bar is Figma's custom nav bar, not a navigator header. v1.1.0 adds Home → Consultation and back; two screens are explicit and easy to explain with a native stack, without Expo Router's file-based conventions |
 | Data fetching | TanStack Query (`useQuery`, `useInfiniteQuery`) | Required by the brief; built-in loading/error/retry/pagination |
 | Bottom sheet | `@gorhom/bottom-sheet` (+ `react-native-reanimated`, `react-native-gesture-handler`) | Required by the brief |
 | In-app browser | `expo-web-browser` | PRD: booking opens in an in-app browser that offers "open in external browser" |
 | External links | `Linking` (React Native) | `tel:`, `mailto:`, WhatsApp universal link |
-| i18n | `i18next`, `react-i18next`, `expo-localization` | Device-language detection, runtime switching, `<Trans>` for inline links |
+| i18n | `i18next`, `react-i18next`, `expo-localization` | Device-language detection, `<Trans>` for inline links |
 | Fonts | `expo-font` / `@expo-google-fonts` (families per Figma) | Match Figma typography |
 | Testing | Jest (`jest-expo`), React Native Testing Library | Standard for Expo |
 | Lint/format | ESLint, Prettier | |
@@ -65,40 +70,43 @@ When the PRD and Figma disagree on **behaviour or copy**, the PRD wins. Figma is
 
 ## 4. Screens
 
-### 4.1 Home (entry point) — not in Figma / PRD
+### 4.1 Home (entry point, v1.1.0) — not in Figma / PRD
 
-Minimal screen that exists to satisfy the senior requirement.
+Minimal screen that exists to satisfy the senior requirement. It does not exist in v1.0.0.
 
-- Button: **"Premium consultation"** (i18n key)
-- On press:
-  - Feature flag `premiumConsultation` **enabled** → navigate to Consultation screen
-  - **disabled** → show "Coming soon" dialog (see §8)
-- Dev-only controls (visible in `__DEV__` builds, used for the demo video):
-  - Toggle feature flag on/off
-  - Switch language (English / 中文（香港）)
-  - Switch specialist list mode: `plain` / `infinite`
-  - Toggle simulated loading failure (to demo the error state)
+- One entry button: **"Premium consultation"** (i18n key), behind the feature flag `premiumConsultation`:
+  - **enabled** → navigate to `ConsultationScreen`
+  - **disabled** → show the "Coming soon" dialog (see §8)
+- **Demo settings menu:** a hamburger button at the top right of Home, shown in every build (it is a demo app, and the README tells reviewers about it). It opens a `BottomSheetModal` (`@gorhom/bottom-sheet`, no new dependency) titled **"Demo settings"** with two switches, each with a one-line description below it. Both values live in memory only (no persistence; an app restart resets them). All its copy is localized:
+  - **Enable Premium consultation** (feature flag): default **on**; turns `premiumConsultation` on or off (§7). On by default so the Infinite scroll button works straight away; switch it off to demo the coming-soon dialog
+  - **Simulate loading failure**: default **off**; makes Specialist loading fail so the error view and Retry can be shown (§10)
 
-> **[ASSUMPTION]** The brief says the Figma screen is the entry point, while the senior section asks for a button-based entry. This spec adds a Home screen for the senior flow (§15, Q2).
+The brief's general requirements make the Figma screen the entry point, while the senior section asks for a button-based entry. Both are met in turn (ADR-011): in **v1.0.0** the app opens straight on the Consultation screen; **v1.1.0** adds Home in front of it, because the flag gating, the coming-soon dialog and the double-press guard all need a button to press and to demo. The Figma screen stays the feature's main screen; Home only hosts the entry button and the demo settings menu.
 
 ### 4.2 Consultation screen
+
+One screen, `ConsultationScreen`, written once.
+
+- **v1.0.0:** plain list, loaded in one request with `useSpecialists` (§6.1).
+- **v1.1.0:** infinite scroll with `useInfiniteSpecialists` (§6.2), which **replaces** the plain list; there is no mode switch. Layout, cards and sections are unchanged; the list footer adds the next-page spinner and next-page error.
+- The two behaviours are compared by checking out the `v1.0.0` and `v1.1.0` tags; the README shows screenshots of both side by side (§6.3).
 
 Structure (top to bottom):
 
 ```
 ConsultationScreen
-├─ Fixed nav bar with back icon — rendered, but pressing it does nothing (PRD)
+├─ Fixed nav bar with back icon — does nothing in v1.0.0 (PRD); returns to Home in v1.1.0
 ├─ FlatList (single scroll container for the whole page)
 │   ├─ ListHeaderComponent
-│   │   ├─ Hero photo banner of ES team members
+│   │   ├─ Hero photo banner of Specialists
 │   │   └─ White content card with rounded top corners, overlapping the hero
 │   │       ├─ Overline:   "Got more questions?"
 │   │       ├─ Title:      "GUM Specialists are here!" + divider
 │   │       └─ Description
 │   ├─ data → SpecialistCard × N
-│   ├─ ListEmptyComponent → loading skeleton / inline error / empty (first page)
+│   ├─ ListEmptyComponent → loading skeleton / empty (first page); inline error from v1.1.0
 │   └─ ListFooterComponent
-│       ├─ Next-page loading indicator or next-page inline error (infinite mode)
+│       ├─ Next-page loading indicator or next-page inline error (v1.1.0)
 │       ├─ Contact info with tappable hotline and email
 │       └─ Agreements notice (privacy statement)
 │   └─ Bottom padding equal to the bottom section height
@@ -110,7 +118,10 @@ ConsultationScreen
 
 **Why one FlatList:** wrapping a FlatList in a ScrollView disables virtualization. Putting the header and footer content into `ListHeaderComponent` / `ListFooterComponent` keeps a single, virtualized scroll container. (ADR-005)
 
-**Back button:** the PRD says the return button is ignored. It is rendered for visual fidelity with no action. Users can still leave via the native back gesture / Android back button. **[ASSUMPTION]** that the native gesture is acceptable given the added Home screen (§15, Q3).
+**Back button:**
+
+- **v1.0.0:** rendered for visual fidelity with no action, as the PRD says ("Clicking it does nothing"). There is no screen behind it; the Android back button leaves the app as usual.
+- **v1.1.0:** Home sits in front of this screen, so `<` returns to Home, as do the iOS back gesture and the Android back button. This deliberately departs from the PRD, because v1.1.0 adds a screen to return to.
 
 ### 4.3 SpecialistCard
 
@@ -130,15 +141,15 @@ ConsultationScreen
 
 | Element | Behaviour (see PRD) | Implementation |
 |---|---|---|
-| Book appointment | Open the booking platform in an **in-app browser** that lets the member open it externally | `WebBrowser.openBrowserAsync(BOOKING_URL)` — SFSafariViewController (iOS) / Chrome Custom Tabs (Android) both provide a built-in "open in browser" control |
+| Book appointment | Open the booking platform in an **in-app browser** that lets the user open it externally | `WebBrowser.openBrowserAsync(BOOKING_URL)` — SFSafariViewController (iOS) / Chrome Custom Tabs (Android) both provide a built-in "open in browser" control |
 | WhatsApp us | Open WhatsApp chat with the ES number and a pre-filled, localized message | `Linking.openURL` with a `wa.me` universal link; message from i18n, URL-encoded; falls back to the browser if WhatsApp is not installed |
 | Hotline | Open the dialer with the number pre-filled | `Linking.openURL('tel:…')` |
 | Email | Open the default mail app with the recipient pre-filled | `Linking.openURL('mailto:…')` |
-| Back (nav bar) | Does nothing | No handler |
+| Back (nav bar) | v1.0.0: does nothing (PRD). v1.1.0: returns to Home | v1.0.0: no handler. v1.1.0: `navigation.goBack()` |
 
 Booking URL, WhatsApp number, hotline and email come from the PRD and live in a single config module, never inline in components.
 
-> **[ASSUMPTION]** The PRD contains two different pre-filled WhatsApp messages (the URL example vs the dedicated "WhatsApp Pre-filled Message" section). This spec uses the dedicated, localized section (§15, Q1).
+> The PRD contains two different pre-filled WhatsApp messages. The "Universal link URL Format" example carries "Hi GUM Specialist! I am contacting via the app." (English only); the dedicated "Whatsapp Pre-filled Message" section gives localized EN/ZH text and matches the PRD screenshot. This spec uses the **dedicated section's message in the current language**, and takes only the URL **format** from the example: `https://wa.me/85260300900?text=<URL-encoded message>`. Trade-off: the dedicated message does not say it comes from the app, which the PRD overview lists as a goal.
 
 ---
 
@@ -175,18 +186,19 @@ interface SpecialistRepository {
 
 | Implementation | Purpose |
 |---|---|
-| `HardcodedSpecialistRepository` | Current implementation (PRD: "Hardcode for now"). Reads from a local dataset, paginates in memory, simulates network latency. Supports injected failure for demos/tests |
+| `HardcodedSpecialistRepository` | Current implementation (PRD: "Hardcode for now"). Reads from a local dataset, paginates in memory, simulates network latency. From v1.1.0, it can simulate failures for the demo (§10) |
 | `CmsSpecialistRepository` | Stub for Q2. Same interface; not implemented beyond the signature |
 
 - **Ordering is owned by the data source.** The PRD requires the CMS to allow adjusting the order, so the contract is: items are returned in display order. The UI never sorts.
 - The repository is provided through a React context (`RepositoryProvider`) at the app root.
 - **Swapping to CMS = changing one line** in the provider setup. UI and hooks depend only on the interface. (ADR-002)
-- The interface is paginated (offset-based) from day one so both list modes and the future CMS share one contract.
+- The interface is paginated (offset-based) **from v1.0.0**, even though v1.0.0 only asks for every item at once, so both list modes and the future CMS share one contract and v1.1.0 adds no new interface.
+- **"Hardcoded" means the data source, not a shortcut.** In every release, screens read Specialists only through `SpecialistRepository` and TanStack Query (`useQuery` / `useInfiniteQuery`), with a loading state. No screen imports the dataset directly. This is what the brief's "use react-query for loading" and "swapping implementation is easy" require.
 
 ### 5.3 Dataset
 
-- Base list (from Figma): Kan Chung, Alisa Mak, Justin Liu
-- Extended list: 100+ generated specialists for the infinite-scroll requirement
+- **Base list** (from Figma): Kan Chung, Alisa Mak, Justin Liu. Used by v1.0.0
+- **Extended list** (v1.1.0): the base list followed by **100 generated Specialists, 103 in total**, matching the brief's "added 100+ specialists". Generated IDs `specialist-004` to `specialist-103`; names built from a fixed set of English first and last names; no `avatarUrl`, so the placeholder image shows
 - Deterministic generation (stable IDs, fixed order) so tests are reproducible
 
 ---
@@ -195,23 +207,26 @@ interface SpecialistRepository {
 
 Hooks live in the viewmodel layer and depend only on `SpecialistRepository`.
 
-### 6.1 Plain mode
+**Automatic retries are off (temporary).** The app's `QueryClient` sets `retry: false`. TanStack Query otherwise retries a failed request 3 times in the background before showing an error, so with the 30% simulated failure rate (§10) the error view would appear about 0.8% of the time, after several seconds of waiting. The PRD wants a failure to show the error view and let the user press Retry. **This is only for the current hardcoded data. When the app calls a real API (the Q2 CMS), restore automatic retries** (e.g. the default, or a small count with backoff) and keep Retry for failures that remain. The `QueryClient` setup carries a comment saying the same.
+
+### 6.1 Plain mode (v1.0.0)
 
 - `useQuery(['specialists', 'all'])`
 - Fetches the full list in one request (repository called with a large `limit` or a dedicated "all" helper)
 - Renders everything into the FlatList (rendering is still virtualized)
+- Data: the base list of 3 Specialists
+- Replaced by infinite mode in v1.1.0
 
-### 6.2 Infinite mode (senior)
+### 6.2 Infinite mode (senior, v1.1.0)
 
 - `useInfiniteQuery(['specialists', 'infinite'])`, offset pagination:
   - `initialPageParam: 0`
   - `getNextPageParam: (last) => last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined`
-- Page size: **20** **[ASSUMPTION]**
+- Page size: **10** (a config value). 103 Specialists load in 11 pages, so loading, failure and Retry come up often during the demo
 - `onEndReached` → `fetchNextPage()` only if `hasNextPage && !isFetchingNextPage` (prevents duplicate fetches)
 - `onEndReachedThreshold` ≈ 0.5
 - Flattened items are de-duplicated by `id`
 - Footer shows a spinner while fetching the next page, or the inline error view with Retry if the next page fails
-- Pull-to-refresh resets to the first page
 
 ### 6.3 Required comparison (explain in PR and be ready to discuss)
 
@@ -223,9 +238,11 @@ Hooks live in the viewmodel layer and depend only on `SpecialistRepository`.
 | Memory — rendered views | Bounded by FlatList virtualization (window) | Same |
 | Scrolling | Scrollbar length known up front | Scrollbar grows as pages load; footer loader appears |
 | Failure modes | One request fails → whole list fails | First-page failure vs next-page failure handled separately |
-| Extra concerns | — | Duplicate `onEndReached` calls, retry of a single page, refresh resetting pages |
+| Extra concerns | — | Duplicate `onEndReached` calls, retry of a single page |
 
 Key point: **virtualization limits rendered views; pagination limits fetched data and network cost.** They solve different problems.
+
+The table compares both approaches for the same list size *n*. In the app they live in different releases: check out `v1.0.0` for the plain list (3 Specialists) and `v1.1.0` for infinite scroll (103 Specialists). The README shows screenshots of both side by side, and the PR explains the differences.
 
 ### 6.4 Offset vs cursor pagination (ADR-007)
 
@@ -242,13 +259,13 @@ Mitigation for the shifting-data risk: de-duplicate items by `id` when flattenin
 
 ### 6.5 UX trade-off to raise
 
-In infinite mode, the contact info and agreements in the list footer are only reachable after every page is loaded. Proposed options (documented in ADR-006 and the PR):
+In infinite mode, the contact info and agreements in the list footer are only reachable after every page is loaded (103 Specialists at 10 per page is 11 pages). Options considered:
 
-1. Keep as is (simplest, matches design literally)
-2. Show the first N specialists + "See all" leading to a dedicated infinite list screen
+1. Keep as is (simplest, matches the design literally)
+2. Show the first N Specialists + "See all" leading to a dedicated infinite list screen
 3. Move contact info into the bottom section
 
-**[ASSUMPTION]** Implement option 1, document options 2–3 (§15, Q4).
+**Decision: option 1.** It matches Figma and is the simplest; options 2–3 are described in the PR as the trade-off. Easy to change later, so no ADR.
 
 ---
 
@@ -262,13 +279,13 @@ interface FeatureFlagService {
 }
 ```
 
-- Current implementation: local, in-memory flags with defaults from config; a dev toggle on Home updates them at runtime
-- Future implementations (e.g. remote config) plug in behind the same interface (ADR-003)
+- Current implementation: `LocalFeatureFlagService`, in-memory flags with defaults from config, switched at runtime from the Home demo settings menu (§4.1)
+- **This is a demo shortcut, not the recommended production approach.** In production the flag should come from a remote source the business controls without an app release: **Firebase Remote Config**, or the **CMS** back office planned for Q2. Either plugs in as another `FeatureFlagService` implementation, with a safe default (off) when the remote value is unavailable; UI and hooks do not change. The README says so
 - Exposed through a context + `useFeatureFlag(flag)` hook
 - **Guarded in two places:**
-  1. Entry button on Home (navigate vs. coming-soon dialog)
-  2. The Consultation route itself, so a deep link cannot bypass the flag (shows coming-soon / redirects back)
-- Demo: screen recording toggling the flag and pressing the button in both states
+  1. The entry button on Home (navigate vs. coming-soon dialog)
+  2. The `Consultation` route itself, so a deep link cannot bypass the flag (shows coming-soon / redirects back)
+- Demo: screen recording switching the flag in the demo settings menu and pressing the entry button in both states
 
 ---
 
@@ -277,6 +294,18 @@ interface FeatureFlagService {
 ### Requirement
 
 Pressing the entry button twice quickly (including programmatically in tests) must not open the "coming soon" dialog twice.
+
+### Coming-soon dialog
+
+A custom, centred dialog component, not the native `Alert.alert`: `DialogManager` must control showing and queueing, and native alerts behave differently on iOS and Android. Not in Figma or the PRD; copy:
+
+| | English | Chinese (`zh-HK`) |
+|---|---|---|
+| Title | Coming soon | 即將推出 |
+| Body | Premium consultation will be available soon. | 尊尚諮詢服務即將推出，敬請期待。 |
+| Button | OK | 知道了 |
+
+The button uses the black primary button style.
 
 ### Approach
 
@@ -290,29 +319,63 @@ Two presses can be handled before React re-renders. A `useState` check would rea
 
 ### Bonus: multiple buttons and multiple dialogs
 
+The app has a single entry button, so this is answered in the PR and README and covered by `DialogManager` tests rather than shown in the app.
+
 - Dialogs are identified by ID; the same ID cannot be shown twice regardless of which button triggered it.
-- Policy for different IDs: **one dialog at a time; later requests are queued** **[ASSUMPTION]**. Alternative policies (drop, replace) are documented.
+- Policy, decided by state rather than time:
+  - **Same ID** already showing or already queued → the request is ignored.
+  - **Different ID** while another dialog is showing → queued; shown when the current one closes.
+  - Otherwise → shown immediately.
+- Considered and rejected: a time-based throttle as the dialog's guarantee (buttons do have a throttle, §8a, but only against hand jitter). It would let a duplicate through once the window passes while the dialog is still open, and block a legitimate press right after the dialog closes. Dropping or replacing on a different ID were also rejected: they lose or cut short a message.
 
 ### Test
 
-- Render Home with the flag disabled, call `fireEvent.press` twice synchronously, assert exactly one dialog is rendered.
+- `DialogManager` on its own: call `show` twice with the same ID → one dialog (§13).
+- Integration: render Home with the flag disabled, call `fireEvent.press` twice synchronously, assert exactly one dialog is rendered. The button throttle (§8a) also blocks the second press here, which is why `DialogManager` is tested on its own as well.
 
-(ADR-004)
+---
+
+## 8a. Duplicate-press protection (all releases)
+
+Protection against repeated presses is layered. Each layer has one job and is tested on its own (§13):
+
+| Layer | Guards against | Decided by | Scope | Release |
+|---|---|---|---|---|
+| 1. Button throttle | Hand jitter, rapid double taps | Time: leading edge, then presses within **300 ms** are ignored | Every pressable | v1.0.0 |
+| 2. Navigation re-entry guard | Navigating twice, stacking the same screen | State: a navigation in flight, or a caller that is no longer focused | Every navigation | v1.1.0 |
+| 3. Dialog de-duplication | The same dialog opening twice | State: same ID showing or queued (§8) | Every dialog | v1.1.0 |
+
+- **Layer 1, `ThrottledPressable`.** A shared press component; the first press fires immediately and further presses within 300 ms (a config value) are ignored. Every pressable in the app uses it: primary buttons, the hamburger and back buttons, Retry. The hotline and email links are `Text` inside `<Trans>` (§9), so they use the same throttle through its `useThrottledPress` hook. Never use `Pressable` or `TouchableOpacity` directly (§14a).
+- **Layer 2, `guardedNavigate`.** An app-level guard, independent of the feature flag: every navigation goes through it instead of calling `navigation.navigate` directly. It is added with React Navigation in v1.1.0.
+
+  ```text
+  guardedNavigate(route)
+    a navigation is in flight            → ignore
+    the calling screen is not focused    → ignore (e.g. it is animating out)
+    otherwise                            → mark in flight (ref, synchronous), navigate
+  target screen focused and its transition ended → clear in flight
+  ```
+
+  Like the dialog guard, it is decided by state, not time, and uses a ref so two calls in the same tick both see the first one.
+- The bottom section's actions (Book appointment, WhatsApp us, hotline, email) rely on layer 1 only: once the in-app browser or the external app opens, it covers the screen.
+- Layers 2 and 3 provide the guarantees; layer 1 only smooths out jitter.
+
 
 ---
 
 ## 9. Localization
 
 - Languages: **English (`en`)** and **Traditional Chinese, Hong Kong (`zh-HK`)** — the PRD's Chinese copy is written Cantonese, so it is `zh-HK`, not generic `zh-Hant`
-- Default: device language via `expo-localization` (`zh-*` with Hong Kong / Traditional script → `zh-HK`), fallback `en`
-- Runtime switch on Home (dev controls)
+- Default: device language via `expo-localization`. **Every Chinese locale** (`zh`, `zh-Hant`, `zh-HK`, `zh-TW`, `zh-MO`, and Simplified `zh-Hans`, `zh-CN`, `zh-SG`) → `zh-HK`, because it is the only Chinese the app has and Chinese readers are better served by it than by English. `en-*` → `en`
+- **Fallback is English** (`fallbackLng: 'en'`): a device language with no matching translation shows English, and a string missing from `zh-HK` shows its English text instead of a blank or a key name
+- **The app follows the system language.** There is no in-app language switch. Changing the device language changes the app's language (on iOS the system restarts the app; on Android the app picks up the new locale)
 - **Every user-visible string** goes through i18n, including dialog text, error messages, button labels and accessibility labels
 - Phone numbers and email are data, not translated
 - The contact-info paragraph has a **different sentence structure per language** (EN: multi-line list; ZH: one sentence with the number and email inline). Use `<Trans>` with link components so each language controls its own word order while the hotline and email stay tappable
 - Typography per language follows the Figma text styles (read via MCP, §11)
 - **Copy comes from the PRD** (EN + ZH for every section); it is not duplicated here (§11a)
-- The PRD has no Chinese copy for the error view and Retry button **[ASSUMPTION]**: the author translates them and lists them in the PR
-- Copy not defined by the PRD (Home screen, coming-soon dialog, empty state, dev controls) is written by the author in both languages and listed in the PR
+- The error view's copy is defined by this spec, not the PRD (§10)
+- Copy not defined by the PRD (Home screen, coming-soon dialog, demo settings menu) is written by the author in both languages and listed in the PR; the error view and empty state copy is in §10
 
 ---
 
@@ -321,15 +384,39 @@ Two presses can be handled before React re-renders. A `useState` check would rea
 | State | Where | UI |
 |---|---|---|
 | Loading (first page) | List body | Skeleton cards (same size as SpecialistCard) |
-| Error (first page) | List body | **Inline error view** (PRD): error text + **Retry button only** → refetch |
-| Empty | List body | Short message **[ASSUMPTION]** (not specified by PRD) |
+| Error (first page, v1.1.0) | List body | `InlineErrorView` full size: **Retry button only** → refetch |
+| Empty | List body | One line of centred grey text; no icon, no Retry |
 | Loading (next page) | List footer | Spinner |
-| Error (next page) | List footer | Same inline error view; Retry → `fetchNextPage` |
-| Refreshing | List | Pull-to-refresh indicator |
+| Error (next page, v1.1.0) | List footer | `InlineErrorView` compact size; Retry → `fetchNextPage` |
 
-- PRD note: the reference screenshot shows a "Close" button; that is incorrect — **only Retry** is shown.
-- The PRD error text says "close the app and try again" while the only action is Retry. Implemented as written; the mismatch is raised in §15, Q5.
-- Header, footer content and the bottom section stay visible in every state. The hardcoded repository can be configured to fail so error states can be demonstrated.
+- **Inline error view (v1.1.0).** The PRD has only a screenshot (with a "Close" button the PRD itself calls incorrect), no Figma frame, no Chinese copy, and text that tells the user to close the app while the only action is Retry. So this spec defines the view, using the PRD screenshot as the layout reference. This deliberately departs from the PRD's wording.
+
+  | | English | Chinese (`zh-HK`) |
+  |---|---|---|
+  | Title | Oops! | 哎呀！ |
+  | Body | Something went wrong. Please try again. | 出咗啲問題，請再試一次。 |
+  | Button | Retry | 重試 |
+
+  - One component, `InlineErrorView`, in two sizes:
+    - **Full** (first page failed; fills the list body): circular "i" icon, title, body, full-width Retry button, as in the PRD screenshot.
+    - **Compact** (next page failed; in the list footer, below the Specialists already shown): body and Retry button only.
+  - The Retry button in both sizes uses the bottom section's black primary button style.
+- **Empty state.** Not defined by the PRD; hardcoded data is never empty, but a CMS with no Specialists configured would be. Copy:
+
+  | | English | Chinese (`zh-HK`) |
+  |---|---|---|
+  | Body | No Specialists are available right now. | 暫時未有專家提供服務。 |
+
+  No Retry, because reloading an empty list doesn't help; contact info and the bottom section stay available.
+- Header, footer content and the bottom section stay visible in every state.
+- No pull-to-refresh: neither the PRD nor the brief asks for it, and hardcoded data never changes. Add it with the CMS.
+- **Simulated failure (v1.1.0).** When the demo settings switch "Simulate loading failure" is on (§4.1):
+  - The first request after entering `ConsultationScreen` always succeeds, so the first page always loads.
+  - Every later request, including Retry, fails with probability **0.3** (a config value).
+  - A failed next page shows the inline error view in the list footer; Retry loads that page again, and on success its Specialists are appended after those already shown.
+  - The random source is injected into the repository: `Math.random` in the app, a fixed sequence in tests.
+  - So the full-size error view (first page failed) never appears in the demo; it is covered by tests (§13).
+- **Error handling ships in v1.1.0, not v1.0.0** (ADR-011). v1.0.0 reads hardcoded data that cannot fail, so it has no error state; v1.1.0 adds the inline error view, Retry, and a way to make the hardcoded repository fail for the demo. The README and the v1.0.0 release notes say so, because the brief lists error handling among the general requirements.
 
 ---
 
@@ -345,21 +432,20 @@ Visual details (colors, typography, spacing, radii, shadows, assets) are **not d
 1. Read the design variables (colors, fonts, effects) and generate `src/shared/theme.ts` from them; use semantic token names, not raw hex values in components
 2. Read design context per component (SpecialistCard, bottom section, agreements box, header) and translate to React Native `View` / `Text` / `StyleSheet` — no HTML elements, no Tailwind
 3. Export the hero image and icons as assets
-4. Ignore hidden layers (leftover elements such as tags, timestamps and icons on the cards)
+4. Ignore leftover layers: hidden layers (tags, timestamps and icons on the cards, an MPF/Manulife card, time slots) and layers outside the frame bounds (e.g. "Insurance material 1")
 5. Copy comes from the PRD (§11a), not from Figma text layers; never inline strings
 6. Bottom section uses a plain white background regardless of any glass/blur styling in Figma (PRD)
 
 MCP calls are rate-limited on the author's plan: read variables once, then fetch design context only for the components being built.
 
-## 11a. PRD source (zip)
+## 11a. PRD source (PDF)
 
-> **TODO:** The PRD is provided as a zip (saved Confluence page) at implementation time. Read it before building screens, i18n and actions.
-
-- The zip contains `Premium Consultation - Confluence.html` plus a `_files/` folder of Confluence scripts and a `__MACOSX/` folder — only the HTML holds content
-- Extract the visible text from the HTML (strip scripts and styles); the PRD screenshots are not included in the zip, so visuals come from Figma
-- Take from the PRD: section behaviour, EN/ZH copy, booking URL, WhatsApp number and pre-filled messages, hotline, email, error-view copy
-- Copy goes into `locales/en.json` and `locales/zh-HK.json`; URLs and contact values go into the config module
-- Keep the zip, the assignment PDF and any extracted HTML in `.private/` (git-ignored, see §14). Never commit them (company documents); reference the PRD in the PR as "provided separately" **[ASSUMPTION]**
+- The PRD is `.private/PRD-PremiumConsultation.pdf`: a single-page image capture of the Confluence page, with no text layer. Unlike Figma, it includes the PRD's UI screenshots.
+- **Work from `.private/prd.md`**, a verbatim transcription of the PDF: EN/ZH copy, behaviour notes, and what each screenshot shows. Check the PDF itself only when the transcription is in doubt.
+- Two code blocks are cut off in the PDF: the WhatsApp universal link (full URL supplied by the author) and the English pre-filled message (full text visible in the PRD screenshot). The booking URL comes from the PDF's link and was confirmed by the author. All three are recorded in `prd.md`.
+- Take from the PRD: section behaviour, EN/ZH copy, booking URL, WhatsApp number and pre-filled messages, hotline, email. The error view's copy comes from this spec instead (§10).
+- Copy goes into `locales/en.json` and `locales/zh-HK.json`; URLs and contact values go into the config module.
+- The PRD PDF, its transcription and the assignment brief (`.private/GainMiles-WrittenAssignment-PremiumConsultation.pdf`) stay in `.private/` (git-ignored, see §14). Never commit them (company documents); reference the PRD in the PR as "provided separately".
 
 ---
 
@@ -369,19 +455,21 @@ MCP calls are rate-limited on the author's plan: read variables once, then fetch
 src/
   app/
     App.tsx                     providers: QueryClient, Repository, FeatureFlags, Dialog, i18n
-    navigation.tsx
+    navigation.tsx              v1.1.0
   features/
     home/
       view/HomeScreen.tsx
       viewmodel/useConsultationEntry.ts
     consultation/
-      view/ConsultationScreen.tsx
+      view/ConsultationScreen.tsx          one screen; v1.0.0 plain, v1.1.0 infinite
+      view/ConsultationHeader.tsx          hero, title, description
       view/SpecialistCard.tsx
-      view/ConsultationBottomSection.tsx
       view/ContactInfo.tsx
-      view/states/              Skeleton, InlineErrorView, EmptyState
-      viewmodel/useSpecialists.ts          plain
-      viewmodel/useInfiniteSpecialists.ts  infinite
+      view/AgreementsNotice.tsx
+      view/ConsultationBottomSection.tsx
+      view/states/              Skeleton, EmptyState; InlineErrorView (v1.1.0)
+      viewmodel/useSpecialists.ts          plain (v1.0.0; removed in v1.1.0)
+      viewmodel/useInfiniteSpecialists.ts  infinite (v1.1.0)
       viewmodel/useConsultationActions.ts  booking, WhatsApp, tel, mailto
   data/
     specialist/
@@ -392,6 +480,8 @@ src/
       specialists.fixture.ts
       RepositoryProvider.tsx
   shared/
+    ui/                         ThrottledPressable
+    navigation/                 guardedNavigate (v1.1.0)
     featureFlags/
     dialog/                     DialogManager
     i18n/                       setup + locales/en.json, zh-HK.json
@@ -399,10 +489,31 @@ src/
     theme.ts
 docs/
   adr/
-  GLOSSARY.md
+GLOSSARY.md                     repo root, read by the agent skills
 ```
 
 Layering: **View** (components, no logic) → **ViewModel** (custom hooks) → **Data** (repository interface). UI and hooks never import a concrete repository. Side-effecting actions (`Linking`, `WebBrowser`) are wrapped in `useConsultationActions` so they can be mocked in tests.
+
+---
+
+## 12a. Naming conventions
+
+Code follows common TypeScript / React Native conventions, and domain names follow `GLOSSARY.md` (e.g. `Specialist`, not `Consultant`). ESLint enforces what it can (`@typescript-eslint/naming-convention`).
+
+| Kind | Convention | Example |
+|---|---|---|
+| Components, screens, types, interfaces, classes | PascalCase | `SpecialistCard`, `ConsultationScreen`, `SpecialistRepository` |
+| Component and screen files | PascalCase, matching the export | `SpecialistCard.tsx` |
+| Hooks | camelCase with `use` prefix, file named the same | `useInfiniteSpecialists.ts` |
+| Functions and variables | camelCase | `guardedNavigate`, `pageSize` |
+| Booleans | `is` / `has` / `should` / `can` prefix | `isEnabled`, `hasNextPage` |
+| Event props / handlers | `onX` for props, `handleX` for handlers | `onPress`, `handleRetry` |
+| Module-level constants | SCREAMING_SNAKE_CASE | `BOOKING_URL`, `PAGE_SIZE` |
+| Enum-like unions and string literals | camelCase values | `'premiumConsultation'` |
+| Folders | camelCase | `featureFlags/`, `specialist/` |
+| Tests | `*.test.ts(x)` next to the code under test | `HardcodedSpecialistRepository.test.ts` |
+| i18n keys | dot-separated camelCase, grouped by screen | `consultation.bookAppointment` |
+| No abbreviations | spell words out, except well-known ones (`id`, `url`) | `specialist`, not `spec` |
 
 ---
 
@@ -421,13 +532,16 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 
 | Seam | Type | Cases |
 |---|---|---|
-| `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved, configured failure |
-| `DialogManager` | Unit | Same ID twice → one dialog; different IDs → queued; close → next shown |
+| `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved; simulated failure (v1.1.0): first request after entering the screen succeeds, a later request fails when the injected random value is below 0.3 and succeeds otherwise |
+| `ThrottledPressable` | Component | Two presses within 300 ms → one call; a press after 300 ms → a second call; the first press fires immediately |
+| `guardedNavigate` (v1.1.0) | Unit | Called twice in the same tick (directly, not through a button) → one navigation; called from a screen that is not focused → ignored; after the target screen is focused and its transition ends → a new call navigates |
+| `DialogManager` | Unit | `show` twice with the same ID (called directly, not through a button) → one dialog; same ID while queued → ignored; different IDs → queued; close → next shown |
 | `useConsultationEntry` | Hook | Flag on → navigate; flag off → dialog |
 | Home screen | Component | Double press with flag off → exactly one dialog |
 | `useInfiniteSpecialists` | Hook | Loads first page; `fetchNextPage` appends; no fetch when `!hasNextPage` or already fetching; duplicate IDs across pages are removed |
 | `useConsultationActions` | Hook | Book → `openBrowserAsync` with booking URL; WhatsApp → `wa.me` URL with encoded message in the current language; hotline → `tel:`; email → `mailto:` |
-| Consultation screen | Component | Loading skeleton; inline error with Retry only, Retry refetches; empty; list renders names; contact info and agreements present; back button has no effect |
+| `ConsultationScreen` (v1.0.0, plain) | Component | Loading skeleton; empty; list renders the 3 base names in order; contact info and agreements present; back button has no effect |
+| `ConsultationScreen` (v1.1.0, infinite) | Component | Loading skeleton; first page renders; a failed first page shows the full-size inline error and Retry refetches; reaching the end loads the next page with a footer spinner; a failed next page shows the compact inline error in the footer with loaded Specialists still shown; Retry appends the page on success; back button returns to Home |
 | i18n | Component | Key strings render in both languages; contact links remain tappable in both languages |
 
 Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (retries disabled). `Linking` and `expo-web-browser` are mocked.
@@ -438,18 +552,20 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 
 ### Repository and PR
 
-> **TODO — branching:** `main` ← `dev` ← `feats/T-XXXX-[TicketName]`
+> **Branching:** `main` ← `dev` ← `feats/T-XXXX-[TicketName]`
 > - `main`: initial commit with `README.md` only (no code). `.gitignore`, `CLAUDE.md` and this spec land through ticket `T-0001` (ADR-008)
 > - `dev`: branched from `main`; integration branch
 > - `feats/T-XXXX-[TicketName]`: one branch per ticket, merged into `dev` via PR. `XXXX` is an auto-incrementing, zero-padded 4-digit sequence number (`T-0001`, `T-0002`, …), assigned in ticket order and never reused (e.g. `feats/T-0003-ProjectScaffolding`)
-> - Submission: PR `dev` → `main`, reviewed by the interviewer **[ASSUMPTION]**
+> - Releases (ADR-011): when every ticket of a release is merged into `dev`, open a PR `dev` → `main`, merge it with a merge commit, tag the merge commit with an annotated tag (`v1.0.0`, then `v1.1.0`) and publish a GitHub Release with release notes and demo videos. Development then continues on `dev`
+> - Each ticket belongs to a GitHub Milestone named after its release (`v1.0.0` or `v1.1.0`)
+> - Submission: the `v1.1.0` PR `dev` → `main` is the one handed to the interviewer. `v1.0.0` is merged and released by the author beforehand; the README explains both releases so the interviewer can check out either tag
 > - Small Conventional Commits; respond to review with new commits (no force-push during review)
 > - PRs merge with a merge commit (`--no-ff`); squash and rebase merges are disabled on GitHub. Ticket branches are kept after merge, locally and on `origin`, so reviewers can clone and inspect each PR's branch (ADR-009)
 > - Code owner: `.github/CODEOWNERS` assigns every path to `@LoS-Light`, so PRs mark owned files and request the owner's review. Not enforced as a required review: the repo is private on a free plan, so branch protection is unavailable
 
 ### .gitignore
 
-> Created in `T-0001` (before scaffolding, ADR-008); merge the Expo template's entries when scaffolding in `T-0003`. It must exclude `.private/` (PRD zip, assignment PDF, extracted PRD), `__MACOSX/`, secrets and generated native folders, and must **not** exclude `package-lock.json`.
+> Created in `T-0001` (before scaffolding, ADR-008); merge the Expo template's entries when scaffolding in `T-0003`. It must exclude `.private/` (PRD PDF and its transcription, assignment brief PDF), `__MACOSX/`, secrets and generated native folders, and must **not** exclude `package-lock.json`.
 
 ### CI (GitHub Actions on pull_request)
 
@@ -457,11 +573,13 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 
 ### README
 
-Setup (Node version, `npm ci`, `npx expo start`), architecture overview, how to swap to CMS, how to toggle the feature flag, list mode and simulated failure, how to run tests.
+Releases (what `v1.0.0` and `v1.1.0` each cover, and how to check out either tag), setup (Node version, `npm ci`, `npx expo start`), architecture overview, how to swap to CMS, the demo settings menu (feature flag and simulated failure) and why the in-app flag switch is a demo shortcut rather than the production approach (Firebase Remote Config or the CMS, §7), how to run tests.
 
-### PR description
+### PR description (release PRs `dev` → `main`)
 
-Summary · Demo (screenshots + videos: feature flag on/off, double-press, infinite scroll, language switch, error + retry, booking and WhatsApp redirects) · How to run · Architecture · Requirements checklist (brief + PRD) · Senior answers (§6.3, §7, §8) · Trade-offs and assumptions · Future work (CMS, remote flags)
+Senior items (feature flag, double-press, infinite scroll, §6.3, §7, §8) apply to the `v1.1.0` PR only.
+
+Summary · Demo (screenshots + videos: feature flag on/off, double-press, infinite scroll, both languages (via the device language setting), error + retry, booking and WhatsApp redirects) · How to run · Architecture · Requirements checklist (brief + PRD) · Senior answers (§6.3, §7, §8) · Trade-offs and assumptions · Future work (CMS, remote flags, restoring automatic query retries)
 
 ### Pre-submit checklist
 
@@ -486,7 +604,7 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 - Source: this spec (`docs/SPEC.md`). Do not run `/to-spec`; this file is the single spec.
 - Ticket ID: `T-XXXX`, an auto-incrementing, zero-padded 4-digit number starting at `T-0001`, assigned in implementation order and never reused.
 - Ticket name: short PascalCase, used in the branch name (e.g. `T-0003 ProjectScaffolding`).
-- Each ticket lists: the spec sections it covers, its acceptance criteria (from §16), its TDD seams (from §13), and the tickets it is blocked by.
+- Each ticket lists: the spec sections it covers, its acceptance criteria (from §15), its TDD seams (from §13), and the tickets it is blocked by.
 - One ticket = one branch = one PR. Keep tickets small enough to review in one sitting.
 - Fixed opening tickets (ADR-008):
   - `T-0001 RepoSetup`: `.gitignore`, `CLAUDE.md`, agent skills config, PR template and this spec. No app code.
@@ -510,30 +628,32 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 - Never commit directly to `main` or `dev`; never force-push a branch that has an open PR.
 - Never delete a ticket branch, locally or on `origin`, unless the author asks.
 - Never commit anything from `.private/` or secrets.
-- New or changed decisions → write an ADR in `docs/adr/` and update this spec in the same PR.
-- If the spec is ambiguous, stop and ask the author instead of guessing; record the answer as an ADR or an [ASSUMPTION].
+- Record every new or changed decision in this spec, in the same PR, and list it in the PR's Decisions section.
+- Also write an ADR in `docs/adr/` only when all three hold: hard to reverse, surprising without context, and the result of a real trade-off. Otherwise the spec is enough.
+- ADR numbering: ADR-002, ADR-005 and ADR-007 were written for decisions the original draft already named; ADR-001, 003, 004 and 006 stay unused. Every new ADR takes the highest existing number + 1 (from 012). Files are named `NNNN-slug.md`; titles and references use three digits (`ADR-012`).
+- ADR format: a title and one to three sentences (context, decision, why). Add Status, Considered Options or Consequences only when they add value. ADR-008 to ADR-010 keep their longer format.
+- Every pressable uses `ThrottledPressable` (§8a); never use `Pressable` or `TouchableOpacity` directly. Every navigation goes through `guardedNavigate` (§8a, v1.1.0); never call `navigation.navigate` directly.
+- Follow the naming conventions in §12a.
+- If the spec is ambiguous, stop and ask the author instead of guessing; record the answer in this spec, and as an ADR only if it passes the three-part test below.
 - Remind the author to export the conversation (`/export`) at the end of each session.
 
 ### Final submission
 
-When all tickets are merged into `dev`: open the PR `dev` → `main` using the PR description outline in §14, after completing the pre-submit checklist.
+For each release (ADR-011), when all of its tickets are merged into `dev`:
+
+1. Complete the pre-submit checklist (§14).
+2. Open the PR `dev` → `main` titled `Release vX.Y.Z`, using the PR description outline in §14.
+3. After the author merges it: tag the merge commit (`git tag -a vX.Y.Z`), push the tag, and publish the GitHub Release.
+
+`v1.0.0` covers the general requirements; `v1.1.0` covers the senior requirements and is the PR handed to the interviewer.
 
 ---
 
-## 15. Open questions (to confirm with interviewer)
+## 15. Acceptance criteria
 
-1. **WhatsApp pre-filled message:** the PRD URL example differs from the dedicated "WhatsApp Pre-filled Message" section. Which one? (Assumed the dedicated, localized one.)
-2. **Entry point:** the brief says the Figma screen is the entry point; the senior section requires a button entry. Is adding a Home screen acceptable?
-3. **Back button:** the PRD says it does nothing. With a Home screen in front, is leaving via the native back gesture acceptable?
-4. **Infinite scroll footer:** how should contact info and agreements be handled when the list is paginated?
-5. **Error copy:** the error text says "close the app and try again" but the only action is Retry. Keep as written? Is there official Chinese copy for the error and the Retry button?
-6. **Navigation library:** any preference between React Navigation and Expo Router?
-7. **Review target:** should the interviewer review the single `dev` → `main` PR, or the per-ticket PRs into `dev`?
+### v1.0.0 — general requirements
 
----
-
-## 16. Acceptance criteria
-
+- [ ] The app opens on the Consultation screen
 - [ ] Consultation screen matches Figma visuals and PRD behaviour
 - [ ] Persistent white bottom section with service hours and two black buttons, built with `@gorhom/bottom-sheet`
 - [ ] Book appointment opens the booking site in an in-app browser with an option to open externally
@@ -542,11 +662,21 @@ When all tickets are merged into `dev`: open the PR `dev` → `main` using the P
 - [ ] Back button is rendered and does nothing
 - [ ] Specialist list is static (no interaction) and rendered in data-source order
 - [ ] Specialist data loaded through TanStack Query via `SpecialistRepository`
-- [ ] Loading, inline error with Retry only, and empty states for first page and next page
-- [ ] All visible text localized in English and Chinese (Hong Kong) using PRD copy, switchable at runtime
+- [ ] Loading and empty states
+- [ ] All visible text localized in English and Chinese (Hong Kong) using PRD copy, following the device language
 - [ ] Swapping hardcoded data for CMS requires changing only the provider setup
+- [ ] Reproducible build, CI green, README explains both releases and that error handling ships in v1.1.0
+- [ ] Release PR merged into `main`, tagged `v1.0.0`, GitHub Release published with demo videos
+
+### v1.1.0 — senior requirements
+
+- [ ] Home screen with an entry button is the app's entry point
+- [ ] Back button on the Consultation screen returns to Home
 - [ ] Feature flag gates entry from Home and the route itself; coming-soon dialog when disabled
 - [ ] Rapid double press opens the dialog once, covered by a test
-- [ ] Infinite scroll over 100+ specialists without duplicate page fetches
+- [ ] Infinite scroll over 103 Specialists (3 base + 100 generated) without duplicate page fetches
+- [ ] Inline error view with Retry only when the first page fails; Retry reloads
+- [ ] Next-page loading indicator, and next-page inline error with Retry
+- [ ] Hardcoded repository can be made to fail for the demo
 - [ ] Plain vs infinite comparison documented
-- [ ] Reproducible build, CI green, PR submitted with demo videos
+- [ ] Release PR `dev` → `main` submitted to the interviewer with demo videos; tagged `v1.1.0` after merge
