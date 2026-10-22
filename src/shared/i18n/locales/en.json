@@ -1,5 +1,11 @@
 {
+  "home": {
+    "premiumConsultation": "Premium consultation"
+  },
   "consultation": {
+    "navBar": {
+      "back": "Back"
+    },
     "header": {
       "overline": "Got more questions?",
       "title": "GUM Specialists are here!",

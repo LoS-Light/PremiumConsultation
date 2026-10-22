@@ -1,5 +1,11 @@
 {
+  "home": {
+    "premiumConsultation": "尊尚諮詢"
+  },
   "consultation": {
+    "navBar": {
+      "back": "返回"
+    },
     "header": {
       "overline": "有更多問題嗎？",
       "title": "GUM 專家為你服務！",

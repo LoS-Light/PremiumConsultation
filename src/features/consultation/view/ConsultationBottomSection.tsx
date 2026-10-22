@@ -5,14 +5,10 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS, SHADOWS, TYPOGRAPHY } from '../../../shared/theme';
+import { bottomControlsPadding } from '../../../shared/ui/bottomControlsPadding';
 import { PrimaryButton } from '../../../shared/ui/PrimaryButton';
 import { useConsultationActions } from '../viewmodel/useConsultationActions';
-
-// Figma: 10 pt between the content and the 34 pt home indicator area. The bottom inset covers
-// that area, but Android's gesture bar is shorter, so keep at least Figma's 34 pt everywhere
-// and the section looks the same on both platforms.
-const CONTENT_BOTTOM_PADDING = 10;
-const MIN_BOTTOM_INSET = 34;
+import { VERTICAL_DRAG_THRESHOLD } from './layout';
 
 // Service hours and the two actions (PRD: they persist at the bottom of the page). Rendered as
 // the content sheet's footer, so it stays at the bottom of the screen (ADR-012).
@@ -27,15 +23,16 @@ export function ConsultationBottomSection({
   // The sheet's drag gesture covers its footer too. This pan does nothing but claims drags that
   // start on the bottom section, so the section stays fixed and the sheet doesn't move. Taps
   // still reach the buttons.
-  const blockSheetDrag = useMemo(() => Gesture.Pan(), []);
+  // Like the sheet, it only claims vertical drags, so a swipe back from the edge still works.
+  const blockSheetDrag = useMemo(
+    () => Gesture.Pan().activeOffsetY(VERTICAL_DRAG_THRESHOLD).failOffsetX(VERTICAL_DRAG_THRESHOLD),
+    [],
+  );
 
   return (
     <GestureDetector gesture={blockSheetDrag}>
       <View
-        style={[
-          styles.section,
-          { paddingBottom: Math.max(insets.bottom, MIN_BOTTOM_INSET) + CONTENT_BOTTOM_PADDING },
-        ]}
+        style={[styles.section, { paddingBottom: bottomControlsPadding(insets.bottom) }]}
         onLayout={(event: LayoutChangeEvent) => onHeightChange(event.nativeEvent.layout.height)}
       >
         <Text style={styles.serviceHours}>{t('consultation.bottomSection.serviceHours')}</Text>

@@ -13,3 +13,7 @@ const CARD_TOP_IN_DESIGN = 230;
 export function collapsedSheetTop(screenWidth: number): number {
   return (CARD_TOP_IN_DESIGN * screenWidth) / DESIGN_WIDTH;
 }
+
+// How far a finger moves (pt) before a drag on the content sheet or the bottom section counts
+// as vertical (and is theirs) or horizontal (and is left to the stack's swipe back, ADR-013).
+export const VERTICAL_DRAG_THRESHOLD: [number, number] = [-10, 10];

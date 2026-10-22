@@ -2,6 +2,7 @@ import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
 import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
 import { NotoSansTC_700Bold } from '@expo-google-fonts/noto-sans-tc/700Bold';
+import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -12,8 +13,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { RepositoryProvider } from '../data/specialist/RepositoryProvider';
-import { ConsultationScreen } from '../features/consultation/view/ConsultationScreen';
 import { useAppLanguage } from '../shared/i18n/useAppLanguage';
+import { RootNavigator } from './navigation';
 import { specialistRepository } from './specialistRepository';
 
 // Keep the splash screen up until the Figma fonts are ready.
@@ -62,7 +63,9 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
           <RepositoryProvider repository={specialistRepository}>
             <I18nextProvider i18n={i18n}>
-              <ConsultationScreen />
+              <NavigationContainer>
+                <RootNavigator />
+              </NavigationContainer>
             </I18nextProvider>
           </RepositoryProvider>
         </QueryClientProvider>

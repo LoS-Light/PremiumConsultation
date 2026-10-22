@@ -55,7 +55,7 @@ Delivered in two releases (ADR-011):
 | Concern | Choice | Reason |
 |---|---|---|
 | Framework | Expo (managed), TypeScript, blank template | Reproducible build with minimal native setup; no custom native code required |
-| Navigation | v1.0.0: none. v1.1.0: React Navigation (native stack) | v1.0.0 has a single screen, and its top bar is Figma's custom nav bar, not a navigator header. v1.1.0 adds Home → Consultation and back; two screens are explicit and easy to explain with a native stack, without Expo Router's file-based conventions |
+| Navigation | v1.0.0: none. v1.1.0: React Navigation (JS stack, iOS transitions on both platforms, ADR-013) | v1.0.0 has a single screen, and its top bar is Figma's custom nav bar, not a navigator header. v1.1.0 adds Home → Consultation and back; two screens are explicit and easy to explain with a stack, without Expo Router's file-based conventions. The JS stack (not the native stack) gives Android the same push, pop and swipe back as iOS (ADR-013) |
 | Data fetching | TanStack Query (`useQuery`, `useInfiniteQuery`) | Required by the brief; built-in loading/error/retry/pagination |
 | Bottom sheet | `@gorhom/bottom-sheet` (+ `react-native-reanimated`, `react-native-gesture-handler`) | Required by the brief |
 | In-app browser | `expo-web-browser` | PRD: booking opens in an in-app browser that offers "open in external browser" |
@@ -72,9 +72,9 @@ Delivered in two releases (ADR-011):
 
 ### 4.1 Home (entry point, v1.1.0) — not in Figma / PRD
 
-Minimal screen that exists to satisfy the senior requirement. It does not exist in v1.0.0.
+Minimal screen that exists to satisfy the senior requirement. It does not exist in v1.0.0. It reuses the Consultation hero (image and gradient) at the top, on the hero's background colour (LY2) so the gradient fades into the screen, with the entry button at the bottom, placed like the Consultation screen's last button (on Android both sit 10 dp higher, §4.2).
 
-- One entry button: **"Premium consultation"** (i18n key), behind the feature flag `premiumConsultation`:
+- One entry button: **"Premium consultation"** / **「尊尚諮詢」** (`home.premiumConsultation`), behind the feature flag `premiumConsultation`:
   - **enabled** → navigate to `ConsultationScreen`
   - **disabled** → show the "Coming soon" dialog (see §8)
 - **Demo settings menu:** a hamburger button at the top right of Home, shown in every build (it is a demo app, and the README tells reviewers about it). It opens a `BottomSheetModal` (`@gorhom/bottom-sheet`, no new dependency) titled **"Demo settings"** with two switches, each with a one-line description below it. Both values live in memory only (no persistence; an app restart resets them). All its copy is localized:
@@ -109,12 +109,12 @@ ConsultationScreen
     └─ footerComponent: persistent bottom section (service hours, two buttons)
 ```
 
-**Sheet behaviour:** it appears already collapsed, with no opening animation, and can only grow: it never rests below the collapsed point and cannot be closed. Pulling down at the collapsed point stretches the sheet a little with resistance and springs it back (gorhom's over-drag). Once a drag starts with the list scrolled, it only scrolls the list; collapsing needs a new drag (gorhom's design). Dragging moves the sheet until it is expanded; after that the list scrolls (gorhom's built-in hand-off). Pulling past the end of the list bounces on iOS and stretches on Android (the platform's native overscroll; gorhom turns Android's off by default, so the list turns it back on). Snap points are computed from the full screen frame, not the window, because Android's window size leaves out the status and navigation bars. The bottom section keeps at least Figma's 34 pt home-indicator area below its content (more when the system's bottom inset is larger), so it looks the same on Android, whose gesture bar is shorter.
+**Sheet behaviour:** it appears already collapsed, with no opening animation, and can only grow: it never rests below the collapsed point and cannot be closed. Pulling down at the collapsed point stretches the sheet a little with resistance and springs it back (gorhom's over-drag). Once a drag starts with the list scrolled, it only scrolls the list; collapsing needs a new drag (gorhom's design). Dragging moves the sheet until it is expanded; after that the list scrolls (gorhom's built-in hand-off). Pulling past the end of the list bounces on iOS and stretches on Android (the platform's native overscroll; gorhom turns Android's off by default, so the list turns it back on). The sheet and the bottom section only claim vertical drags, so a swipe back from the left edge works over them too (ADR-013). Snap points are computed from the full screen frame, not the window, because Android's window size leaves out the status and navigation bars. The bottom section keeps at least Figma's 34 pt home-indicator area below its content (more when the system's bottom inset is larger), so it looks the same on Android, whose gesture bar is shorter. On Android, the bottom controls of both screens (this section and Home's button) sit a further 10 dp higher, the author's visual choice.
 
 **Back button:**
 
 - **v1.0.0:** rendered for visual fidelity with no action, as the PRD says ("Clicking it does nothing"). There is no screen behind it; the Android back button leaves the app as usual.
-- **v1.1.0:** Home sits in front of this screen, so `<` returns to Home, as do the iOS back gesture and the Android back button. This deliberately departs from the PRD, because v1.1.0 adds a screen to return to.
+- **v1.1.0:** Home sits in front of this screen, so `<` returns to Home, as do the swipe back from the left edge (on both platforms, ADR-013) and the Android back button. This deliberately departs from the PRD, because v1.1.0 adds a screen to return to.
 
 ### 4.3 SpecialistCard
 
@@ -139,7 +139,7 @@ ConsultationScreen
 | WhatsApp us | Open WhatsApp chat with the ES number and a pre-filled, localized message | `Linking.openURL` with a `wa.me` universal link; message from i18n, URL-encoded; falls back to the browser if WhatsApp is not installed |
 | Hotline | Open the dialer with the number pre-filled | `Linking.openURL('tel:…')` |
 | Email | Open the default mail app with the recipient pre-filled | `Linking.openURL('mailto:…')` |
-| Back (nav bar) | v1.0.0: does nothing (PRD). v1.1.0: returns to Home | v1.0.0: no handler. v1.1.0: `navigation.goBack()` |
+| Back (nav bar) | v1.0.0: does nothing (PRD). v1.1.0: returns to Home | v1.0.0: no handler. v1.1.0: `useGuardedNavigation().goBack`, ignored once the screen is no longer focused (§8a). Accessibility label "Back" / 「返回」 (`consultation.navBar.back`) |
 
 Booking URL, WhatsApp number, hotline and email come from the PRD and live in a single config module, never inline in components.
 
@@ -342,17 +342,19 @@ Protection against repeated presses is layered. Each layer has one job and is te
 | 3. Dialog de-duplication | The same dialog opening twice | State: same ID showing or queued (§8) | Every dialog | v1.1.0 |
 
 - **Layer 1, `ThrottledPressable`.** A shared press component; the first press fires immediately and further presses within 300 ms (a config value) are ignored. Every pressable in the app uses it: primary buttons, the hamburger and back buttons, Retry. The hotline and email links are `Text` inside `<Trans>` (§9), so they use the same throttle through its `useThrottledPress` hook. Never use `Pressable` or `TouchableOpacity` directly (§14a).
-- **Layer 2, `guardedNavigate`.** An app-level guard, independent of the feature flag: every navigation goes through it instead of calling `navigation.navigate` directly. It is added with React Navigation in v1.1.0.
+- **Layer 2, `guardedNavigate`.** An app-level guard, independent of the feature flag: every screen-initiated navigation goes through it instead of calling `navigation.navigate` directly. It is added with React Navigation in v1.1.0. The system's back actions (the swipe back from the left edge, the Android back button) don't go through it; the stack handles those itself.
 
   ```text
   guardedNavigate(route)
     a navigation is in flight            → ignore
     the calling screen is not focused    → ignore (e.g. it is animating out)
     otherwise                            → mark in flight (ref, synchronous), navigate
-  target screen focused and its transition ended → clear in flight
+  a screen gains focus (the target, or the caller again) → clear in flight
   ```
 
-  Like the dialog guard, it is decided by state, not time, and uses a ref so two calls in the same tick both see the first one.
+  Like the dialog guard, it is decided by state, not time, and uses a ref so two calls in the same tick both see the first one. The navigator owns one guard and clears it whenever a screen gains focus: either the target screen (the caller is then unfocused, so the focus rule still blocks a second push) or the caller again (a back interrupted the push). Clearing on the opening screen's `transitionEnd` was tried first and left the guard stuck when a back interrupted the push. Screens reach it through `useGuardedNavigation()`, whose `goBack` applies the same focus rule: a screen that is already animating out cannot go back a second time.
+
+  **Known limitation:** a navigation that changes no screen's focus (a no-op, or one the route-level flag gate cancels before any screen is focused, §7) would leave the mark set, and every later navigation would be ignored. T-0011 checks this when it designs the route gate.
 - The bottom section's actions (Book appointment, WhatsApp us, hotline, email) rely on layer 1 only: once the in-app browser or the external app opens, it covers the screen.
 - Layers 2 and 3 provide the guarantees; layer 1 only smooths out jitter.
 
@@ -460,7 +462,7 @@ src/
       viewmodel/useConsultationEntry.ts
     consultation/
       view/ConsultationScreen.tsx          one screen; v1.0.0 plain, v1.1.0 infinite
-      view/ConsultationHeader.tsx          hero, title, description
+      view/ConsultationHeader.tsx          title, divider, description
       view/SpecialistCard.tsx
       view/ContactInfo.tsx
       view/AgreementsNotice.tsx
@@ -478,8 +480,8 @@ src/
       specialists.fixture.ts
       RepositoryProvider.tsx
   shared/
-    ui/                         ThrottledPressable, PrimaryButton
-    navigation/                 guardedNavigate (v1.1.0)
+    ui/                         ThrottledPressable, PrimaryButton, HeroBanner (Home and Consultation), bottomControlsPadding
+    navigation/                 navigationGuard (guardedNavigate), NavigationGuardProvider + useGuardedNavigation (v1.1.0)
     featureFlags/
     dialog/                     DialogManager
     i18n/                       setup + locales/en.json, zh-HK.json
@@ -531,17 +533,17 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 
 | Seam | Type | Cases |
 |---|---|---|
-| `App` smoke test | Component | The app boots with its providers and opens on the Consultation screen (since T-0004; in T-0003 it only proved the test setup worked) |
+| `App` smoke test | Component | The app boots with its providers and opens on the Consultation screen (T-0004 to v1.0.0), then on the Home screen (v1.1.0, T-0009; in T-0003 it only proved the test setup worked) |
 | `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved; simulated failure (v1.1.0): first request after entering the screen succeeds, a later request fails when the injected random value is below 0.3 and succeeds otherwise |
 | `ThrottledPressable` | Component | Two presses within 300 ms → one call; a press after 300 ms → a second call; the first press fires immediately |
-| `guardedNavigate` (v1.1.0) | Unit | Called twice in the same tick (directly, not through a button) → one navigation; called from a screen that is not focused → ignored; after the target screen is focused and its transition ends → a new call navigates |
+| `guardedNavigate` (v1.1.0) | Unit | Called twice in the same tick (directly, not through a button) → one navigation; called from a screen that is not focused → ignored; after a screen gains focus → a new call navigates; `guardedGoBack` from a screen that is not focused → ignored |
 | `DialogManager` | Unit | `show` twice with the same ID (called directly, not through a button) → one dialog; same ID while queued → ignored; different IDs → queued; close → next shown |
 | `useConsultationEntry` | Hook | Flag on → navigate; flag off → dialog |
 | Home screen | Component | Double press with flag off → exactly one dialog |
 | `useInfiniteSpecialists` | Hook | Loads first page; `fetchNextPage` appends; no fetch when `!hasNextPage` or already fetching; duplicate IDs across pages are removed |
 | `useConsultationActions` | Hook | Book → `openBrowserAsync` with booking URL; WhatsApp → `wa.me` URL with encoded message in the current language; hotline → `tel:`; email → `mailto:`; an action whose link the device cannot open does not throw |
 | `ConsultationScreen` (v1.0.0, plain) | Component | Loading skeleton; empty; a failed load does not show the empty state; list renders the 3 base names in order; contact info and agreements present; back button has no effect |
-| `ConsultationScreen` (v1.1.0, infinite) | Component | Loading skeleton; first page renders; a failed first page shows the full-size inline error and Retry refetches; reaching the end loads the next page with a footer spinner; a failed next page shows the compact inline error in the footer with loaded Specialists still shown; Retry appends the page on success; back button returns to Home |
+| `ConsultationScreen` (v1.1.0, infinite) | Component | Loading skeleton; first page renders; a failed first page shows the full-size inline error and Retry refetches; reaching the end loads the next page with a footer spinner; a failed next page shows the compact inline error in the footer with loaded Specialists still shown; Retry appends the page on success; back button returns to Home; a back that interrupts the push doesn't block the next entry |
 | i18n | Component | Key strings render in both languages; a string missing from `zh-HK` shows its English text; contact links remain tappable in both languages |
 | Locale resolution (T-0004) | Unit | Language `zh` with any script or region (`zh-Hant-HK`, `zh-Hant-TW`, `zh-Hant-MO`, `zh-Hans-CN`, `zh-Hans-SG`, `zh`) → `zh-HK`; `en-US`, `en-GB` → `en`; any other language (`ja-JP`, `fr-FR`, and `zha-CN`, Zhuang, whose code only starts with "zh") → `en` |
 

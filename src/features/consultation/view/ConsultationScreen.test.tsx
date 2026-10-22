@@ -1,15 +1,16 @@
+import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { I18nextProvider } from 'react-i18next';
 import { Linking } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { type RootStackParamList, RootNavigator } from '../../../app/navigation';
 import type { Specialist } from '../../../data/specialist/Specialist';
 import type { SpecialistRepository } from '../../../data/specialist/SpecialistRepository';
 import { RepositoryProvider } from '../../../data/specialist/RepositoryProvider';
 import { createI18n } from '../../../shared/i18n/createI18n';
 import type { AppLanguage } from '../../../shared/i18n/resolveLanguage';
-import { ConsultationScreen } from './ConsultationScreen';
 
 const FIGMA_SPECIALISTS: Specialist[] = [
   { id: '1', name: 'Kan Chung' },
@@ -29,9 +30,11 @@ function fakeRepository(specialists: Specialist[]): SpecialistRepository {
   };
 }
 
+// Renders the app's navigator, opened on the Consultation screen unless told otherwise.
 async function renderScreen(
   language: AppLanguage,
   repository: SpecialistRepository = fakeRepository(FIGMA_SPECIALISTS),
+  initialRouteName: keyof RootStackParamList = 'Consultation',
 ) {
   // A fresh QueryClient per test, with retries off (SPEC §13). gcTime: Infinity stops the
   // cache from scheduling a clean-up timer that would keep Jest from exiting.
@@ -43,7 +46,9 @@ async function renderScreen(
       <QueryClientProvider client={queryClient}>
         <RepositoryProvider repository={repository}>
           <I18nextProvider i18n={createI18n(language)}>
-            <ConsultationScreen />
+            <NavigationContainer>
+              <RootNavigator initialRouteName={initialRouteName} />
+            </NavigationContainer>
           </I18nextProvider>
         </RepositoryProvider>
       </QueryClientProvider>
@@ -76,16 +81,41 @@ describe('ConsultationScreen header', () => {
 });
 
 describe('ConsultationScreen back button', () => {
-  // In v1.0.0 the icon is decorative and has no press handler, so this only proves it is
-  // drawn and that pressing it leaves the screen as it was. It gains weight in v1.1.0
-  // (T-0009), when the back button navigates to Home.
-  test('is shown but pressing it does nothing (PRD)', async () => {
-    await renderScreen('en');
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
-    // The icon is decorative (hidden from screen readers), so include hidden elements.
-    await fireEvent.press(screen.getByTestId('consultation-back', { includeHiddenElements: true }));
+  test('returns to Home', async () => {
+    await renderScreen('en', undefined, 'Home');
+    await fireEvent.press(screen.getByText('Premium consultation'));
+    expect(await screen.findByText('GUM Specialists are here!')).toBeOnTheScreen();
 
-    expect(screen.getByText('GUM Specialists are here!')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+
+    await waitFor(() =>
+      expect(screen.queryByText('GUM Specialists are here!')).not.toBeOnTheScreen(),
+    );
+    expect(screen.getByText('Premium consultation')).toBeOnTheScreen();
+  });
+
+  test('opens again after a back that interrupts the opening transition', async () => {
+    // Move the clock past the entry button's 300 ms throttle between the two presses, so only
+    // the navigation guard can block the second one.
+    const realNow = Date.now.bind(Date);
+    let clockOffset = 0;
+    jest.spyOn(Date, 'now').mockImplementation(() => realNow() + clockOffset);
+    await renderScreen('en', undefined, 'Home');
+
+    await fireEvent.press(screen.getByText('Premium consultation'));
+    // Back before the Consultation screen has finished sliding in.
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    await waitFor(() =>
+      expect(screen.queryByText('GUM Specialists are here!')).not.toBeOnTheScreen(),
+    );
+    clockOffset += 1000;
+    await fireEvent.press(screen.getByText('Premium consultation'));
+
+    expect(await screen.findByText('GUM Specialists are here!')).toBeOnTheScreen();
   });
 });
 

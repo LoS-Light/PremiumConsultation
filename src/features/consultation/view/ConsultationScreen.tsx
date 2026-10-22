@@ -9,11 +9,11 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaFrame, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS } from '../../../shared/theme';
+import { HeroBanner } from '../../../shared/ui/HeroBanner';
 import { useSpecialists } from '../viewmodel/useSpecialists';
 import { AgreementsNotice } from './AgreementsNotice';
 import { ConsultationBottomSection } from './ConsultationBottomSection';
 import { ConsultationHeader } from './ConsultationHeader';
-import { ConsultationHero } from './ConsultationHero';
 import { ConsultationNavBar } from './ConsultationNavBar';
 import { ContactInfo } from './ContactInfo';
 import {
@@ -22,6 +22,7 @@ import {
   CONTENT_PADDING_HORIZONTAL,
   NAV_BAR_BOTTOM_PADDING,
   NAV_BAR_ROW_HEIGHT,
+  VERTICAL_DRAG_THRESHOLD,
 } from './layout';
 import { SpecialistCard } from './SpecialistCard';
 import { EmptyState } from './states/EmptyState';
@@ -57,7 +58,7 @@ export function ConsultationScreen() {
 
   return (
     <View style={styles.screen}>
-      <ConsultationHero />
+      <HeroBanner />
       <BottomSheet
         index={0}
         snapPoints={snapPoints}
@@ -67,6 +68,10 @@ export function ConsultationScreen() {
         enablePanDownToClose={false}
         // Pulling down at the collapsed point stretches the sheet a little and springs it back.
         enableOverDrag
+        // Only vertical drags move the sheet; a horizontal one fails, so a swipe from the left
+        // edge reaches the stack's swipe back (ADR-013).
+        activeOffsetY={VERTICAL_DRAG_THRESHOLD}
+        failOffsetX={VERTICAL_DRAG_THRESHOLD}
         handleComponent={null}
         backgroundStyle={styles.sheetBackground}
         footerComponent={renderFooter}

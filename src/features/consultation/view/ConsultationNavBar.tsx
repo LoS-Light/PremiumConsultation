@@ -1,29 +1,34 @@
 import { Image } from 'expo-image';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useGuardedNavigation } from '../../../shared/navigation/NavigationGuardProvider';
 import { SHADOWS } from '../../../shared/theme';
+import { ThrottledPressable } from '../../../shared/ui/ThrottledPressable';
 import { NAV_BAR_BOTTOM_PADDING, NAV_BAR_ROW_HEIGHT } from './layout';
 
 const BACK_ICON = require('../../../../assets/icons/back.svg');
 
-// Transparent bar fixed over the hero. The back icon is drawn for visual fidelity only:
-// the PRD says pressing it does nothing (v1.0.0), so it is not a button and is hidden from
-// screen readers rather than announced as a button that does nothing.
+// Transparent bar fixed over the hero. The back button returns to Home (v1.1.0), as do the swipe
+// back from the left edge and the Android back button (SPEC §4.2).
 export function ConsultationNavBar() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { goBack } = useGuardedNavigation();
 
   return (
     <View style={[styles.bar, { paddingTop: insets.top }]} pointerEvents="box-none">
       <View style={styles.row} pointerEvents="box-none">
-        <View
+        <ThrottledPressable
           testID="consultation-back"
-          style={styles.backIcon}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
+          accessibilityRole="button"
+          accessibilityLabel={t('consultation.navBar.back')}
+          onPress={goBack}
+          style={styles.backButton}
         >
           <Image source={BACK_ICON} style={styles.backIconImage} contentFit="contain" />
-        </View>
+        </ThrottledPressable>
       </View>
     </View>
   );
@@ -41,7 +46,7 @@ const styles = StyleSheet.create({
     height: NAV_BAR_ROW_HEIGHT,
     justifyContent: 'center',
   },
-  backIcon: {
+  backButton: {
     ...SHADOWS.navBar,
     paddingHorizontal: 16,
     paddingVertical: 10,
