@@ -13,6 +13,8 @@
       "bookAppointment": "Book appointment",
       "whatsAppUs": "WhatsApp us",
       "whatsAppMessage": "Hello, I would like to learn more about MPF information."
-    }
+    },
+    "contactInfo": "For general enquiries, please feel free to reach out to us using the method below:\nHotline: <hotline>{{hotline}}</hotline>\nEmail address: <email>{{email}}</email>",
+    "agreements": "Your use of our appointment service or communication via WhatsApp constitutes your agreement to our collection and use of personal data as outlined in our privacy policy."
   }
 }

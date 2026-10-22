@@ -1,4 +1,4 @@
-import {
+import BottomSheet, {
   BottomSheetFlatList,
   BottomSheetFooter,
   type BottomSheetFooterProps,
@@ -9,12 +9,13 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS } from '../../../shared/theme';
-import { ElasticContentBottomSheet } from '../../../shared/ui/ElasticContentBottomSheet';
 import { useSpecialists } from '../viewmodel/useSpecialists';
+import { AgreementsNotice } from './AgreementsNotice';
 import { ConsultationBottomSection } from './ConsultationBottomSection';
 import { ConsultationHeader } from './ConsultationHeader';
 import { ConsultationHero } from './ConsultationHero';
 import { ConsultationNavBar } from './ConsultationNavBar';
+import { ContactInfo } from './ContactInfo';
 import {
   collapsedSheetTop,
   CONTENT_GAP,
@@ -33,7 +34,8 @@ export function ConsultationScreen() {
   const { data: specialists = [], isPending, isError } = useSpecialists();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  // The list's bottom padding equals the footer's height, so nothing hides behind it.
+  // The list's bottom padding equals the sheet footer's (bottom section's) height, so nothing
+  // hides behind it.
   const [footerHeight, setFooterHeight] = useState(0);
 
   const snapPoints = useMemo(() => {
@@ -53,14 +55,15 @@ export function ConsultationScreen() {
   return (
     <View style={styles.screen}>
       <ConsultationHero />
-      <ElasticContentBottomSheet
+      <BottomSheet
         index={0}
         snapPoints={snapPoints}
         // Appear already collapsed, without sliding up on mount.
         animateOnMount={false}
         enableDynamicSizing={false}
         enablePanDownToClose={false}
-        // Pulling down when collapsed bounces the list, not the sheet.
+        // Pulling down at the collapsed point stretches the sheet a little and springs it back.
+        enableOverDrag
         handleComponent={null}
         backgroundStyle={styles.sheetBackground}
         footerComponent={renderFooter}
@@ -75,11 +78,22 @@ export function ConsultationScreen() {
           )}
           ListHeaderComponent={<ConsultationHeader />}
           ListEmptyComponent={<ListBodyState isPending={isPending} isError={isError} />}
+          ListFooterComponent={<ListEnd />}
           contentContainerStyle={{ paddingBottom: footerHeight }}
         />
-      </ElasticContentBottomSheet>
+      </BottomSheet>
       <ConsultationNavBar />
       <StatusBar style="dark" />
+    </View>
+  );
+}
+
+// Below the Specialists: contact info, then the agreements notice (Figma 2:139).
+function ListEnd() {
+  return (
+    <View style={styles.listEnd}>
+      <ContactInfo />
+      <AgreementsNotice />
     </View>
   );
 }
@@ -105,6 +119,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
+  },
+  // Figma: 32 pt from the last card (whose cell already adds 7) and between the blocks. Below
+  // the agreements, the full-length frame leaves 13 pt before the bottom section (968 → 981).
+  listEnd: {
+    paddingTop: 32 - CONTENT_GAP,
+    paddingBottom: 13,
+    paddingHorizontal: CONTENT_PADDING_HORIZONTAL,
+    gap: 32,
   },
   cell: {
     paddingHorizontal: CONTENT_PADDING_HORIZONTAL,

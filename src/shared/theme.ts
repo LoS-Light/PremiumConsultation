@@ -11,6 +11,10 @@ export const COLORS = {
   placeholder: '#A7A7A7', // Info/I6, the Specialist photo placeholder
   textMuted: '#A7A7A7', // Info/I6, secondary messages such as the empty state
   actionBackground: '#000000', // Primay/Black, primary buttons
+  textStrong: '#333333', // Primay/Dark Grey, the agreements notice
+  link: '#007AFF', // contact links in Figma (not a variable)
+  noticeBackground: '#FFFAE5', // Light Secounday/LY3
+  noticeBorder: '#F5E6A7', // Light Secounday/LY1
   textOnPrimary: '#FFFFFF', // Info/I1
   skeleton: '#F7F7F7', // Neutral/N2
 } as const;

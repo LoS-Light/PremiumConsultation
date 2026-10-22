@@ -13,6 +13,8 @@
       "bookAppointment": "立即預約諮詢",
       "whatsAppUs": "WhatsApp",
       "whatsAppMessage": "你好，我想了解更多有關強積金嘅資訊"
-    }
+    },
+    "contactInfo": "如有一般查詢，歡迎致電本公司熱線 <hotline>{{hotline}}</hotline> 或電郵至 <email>{{email}}</email> 與我們聯絡。",
+    "agreements": "閣下使用本公司之預約服務或透過 WhatsApp 與本公司聯絡，即表示同意本公司根據私隱政策所載條款，收集及使用閣下之個人資料。"
   }
 }

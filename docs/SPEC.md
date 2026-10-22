@@ -109,7 +109,7 @@ ConsultationScreen
     └─ footerComponent: persistent bottom section (service hours, two buttons)
 ```
 
-**Sheet behaviour:** it appears already collapsed, with no opening animation, and can only grow: it never moves below the collapsed point and cannot be closed. Pulling down from the collapsed point leaves the sheet in place and stretches the list inside with resistance, springing back on release, like a scroll view's bounce (the shared `ElasticContentBottomSheet` in `shared/ui`, a BottomSheet wrapper that owns this gesture handling; reuse it for any future sheet). Dragging moves the sheet until it is expanded; after that the list scrolls (gorhom's built-in hand-off).
+**Sheet behaviour:** it appears already collapsed, with no opening animation, and can only grow: it never rests below the collapsed point and cannot be closed. Pulling down at the collapsed point stretches the sheet a little with resistance and springs it back (gorhom's over-drag). Once a drag starts with the list scrolled, it only scrolls the list; collapsing needs a new drag (gorhom's design). Dragging moves the sheet until it is expanded; after that the list scrolls (gorhom's built-in hand-off).
 
 **Back button:**
 
@@ -142,6 +142,8 @@ ConsultationScreen
 | Back (nav bar) | v1.0.0: does nothing (PRD). v1.1.0: returns to Home | v1.0.0: no handler. v1.1.0: `navigation.goBack()` |
 
 Booking URL, WhatsApp number, hotline and email come from the PRD and live in a single config module, never inline in components.
+
+If the device cannot open a link (no app handles it: for example, the iOS simulator has no Phone or Mail app, or the user deleted Mail), the action catches the failure and the user stays on the screen with nothing shown. A message for this case would need copy the PRD doesn't have.
 
 > The PRD contains two different pre-filled WhatsApp messages. The "Universal link URL Format" example carries "Hi GUM Specialist! I am contacting via the app." (English only); the dedicated "Whatsapp Pre-filled Message" section gives localized EN/ZH text and matches the PRD screenshot. This spec uses the **dedicated section's message in the current language**, and takes only the URL **format** from the example: `https://wa.me/85260300900?text=<URL-encoded message>`. Trade-off: the dedicated message does not say it comes from the app, which the PRD overview lists as a goal.
 
@@ -476,7 +478,7 @@ src/
       specialists.fixture.ts
       RepositoryProvider.tsx
   shared/
-    ui/                         ThrottledPressable, PrimaryButton, ElasticContentBottomSheet
+    ui/                         ThrottledPressable, PrimaryButton
     navigation/                 guardedNavigate (v1.1.0)
     featureFlags/
     dialog/                     DialogManager
@@ -537,7 +539,7 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 | `useConsultationEntry` | Hook | Flag on → navigate; flag off → dialog |
 | Home screen | Component | Double press with flag off → exactly one dialog |
 | `useInfiniteSpecialists` | Hook | Loads first page; `fetchNextPage` appends; no fetch when `!hasNextPage` or already fetching; duplicate IDs across pages are removed |
-| `useConsultationActions` | Hook | Book → `openBrowserAsync` with booking URL; WhatsApp → `wa.me` URL with encoded message in the current language; hotline → `tel:`; email → `mailto:` |
+| `useConsultationActions` | Hook | Book → `openBrowserAsync` with booking URL; WhatsApp → `wa.me` URL with encoded message in the current language; hotline → `tel:`; email → `mailto:`; an action whose link the device cannot open does not throw |
 | `ConsultationScreen` (v1.0.0, plain) | Component | Loading skeleton; empty; a failed load does not show the empty state; list renders the 3 base names in order; contact info and agreements present; back button has no effect |
 | `ConsultationScreen` (v1.1.0, infinite) | Component | Loading skeleton; first page renders; a failed first page shows the full-size inline error and Retry refetches; reaching the end loads the next page with a footer spinner; a failed next page shows the compact inline error in the footer with loaded Specialists still shown; Retry appends the page on success; back button returns to Home |
 | i18n | Component | Key strings render in both languages; a string missing from `zh-HK` shows its English text; contact links remain tappable in both languages |
