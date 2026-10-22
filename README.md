@@ -97,6 +97,23 @@ The project uses Expo SDK 58, and each Expo Go release supports one SDK only.
 
 To see the Chinese copy, set the device language to Chinese (any `zh` locale shows Traditional Chinese, Hong Kong); every other language shows English.
 
+## Tech stack
+
+| Area | Choice | Used for |
+|---|---|---|
+| Framework | [Expo](https://docs.expo.dev/versions/v58.0.0/) SDK 58 (managed workflow), React Native 0.88, React 19.3 | The app on iOS and Android from one codebase; no native folders are committed |
+| Language | TypeScript 6.0, `strict` | Every source and test file |
+| Server state | [TanStack Query](https://tanstack.com/query/v5) v5 | Loading, caching and errors for the Specialist list: `useQuery` in `v1.0.0`, `useInfiniteQuery` (10 per page) in `v1.1.1` |
+| Navigation | [React Navigation](https://reactnavigation.org/) 7, JS stack (`@react-navigation/stack`) | Home → Consultation and the demo screens, with iOS's push, pop and swipe back on both platforms ([ADR-013](docs/adr/0013-js-stack-with-ios-transitions.md)). Not Expo Router: two screens don't need file-based routes |
+| Bottom sheets | [`@gorhom/bottom-sheet`](https://gorhom.dev/react-native-bottom-sheet/) 5, on Reanimated 4 and Gesture Handler 3 | The Consultation content sheet over the hero ([ADR-012](docs/adr/0012-content-bottom-sheet.md)) and the Feature toggles sheet |
+| Localization | i18next, react-i18next, `expo-localization` | English and Chinese (Hong Kong) copy, following the device language |
+| Expo modules | `expo-image`, `expo-linear-gradient`, `expo-web-browser`, `expo-font` with Inter and Noto Sans TC (`@expo-google-fonts`), `expo-splash-screen`, `expo-status-bar` | Images and SVG icons, the hero's fade, the booking page in an in-app browser, the Figma fonts, holding the splash screen until the fonts load |
+| Tests | Jest 30 (`jest-expo`), React Native Testing Library 14 | 94 tests, written test-first at agreed seams ([ADR-010](docs/adr/0010-test-driven-development.md)) |
+| Code quality | ESLint 9 (`eslint-config-expo`), Prettier 3, GitHub Actions | Lint and formatting; CI runs the type check, lint and tests on every pull request |
+| Tooling | Node 24.22.1 ([`.nvmrc`](.nvmrc)), npm | `npm ci` installs the exact versions in `package-lock.json` |
+
+No global state library: server data lives in TanStack Query, the feature flags in a small service read with `useSyncExternalStore`, and the dialog queue in a plain array inside the DialogManager. Every UI part (buttons, switch, spinner, dialogs, toasts) is a custom component, so iOS and Android look the same.
+
 ## Releases
 
 The assignment's general and senior requirements disagree on the entry point (the Figma screen versus a flag-gated Home button), so the work ships in two releases ([ADR-011](docs/adr/0011-two-releases.md)). The latest is `v1.1.1`.
@@ -206,23 +223,83 @@ Behaviour is developed test-first at agreed seams ([ADR-010](docs/adr/0010-test-
 Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Data** (a repository interface). Views and hooks never import a concrete repository.
 
 ```
-src/
-├── app/                     App (fonts), AppProviders, the navigator, and the one place each
-│                            service is picked: the Specialist repository and the feature flags
-├── data/specialist/         Specialist model, SpecialistRepository interface,
-│                            HardcodedSpecialistRepository, CmsSpecialistRepository (stub)
-├── features/
-│   ├── home/                Home, the Feature toggles sheet, useConsultationEntry
-│   ├── consultation/        the Consultation screen (hero, content sheet, cards, contact info,
-│   │                        agreements, bottom section, loading / empty / error states),
-│   │                        useInfiniteSpecialists, useConsultationActions, useConsultationGate
-│   ├── dialogDemo/          the Dialog demo screen
-│   └── toastDemo/           the Toast demo screen
-├── shared/                  theme, config, i18n, feature flags, the DialogManager,
-│                            UI parts (ThrottledPressable, PrimaryButton, ToggleSwitch,
-│                            LoadingSpinner, HeroBanner, BackNavBar)
-└── test/                    test helpers: the app's providers, fake repositories, a clock
+.
+├── index.ts                      Entry point: registers App
+├── app.json                      Expo config: name, version, icons, splash, plugins
+├── assets/                       App icons, splash, the hero image, SVG icons (back, info)
+├── demo/                         The README's screenshots and demo video
+├── docs/
+│   ├── SPEC.md                   The full specification
+│   └── adr/                      Architecture decision records
+├── GLOSSARY.md                   Domain terms (Specialist, Premium consultation, …)
+├── jest.setup.ts                 Jest mocks for native modules and the bottom sheet
+├── .github/workflows/ci.yml      CI: type check, lint, tests
+└── src/
+    ├── app/                      Composition root: the only place concrete services are picked
+    │   ├── App.tsx               Fonts, splash screen, the QueryClient
+    │   ├── AppProviders.tsx      Every provider in one place, shared by App and the tests
+    │   ├── navigation.tsx        The stack: Home → Consultation, Dialog demo, Toast demo
+    │   ├── specialistRepository.ts   Picks the repository: hardcoded today, the CMS later
+    │   └── featureFlagService.ts     Picks the flag service: in memory today, remote later
+    │
+    ├── data/specialist/          Data layer
+    │   ├── Specialist.ts         The model, and Page / PageParams for offset pagination
+    │   ├── SpecialistRepository.ts           The interface screens depend on
+    │   ├── HardcodedSpecialistRepository.ts  Pages a local list, simulated latency and failure
+    │   ├── CmsSpecialistRepository.ts        Stub for the Q2 CMS
+    │   ├── RepositoryProvider.tsx            Provides the repository (useSpecialistRepository)
+    │   └── specialists.fixture.ts            The 3 Figma Specialists and 100 generated ones
+    │
+    ├── features/                 One folder per screen, each split into view/ and viewmodel/
+    │   ├── home/
+    │   │   ├── view/HomeScreen.tsx                The four buttons over the hero
+    │   │   ├── view/FeatureTogglesSheet.tsx       The five demo switches
+    │   │   ├── viewmodel/useConsultationEntry.ts  Opens the screen, or the Coming soon dialog
+    │   │   └── viewmodel/useFeatureToggle.ts      One switch of the sheet
+    │   ├── consultation/
+    │   │   ├── view/ConsultationScreen.tsx        Hero, content sheet with the list, bottom section
+    │   │   ├── view/ConsultationHeader.tsx        "Got more questions?" and the intro
+    │   │   ├── view/SpecialistCard.tsx            Photo (or placeholder) and name
+    │   │   ├── view/ContactInfo.tsx               Hotline and email, tappable
+    │   │   ├── view/AgreementsNotice.tsx          The WhatsApp and privacy notice
+    │   │   ├── view/ConsultationBottomSection.tsx Service hours, Book appointment, WhatsApp us
+    │   │   ├── view/states/                       SpecialistSkeleton, EmptyState, InlineErrorView
+    │   │   ├── view/layout.ts                     Figma measurements: padding, sheet position
+    │   │   ├── view/useNextPageSpinner.ts         Keeps the spinner's space until the list grows
+    │   │   ├── view/useContentSheetAnimationConfigs.ts  No sheet animation during the push
+    │   │   ├── viewmodel/useInfiniteSpecialists.ts  Pages of 10 through useInfiniteQuery
+    │   │   ├── viewmodel/useConsultationActions.ts  Booking, WhatsApp, phone and email
+    │   │   ├── viewmodel/useConsultationGate.ts     The route's own feature-flag guard
+    │   │   └── viewmodel/useComingSoonDialog.ts     The Coming soon dialog, by ID
+    │   ├── dialogDemo/
+    │   │   ├── view/DialogDemoScreen.tsx
+    │   │   └── viewmodel/useDemoDialogs.ts        One dialog, the same one twice, three at once
+    │   └── toastDemo/
+    │       ├── view/ToastDemoScreen.tsx
+    │       ├── view/ToastMessage.tsx              Fades in, stays 2 s, fades out
+    │       └── viewmodel/useToastStack.ts         No queue, so only the press throttle stops repeats
+    │
+    ├── shared/                   Used by more than one feature
+    │   ├── theme.ts              Colours, gradients, text styles and shadows from the Figma variables
+    │   ├── config/               contact.ts (booking URL, WhatsApp, hotline, email),
+    │   │                         featureFlags.ts (defaults), specialists.ts (latency, page size,
+    │   │                         failure rate), ui.ts (the 500 ms press throttle)
+    │   ├── dialog/               The DialogManager: dialogQueue.ts (the rules), DialogProvider.tsx
+    │   │                         (useDialog), DialogView.tsx (the card)
+    │   ├── featureFlags/         FeatureFlagService (the interface), LocalFeatureFlagService,
+    │   │                         FeatureFlagProvider (useFeatureFlag)
+    │   ├── i18n/                 createI18n, resolveLanguage (any zh → zh-HK), useAppLanguage,
+    │   │                         locales/en.json and locales/zh-HK.json
+    │   └── ui/                   ThrottledPressable and useThrottledPress, PrimaryButton,
+    │                             ToggleSwitch, LoadingSpinner, HeroBanner, BackNavBar,
+    │                             HeroActionsScreen (the layout of Home and the demo screens),
+    │                             useSheetAnimationConfigs, bottomControlsPadding
+    │
+    └── test/                     renderApp (the app opened on any screen), controllableClock,
+                                  fake and steerable repositories
 ```
+
+Tests sit beside the code they cover (`*.test.ts` / `*.test.tsx`).
 
 - **Data** ([ADR-002](docs/adr/0002-specialist-repository.md)): screens read Specialists only through `SpecialistRepository`, provided by `RepositoryProvider`. The interface is paginated by offset, so infinite scroll needed no new interface. The hardcoded repository adds a simulated delay (800 ms in `v1.0.0`, 1500 ms in `v1.1.1`) so the loading states are visible, and can fail at random for the demo.
 - **Layout** ([ADR-012](docs/adr/0012-content-bottom-sheet.md)): the hero image stays fixed and the content is a `@gorhom/bottom-sheet` over it. The sheet opens at Figma's card position, can grow up to the nav bar and never closes. Its list holds the header, Specialists, contact info and agreements notice; its footer is the persistent bottom section with the service hours and the two buttons.
