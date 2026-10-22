@@ -5,6 +5,7 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaFrame, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,8 +16,9 @@ import {
   NAV_BAR_ROW_HEIGHT,
 } from '../../../shared/ui/BackNavBar';
 import { HeroBanner } from '../../../shared/ui/HeroBanner';
+import { LoadingSpinner } from '../../../shared/ui/LoadingSpinner';
 import { useConsultationGate } from '../viewmodel/useConsultationGate';
-import { useSpecialists } from '../viewmodel/useSpecialists';
+import { useInfiniteSpecialists } from '../viewmodel/useInfiniteSpecialists';
 import { AgreementsNotice } from './AgreementsNotice';
 import { ConsultationBottomSection } from './ConsultationBottomSection';
 import { ConsultationHeader } from './ConsultationHeader';
@@ -29,6 +31,7 @@ import {
 } from './layout';
 import { SpecialistCard } from './SpecialistCard';
 import { useContentSheetAnimationConfigs } from './useContentSheetAnimationConfigs';
+import { useNextPageSpinner } from './useNextPageSpinner';
 import { EmptyState } from './states/EmptyState';
 import { SpecialistSkeleton } from './states/SpecialistSkeleton';
 
@@ -43,7 +46,9 @@ export function ConsultationScreen() {
 // opens collapsed at Figma's card position and can only grow, up to just below the nav bar.
 // Once it is expanded, dragging scrolls its list. The service hours and buttons are its footer.
 function ConsultationContent() {
-  const { data: specialists = [], isPending, isError } = useSpecialists();
+  const { specialists, isPending, isError, isFetchingNextPage, hasNextPageFailed, loadMore } =
+    useInfiniteSpecialists();
+  const nextPageSpinner = useNextPageSpinner({ isFetchingNextPage, hasNextPageFailed });
   // The sheet measures its container, which fills the whole screen. useWindowDimensions() leaves
   // out the status and navigation bars on Android (edge-to-edge), which put the sheet about
   // 75 dp too low there, so use the full frame instead.
@@ -99,7 +104,12 @@ function ConsultationContent() {
           )}
           ListHeaderComponent={<ConsultationHeader />}
           ListEmptyComponent={<ListBodyState isPending={isPending} isError={isError} />}
-          ListFooterComponent={<ListEnd />}
+          ListFooterComponent={<ListEnd isSpinnerShown={nextPageSpinner.isShown} />}
+          // Load the next page when a fifth of a screen of list is left (SPEC §6.2).
+          onEndReached={() => void loadMore()}
+          onEndReachedThreshold={0.2}
+          onContentSizeChange={nextPageSpinner.handleContentSizeChange}
+          testID="specialist-list"
           contentContainerStyle={{ paddingBottom: footerHeight }}
           // The library turns Android's overscroll off; turn it back on so the end of the list
           // stretches and springs back there, as iOS bounces.
@@ -112,13 +122,26 @@ function ConsultationContent() {
   );
 }
 
-// Below the Specialists: contact info, then the agreements notice (Figma 2:139).
-function ListEnd() {
+// Below the Specialists: the next-page spinner while it shows, then the contact info and the
+// agreements notice (Figma 2:139), reached once every page is loaded (SPEC §6.5).
+function ListEnd({ isSpinnerShown }: { isSpinnerShown: boolean }) {
+  const { t } = useTranslation();
+
   return (
-    <View style={styles.listEnd}>
-      <ContactInfo />
-      <AgreementsNotice />
-    </View>
+    <>
+      {isSpinnerShown && (
+        <View style={styles.nextPageSpinner}>
+          <LoadingSpinner
+            testID="next-page-spinner"
+            accessibilityLabel={t('consultation.specialists.loadingMore')}
+          />
+        </View>
+      )}
+      <View style={styles.listEnd}>
+        <ContactInfo />
+        <AgreementsNotice />
+      </View>
+    </>
   );
 }
 
@@ -133,6 +156,9 @@ function ListBodyState({ isPending, isError }: { isPending: boolean; isError: bo
   }
   return <EmptyState />;
 }
+
+// Space above and below the next-page spinner (the list end's own top space adds the gap below).
+const SPINNER_SPACE = 24;
 
 const styles = StyleSheet.create({
   screen: {
@@ -151,6 +177,11 @@ const styles = StyleSheet.create({
     paddingBottom: 13,
     paddingHorizontal: CONTENT_PADDING_HORIZONTAL,
     gap: 32,
+  },
+  // The last cell already adds CONTENT_GAP above the spinner.
+  nextPageSpinner: {
+    paddingTop: SPINNER_SPACE - CONTENT_GAP,
+    alignItems: 'center',
   },
   cell: {
     paddingHorizontal: CONTENT_PADDING_HORIZONTAL,

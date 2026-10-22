@@ -22,6 +22,7 @@ export const COLORS = {
   switchOff: '#E9E9EA', // iOS switch track when off (not in Figma)
   sheetHandle: '#C7C7CC', // the bottom sheet's drag handle (not in Figma)
   toastBackground: 'rgba(0, 0, 0, 0.8)', // the Toast demo's toasts (not in Figma)
+  spinner: '#8E8E93', // iOS's activity indicator grey, the loading spinner on both platforms (not in Figma)
 } as const;
 
 // The design is drawn on a 390 pt wide frame.

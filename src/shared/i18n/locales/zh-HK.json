@@ -15,7 +15,8 @@
       "description": "我們提供專業同中立嘅意見， 幫你作出最合適嘅選擇 。"
     },
     "specialists": {
-      "empty": "暫時未有專家提供服務。"
+      "empty": "暫時未有專家提供服務。",
+      "loadingMore": "正在載入更多專家"
     },
     "bottomSection": {
       "serviceHours": "服務時間：\n星期一至五：上午9:30 - 下午5:30\n星期六、日及公眾假期：休息",

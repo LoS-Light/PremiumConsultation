@@ -144,7 +144,7 @@ ConsultationScreen
 | WhatsApp us | Open WhatsApp chat with the ES number and a pre-filled, localized message | `Linking.openURL` with a `wa.me` universal link; message from i18n, URL-encoded; falls back to the browser if WhatsApp is not installed |
 | Hotline | Open the dialer with the number pre-filled | `Linking.openURL('tel:…')` |
 | Email | Open the default mail app with the recipient pre-filled | `Linking.openURL('mailto:…')` |
-| Back (nav bar) | v1.0.0: does nothing (PRD). v1.1.0: returns to Home | v1.0.0: no handler. v1.1.0: `navigation.goBack()` (§8a). Accessibility label "Back" / 「返回」 (`navBar.back`, shared by every screen with a back button) |
+| Back (nav bar) | v1.0.0: does nothing (PRD). v1.1.0: returns to Home | v1.0.0: no handler. v1.1.0: `navigation.goBack()`, ignored once the screen is no longer focused (§8a). Accessibility label "Back" / 「返回」 (`navBar.back`, shared by every screen with a back button) |
 
 Booking URL, WhatsApp number, hotline and email come from the PRD and live in a single config module, never inline in components.
 
@@ -224,9 +224,10 @@ Hooks live in the viewmodel layer and depend only on `SpecialistRepository`.
   - `initialPageParam: 0`
   - `getNextPageParam: (last) => last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined`
 - Page size: **10** (a config value). 103 Specialists load in 11 pages, so loading, failure and Retry come up often during the demo
-- `onEndReached` → `fetchNextPage()` only if `hasNextPage && !isFetchingNextPage` (prevents duplicate fetches)
-- `onEndReachedThreshold` ≈ 0.5
-- Flattened items are de-duplicated by `id`
+- `onEndReached` → `fetchNextPage({ cancelRefetch: false })` only if `hasNextPage && !isFetchingNextPage` and the last next page didn't fail (prevents duplicate fetches; after a failure, onEndReached fires again when the spinner's space goes, and only Retry, §10, loads the failed page again). `cancelRefetch: false` covers a second call in the same tick, before `isFetchingNextPage` updates: TanStack Query's default would cancel the request in flight and start it again
+- `onEndReachedThreshold` 0.2: the next page starts loading when a fifth of a screen of list is left, so the footer spinner is reached and seen. The hardcoded repository's simulated latency is 1500 ms (a config value) for the same reason; it applies to every request, so the first-page skeleton also shows for 1.5 s
+- Flattened items are de-duplicated by `id`, keeping the first
+- Tests hold the next page back to see the footer spinner. The list virtualizes its rows, so screen tests check the requests and the spinner rather than counting rendered rows
 - Footer shows a spinner while fetching the next page, or the inline error view with Retry if the next page fails
 
 ### 6.3 Required comparison (explain in PR and be ready to discuss)
@@ -377,7 +378,7 @@ Protection against repeated presses is layered. Each layer has one job and is te
 
 - **Layer 1, `ThrottledPressable`.** A shared press component; the first press fires immediately and further presses within 500 ms (a config value; 300 ms in v1.0.0, raised in v1.1.0 so the Toast demo shows the throttle clearly) are ignored. Every pressable in the app uses it: primary buttons, the back button, the feature toggles' switch, Retry. The hotline and email links are `Text` inside `<Trans>` (§9), so they use the same throttle through its `useThrottledPress` hook. Never use `Pressable` or `TouchableOpacity` directly (§14a).
 - **Layer 2, React Navigation's `navigate()`.** Screens are opened with `navigation.navigate(name)`, never `push`. When a screen of that name is already in the stack, `navigate()` goes to it instead of pushing it again, so a double press can't stack the Consultation screen even with layer 1 switched off. No app-level guard is needed (unlike Flutter's `Navigator.push`, which always pushes): a `guardedNavigate` with an in-flight ref was built in T-0009 and removed in T-0011 as redundant. Opening a screen with `push`, or the same screen with different params, would need a guard again.
-- **Back.** The back button just calls `navigation.goBack()`. A second press can't go back twice: the stack stops touches on a screen that is leaving, so the press never reaches the button (checked in a test with the press throttle off). An earlier focus check before `goBack()` was dropped as redundant. The Consultation route's flag gate (§7) goes back, or resets the stack to Home when there is nothing to go back to.
+- **Back.** `goBack()` has no such de-duplication, and a second press can still reach the back button while its screen is leaving (it depends on timing: without a check, a test with the press throttle off failed in about one full-suite run in ten). It would then go back from a screen that is gone, a dev-mode "GO_BACK was not handled" error. So the back button ignores a press once its screen is no longer focused. The Consultation route's flag gate (§7) goes back, or resets the stack to Home when there is nothing to go back to.
 - **Demo.** The Feature toggles sheet (§4.1) can switch layer 1 off (`pressThrottle`), to show that layers 2 and 3 stop a double press on their own, and switch layer 3's rules off (`dialogDeduplication`, `dialogQueue`, §8) to show the problem they solve. Layer 1 alone is shown on the Toast demo screen, whose toasts have no other protection. A hand can't double-press a dialog's button, since the dialog covers the screen within a frame; that is why the brief's double press is done programmatically (in tests and on the Dialog demo screen).
 - The bottom section's actions (Book appointment, WhatsApp us, hotline, email) rely on layer 1 only: once the in-app browser or the external app opens, it covers the screen.
 - Layers 2 and 3 provide the guarantees; layer 1 only smooths out jitter.
@@ -408,7 +409,7 @@ Protection against repeated presses is layered. Each layer has one job and is te
 | Loading (first page) | List body | Skeleton cards (same size as SpecialistCard) |
 | Error (first page, v1.1.0) | List body | `InlineErrorView` full size: **Retry button only** → refetch |
 | Empty | List body | One line of centred grey text; no icon, no Retry |
-| Loading (next page) | List footer | Spinner |
+| Loading (next page) | List footer | `LoadingSpinner` (iOS's 12-spoke activity indicator, drawn the same on both platforms; React Native's `ActivityIndicator` is Material on Android. Like iOS's, the spokes stay still and only their opacities go round: rotating the view wobbled on Android) between the last card and the contact info, about 24 pt above and below. Its space appears when the page starts loading and stays until the new rows have made the list taller (or 0.5 s passes, or the page failed): the list renders new rows a moment after the page arrives, and removing the space before then would shorten the content and push the scroll position back. Known limitation: any growth of the list counts, so a layout change during that wait, or rows taking over 0.5 s to render on a slow device, could still give the space back early and nudge the scroll position |
 | Error (next page, v1.1.0) | List footer | `InlineErrorView` compact size; Retry → `fetchNextPage` |
 
 - **Inline error view (v1.1.0).** The PRD has only a screenshot (with a "Close" button the PRD itself calls incorrect), no Figma frame, no Chinese copy, and text that tells the user to close the app while the only action is Retry. So this spec defines the view, using the PRD screenshot as the layout reference. This deliberately departs from the PRD's wording.
@@ -503,6 +504,7 @@ src/
       view/AgreementsNotice.tsx
       view/ConsultationBottomSection.tsx
       view/useContentSheetAnimationConfigs.ts  instant until the push transition ends, then the spring
+      view/useNextPageSpinner.ts           when the next-page spinner keeps and gives back its space
       view/states/              Skeleton, EmptyState; InlineErrorView (v1.1.0)
       viewmodel/useSpecialists.ts          plain (v1.0.0; removed in v1.1.0)
       viewmodel/useInfiniteSpecialists.ts  infinite (v1.1.0)
@@ -518,11 +520,11 @@ src/
       specialists.fixture.ts
       RepositoryProvider.tsx
   shared/
-    ui/                         ThrottledPressable, PrimaryButton, ToggleSwitch, HeroBanner, BackNavBar, HeroActionsScreen (Home and demo layout), bottomControlsPadding, useSheetAnimationConfigs (both sheets' spring)
+    ui/                         ThrottledPressable, PrimaryButton, ToggleSwitch, LoadingSpinner, HeroBanner, BackNavBar, HeroActionsScreen (Home and demo layout), bottomControlsPadding, useSheetAnimationConfigs (both sheets' spring)
     featureFlags/               FeatureFlagService, LocalFeatureFlagService, FeatureFlagProvider + useFeatureFlag (v1.1.0)
     dialog/                     dialogQueue (the guard and queue), DialogProvider + useDialog, DialogView
     i18n/                       setup + locales/en.json, zh-HK.json
-    config/                     contact info, booking URL, flag defaults
+    config/                     contact info, booking URL, flag defaults, press throttle, Specialists' page size and simulated latency
     theme.ts
   test/
     renderApp.tsx               test helper: the app's providers and navigator, a fake repository, a clock past the press throttle
@@ -573,14 +575,17 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 | Seam | Type | Cases |
 |---|---|---|
 | `App` smoke test | Component | The app boots with its providers and opens on the Consultation screen (T-0004 to v1.0.0), then on the Home screen (v1.1.0, T-0009; in T-0003 it only proved the test setup worked) |
-| `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved; simulated failure (v1.1.0): first request after entering the screen succeeds, a later request fails when the injected random value is below 0.3 and succeeds otherwise |
+| `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved; simulated failure (v1.1.0): first request after entering the screen succeeds, a later request fails when the injected random value is below 0.3 and succeeds otherwise; the extended dataset (v1.1.0): 103 Specialists starting with the base three, specialist-103 on the eleventh page of 10, unique IDs, a two-word name and no photo each |
+
 | `ThrottledPressable` | Component | Two presses within 500 ms → one call; a press after 500 ms → a second call; the first press fires immediately; with the press throttle switched off (`pressThrottle`), a second press within 500 ms fires too |
 | `DialogManager` | Unit | `show` twice with the same ID (called directly, not through a button) → one dialog; same ID while queued → ignored; different IDs → queued; close → next shown; the same ID requested after it closed → shown again; closing an already closed dialog leaves the next one showing; with de-duplication off, the same ID twice → shown twice in turn; with the queue off, different IDs → stacked at once, closing the top one leaves the others; with both off, the same ID twice → stacked twice; a stacked dialog closed twice → the one below with the same ID stays; the queue switched while dialogs wait → they still close |
 | Dialog demo screen | Component | One dialog pressed twice quickly → A once; Press two buttons, same dialog → A once; Three dialogs at once → A, then B, then C as each closes; with de-duplication and the queue switched off, Press two buttons, same dialog → two A stacked |
 | Toast demo screen | Component | Two quick presses on Toast A → one toast with the press throttle on, two with it off; each toast fades out on its own schedule while new ones arrive |
 | `useConsultationEntry` | Hook (through the Home screen, its only caller) | Flag on → the Consultation screen opens; flag off → the coming-soon dialog shows |
 | Home screen | Component | Double press with flag off (past the press throttle) → exactly one dialog, and none after it closes; switching Premium consultation off in the Feature toggles sheet → the entry button shows the coming-soon dialog; the press throttle switched off there; dialog de-duplication and the dialog queue switched off there; with the press throttle off, a double press still opens the Consultation screen once |
-| `useInfiniteSpecialists` | Hook | Loads first page; `fetchNextPage` appends; no fetch when `!hasNextPage` or already fetching; duplicate IDs across pages are removed |
+| `useInfiniteSpecialists` | Hook | Loads first page; `fetchNextPage` appends; no fetch when `!hasNextPage` or already fetching; duplicate IDs across pages are removed; no fetch after the next page failed (only Retry loads it again) |
+| `useNextPageSpinner` | Hook | Shows while the next page loads; after it arrives, stays until the list gets taller; goes 0.5 s after it arrives if the list never does; goes at once when the next page fails |
+
 | `useConsultationActions` | Hook | Book → `openBrowserAsync` with booking URL; WhatsApp → `wa.me` URL with encoded message in the current language; hotline → `tel:`; email → `mailto:`; an action whose link the device cannot open does not throw |
 | `ConsultationScreen` (v1.0.0, plain) | Component | Loading skeleton; empty; a failed load does not show the empty state; list renders the 3 base names in order; contact info and agreements present; back button has no effect |
 | `ConsultationScreen` (v1.1.0, infinite) | Component | Loading skeleton; first page renders; a failed first page shows the full-size inline error and Retry refetches; reaching the end loads the next page with a footer spinner; a failed next page shows the compact inline error in the footer with loaded Specialists still shown; Retry appends the page on success; back button returns to Home; a double press on it (press throttle off) goes back once; opened while the flag is off (a deep link) → coming-soon dialog and reset to Home; the flag turned off while it is open → coming-soon dialog and back to Home |

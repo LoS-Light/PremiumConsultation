@@ -15,19 +15,28 @@ const BACK_ICON = require('../../../assets/icons/back.svg');
 
 // Transparent bar fixed over the hero with the back button (Figma "Fix Nav"), on every screen
 // behind Home. The back button returns to the previous screen, as do the swipe back from the
-// left edge and the Android back button. A second press can't go back twice: the stack stops
-// touches on a screen that is leaving.
+// left edge and the Android back button.
 export function BackNavBar() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  // goBack() has no de-duplication of its own, and a second press can still reach the button
+  // while its screen is leaving (it depends on timing); it would then go back from a screen that
+  // is gone (a dev-mode "GO_BACK was not handled" error). The screen is no longer focused then,
+  // so ignore the press.
+  const handleBackPress = () => {
+    if (navigation.isFocused()) {
+      navigation.goBack();
+    }
+  };
+
   return (
     <View style={[styles.bar, { paddingTop: insets.top }]} pointerEvents="box-none">
       <View style={styles.row} pointerEvents="box-none">
         <ThrottledPressable
           accessibilityRole="button"
           accessibilityLabel={t('navBar.back')}
-          onPress={() => navigation.goBack()}
+          onPress={handleBackPress}
           style={styles.backButton}
         >
           <Image source={BACK_ICON} style={styles.backIconImage} contentFit="contain" />

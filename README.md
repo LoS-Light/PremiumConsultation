@@ -66,12 +66,12 @@ src/
 ├── features/consultation/
 │   ├── view/                ConsultationScreen and its parts (hero, header, cards,
 │   │                        contact info, agreements notice, bottom section, states)
-│   └── viewmodel/           useSpecialists (TanStack Query), useConsultationActions
+│   └── viewmodel/           useSpecialists (v1.0.0) / useInfiniteSpecialists (v1.1.0), useConsultationActions
 │                            (in-app browser, WhatsApp, tel:, mailto:)
 └── shared/                  theme, config (contact values, URLs), i18n, ThrottledPressable
 ```
 
-- **Data** ([ADR-002](docs/adr/0002-specialist-repository.md)): screens read Specialists only through `SpecialistRepository`, provided by `RepositoryProvider`. The interface is paginated by offset ([ADR-007](docs/adr/0007-offset-pagination.md)) so `v1.1.0` can add infinite scroll without changing it. The hardcoded repository adds a short simulated delay so the loading state is visible.
+- **Data** ([ADR-002](docs/adr/0002-specialist-repository.md)): screens read Specialists only through `SpecialistRepository`, provided by `RepositoryProvider`. The interface is paginated by offset ([ADR-007](docs/adr/0007-offset-pagination.md)) so `v1.1.0` can add infinite scroll without changing it. The hardcoded repository adds a simulated delay (800 ms in `v1.0.0`, 1500 ms in `v1.1.0`) so the loading states are visible.
 - **Layout** ([ADR-012](docs/adr/0012-content-bottom-sheet.md)): the hero image stays fixed and the content is a `@gorhom/bottom-sheet` over it. The sheet opens at Figma's card position, can grow up to the nav bar and never closes. Its list holds the header, Specialists, contact info and agreements notice; its footer is the persistent bottom section with the service hours and the two buttons.
 - **Actions**: every side effect (`expo-web-browser`, `Linking`) goes through `useConsultationActions`, so tests can mock it. Every pressable, including the inline hotline and email links, goes through a 500 ms (300 ms in `v1.0.0`) leading-edge throttle (`ThrottledPressable` / `useThrottledPress`), so a double tap opens one browser or dialer.
 - **Localization**: `i18next` with `expo-localization`. Copy comes from the PRD; the contact sentence uses `<Trans>` so each language keeps its own sentence structure with tappable links.

@@ -15,7 +15,8 @@
       "description": "We provide professional, impartial advice to help you find what's best for you"
     },
     "specialists": {
-      "empty": "No Specialists are available right now."
+      "empty": "No Specialists are available right now.",
+      "loadingMore": "Loading more Specialists"
     },
     "bottomSection": {
       "serviceHours": "Service Hours:\nMonday – Friday: 9:30am - 5:30pm\nSaturday, Sunday & Public Holidays: Closed",

@@ -3,25 +3,13 @@ import { render } from '@testing-library/react-native';
 
 import { AppProviders } from '../app/AppProviders';
 import { type RootStackParamList, RootNavigator } from '../app/navigation';
-import type { Specialist } from '../data/specialist/Specialist';
 import type { SpecialistRepository } from '../data/specialist/SpecialistRepository';
 import { FEATURE_FLAG_DEFAULTS } from '../shared/config/featureFlags';
 import type { FeatureFlagService } from '../shared/featureFlags/FeatureFlagService';
 import { LocalFeatureFlagService } from '../shared/featureFlags/LocalFeatureFlagService';
 import { createI18n } from '../shared/i18n/createI18n';
 import type { AppLanguage } from '../shared/i18n/resolveLanguage';
-
-// A fake repository that answers at once with the given Specialists.
-export function fakeRepository(specialists: Specialist[]): SpecialistRepository {
-  return {
-    getSpecialists: async ({ offset, limit }) => ({
-      items: specialists.slice(offset, offset + limit),
-      offset,
-      limit,
-      total: specialists.length,
-    }),
-  };
-}
+import { fakeRepository } from './fakeSpecialists';
 
 // Renders the app's providers and navigator, as App does, opened on the given screen.
 export async function renderApp({

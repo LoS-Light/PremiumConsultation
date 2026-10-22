@@ -7,7 +7,8 @@ import type { SpecialistRepository } from '../../../data/specialist/SpecialistRe
 import type { AppLanguage } from '../../../shared/i18n/resolveLanguage';
 import { FEATURE_FLAG_DEFAULTS } from '../../../shared/config/featureFlags';
 import { LocalFeatureFlagService } from '../../../shared/featureFlags/LocalFeatureFlagService';
-import { fakeRepository, renderApp } from '../../../test/renderApp';
+import { fakeRepository, numberedSpecialists, pageOf } from '../../../test/fakeSpecialists';
+import { renderApp } from '../../../test/renderApp';
 
 const FIGMA_SPECIALISTS: Specialist[] = [
   { id: '1', name: 'Kan Chung' },
@@ -62,7 +63,9 @@ describe('ConsultationScreen back button', () => {
     expect(screen.getByText('Premium consultation')).toBeOnTheScreen();
   });
 
-  // The stack stops touches on a screen that is leaving, so the second press goes nowhere.
+  // goBack() doesn't de-duplicate, and the second press can reach the button while its screen
+  // is leaving (it depends on timing), so the button ignores a press once the screen isn't
+  // focused. Without that, this test failed about one full-suite run in ten.
   test('a double press goes back once, with the press throttle off', async () => {
     const consoleError = jest.spyOn(console, 'error');
     await renderApp({
@@ -82,7 +85,7 @@ describe('ConsultationScreen back button', () => {
       expect(screen.queryByText('GUM Specialists are here!')).not.toBeOnTheScreen(),
     );
     expect(screen.getByText('Premium consultation')).toBeOnTheScreen();
-    // React Navigation reports a go back from a screen that is gone as an error.
+    // React Navigation reports a go back with nothing to go back to as an error.
     expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });
@@ -92,6 +95,50 @@ describe('ConsultationScreen back button', () => {
 const pendingRepository: SpecialistRepository = {
   getSpecialists: () => new Promise(() => {}),
 };
+
+// A repository whose first page answers at once and whose next pages wait until the test
+// releases them, so the loading footer can be seen.
+function repositoryWithHeldNextPages(list: Specialist[]) {
+  const held: (() => void)[] = [];
+  const repository: SpecialistRepository = {
+    getSpecialists: ({ offset, limit }) => {
+      const page = pageOf(list, { offset, limit });
+      if (offset === 0) {
+        return Promise.resolve(page);
+      }
+      return new Promise((resolve) => held.push(() => resolve(page)));
+    },
+  };
+  return { repository, releaseNextPage: () => held.shift()?.() };
+}
+
+describe('ConsultationScreen infinite list', () => {
+  test('loads and shows the first page of 10 Specialists', async () => {
+    const repository = fakeRepository(numberedSpecialists(25));
+    await renderScreen('en', repository);
+
+    // The list renders 10 rows at first anyway, so check what was asked for too.
+    expect(await screen.findAllByTestId('specialist-name')).toHaveLength(10);
+    expect(repository.getSpecialists).toHaveBeenCalledTimes(1);
+    expect(repository.getSpecialists).toHaveBeenCalledWith({ offset: 0, limit: 10 });
+  });
+
+  test('loads the next page with a footer spinner when the end of the list is reached', async () => {
+    const { repository, releaseNextPage } = repositoryWithHeldNextPages(numberedSpecialists(25));
+    const getSpecialists = jest.spyOn(repository, 'getSpecialists');
+    await renderScreen('en', repository);
+    expect(await screen.findAllByTestId('specialist-name')).toHaveLength(10);
+
+    await fireEvent(screen.getByTestId('specialist-list'), 'endReached');
+
+    expect(getSpecialists).toHaveBeenLastCalledWith({ offset: 10, limit: 10 });
+    expect(await screen.findByTestId('next-page-spinner')).toBeOnTheScreen();
+    await act(async () => releaseNextPage());
+    // The list virtualizes its rows (only the first 10 render without layout here), so the
+    // spinner going away is what shows the page arrived.
+    await waitFor(() => expect(screen.queryByTestId('next-page-spinner')).not.toBeOnTheScreen());
+  });
+});
 
 describe('ConsultationScreen Specialist list', () => {
   test('shows skeleton cards while the Specialists load', async () => {
