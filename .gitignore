@@ -1,0 +1,28 @@
+# Private material (PRD zip, assignment PDF, extracted PRD) — never commit
+.private/
+__MACOSX/
+
+# Secrets
+.env
+.env*
+!.env.example
+*.pem
+*.p8
+*.p12
+*.key
+*.jks
+*.mobileprovision
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Dependencies (package-lock.json is committed on purpose)
+node_modules/
+
+# Expo and generated native folders (template entries merged in T-0002)
+.expo/
+dist/
+web-build/
+/ios
+/android

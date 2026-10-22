@@ -1,0 +1,3 @@
+# Code owners for this repo. GitHub marks owned files in PRs and requests the owner's review.
+# GitHub reads this file from the PR's base branch, so it applies to PRs into dev once T-0001 is merged.
+* @LoS-Light
