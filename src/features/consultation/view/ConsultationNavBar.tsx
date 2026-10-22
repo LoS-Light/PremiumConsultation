@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SHADOWS } from '../../../shared/theme';
+import { NAV_BAR_BOTTOM_PADDING, NAV_BAR_ROW_HEIGHT } from './layout';
 
 const BACK_ICON = require('../../../../assets/icons/back.svg');
 
@@ -34,10 +35,10 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    paddingBottom: 6,
+    paddingBottom: NAV_BAR_BOTTOM_PADDING,
   },
   row: {
-    height: 42,
+    height: NAV_BAR_ROW_HEIGHT,
     justifyContent: 'center',
   },
   backIcon: {

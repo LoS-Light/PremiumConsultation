@@ -1,0 +1,5 @@
+# ADR-012: The Consultation content is a bottom sheet over a fixed hero
+
+**Status:** Accepted (2026-10-22). Supersedes ADR-005.
+
+The brief asks for React Native Bottom Sheet, and Figma draws the white content card with rounded top corners and a shadow over the hero. ADR-005 made the whole page one scrolling FlatList, which used the bottom sheet only as a fixed-looking container. Instead, the hero is a fixed background and the content (title block, Specialists, contact info, agreements) lives in a `@gorhom/bottom-sheet` BottomSheet with two snap points: collapsed with its top at Figma's y = 230 pt, and expanded with its top just below the nav bar, so the back arrow stays visible. The sheet can only grow from the collapsed point: it never moves lower and cannot be closed; pulling down from the collapsed point leaves the sheet in place and stretches the list inside, which springs back. Dragging moves the sheet until it is expanded, then scrolls its `BottomSheetFlatList`, which keeps the list virtualized (the reason for ADR-005). The service hours and buttons are the sheet's `footerComponent`, so they persist at the bottom of the screen in both states (PRD).

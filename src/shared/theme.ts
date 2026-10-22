@@ -10,6 +10,8 @@ export const COLORS = {
   divider: '#F5F5F5', // Vector 74 stroke (not a variable)
   placeholder: '#A7A7A7', // Info/I6, the Specialist photo placeholder
   textMuted: '#A7A7A7', // Info/I6, secondary messages such as the empty state
+  actionBackground: '#000000', // Primay/Black, primary buttons
+  textOnPrimary: '#FFFFFF', // Info/I1
   skeleton: '#F7F7F7', // Neutral/N2
 } as const;
 
@@ -18,6 +20,7 @@ export const DESIGN_WIDTH = 390;
 
 const FONTS = {
   interMedium: 'Inter_500Medium',
+  interSemiBold: 'Inter_600SemiBold',
   interBold: 'Inter_700Bold',
   notoSansTcBold: 'NotoSansTC_700Bold',
 } as const;
@@ -41,9 +44,18 @@ export const TYPOGRAPHY = {
   subtitle1: textStyle(FONTS.interBold, 14), // English/Subtitle/Subtitle 1
   body3: textStyle(FONTS.interMedium, 12), // English/Body/Body 3
   header2: textStyle(FONTS.notoSansTcBold, 22), // Chinese/Header/Header 2
+  header6: textStyle(FONTS.interSemiBold, 16), // English/Header/Header 6
 } as const;
 
 export const SHADOWS = {
+  // Bottom section: Figma drop shadow 8 8 15 rgba(0, 0, 0, 0.08); iOS radius is half the blur.
+  bottomSection: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 8, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 7.5,
+    elevation: 8,
+  },
   // Specialist card: Figma shadow 0 4 10 rgba(0, 0, 0, 0.1). Figma's blur is a CSS blur
   // radius; iOS shadowRadius is about half of it.
   card: {

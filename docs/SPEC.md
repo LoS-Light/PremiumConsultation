@@ -91,32 +91,25 @@ One screen, `ConsultationScreen`, written once.
 - **v1.1.0:** infinite scroll with `useInfiniteSpecialists` (§6.2), which **replaces** the plain list; there is no mode switch. Layout, cards and sections are unchanged; the list footer adds the next-page spinner and next-page error.
 - The two behaviours are compared by checking out the `v1.0.0` and `v1.1.0` tags; the README shows screenshots of both side by side (§6.3).
 
-Structure (top to bottom):
+Structure (ADR-012, superseding ADR-005):
 
 ```
 ConsultationScreen
+├─ Hero photo banner — fixed background, does not scroll
 ├─ Fixed nav bar with back icon — does nothing in v1.0.0 (PRD); returns to Home in v1.1.0
-├─ FlatList (single scroll container for the whole page)
-│   ├─ ListHeaderComponent
-│   │   ├─ Hero photo banner of Specialists
-│   │   └─ White content card with rounded top corners, overlapping the hero
-│   │       ├─ Overline:   "Got more questions?"
-│   │       ├─ Title:      "GUM Specialists are here!" + divider
-│   │       └─ Description
-│   ├─ data → SpecialistCard × N
-│   ├─ ListEmptyComponent → loading skeleton / empty (first page); inline error from v1.1.0
-│   └─ ListFooterComponent
-│       ├─ Next-page loading indicator or next-page inline error (v1.1.0)
-│       ├─ Contact info with tappable hotline and email
-│       └─ Agreements notice (privacy statement)
-│   └─ Bottom padding equal to the bottom section height
-└─ Persistent bottom section (white background)
-    ├─ Service hours
-    ├─ Primary button (black): "Book appointment"
-    └─ Primary button (black): "WhatsApp us"
+└─ BottomSheet (white, top corners radius 32)
+    ├─ Snap points: collapsed (top at Figma y = 230 pt, scaled to the screen width)
+    │               expanded (top just below the nav bar, so the back arrow stays visible)
+    ├─ BottomSheetFlatList (single virtualized list)
+    │   ├─ ListHeaderComponent: overline, title + divider, description
+    │   ├─ data → SpecialistCard × N
+    │   ├─ ListEmptyComponent → loading skeleton / empty (first page); inline error from v1.1.0
+    │   └─ ListFooterComponent: next-page indicator/error (v1.1.0), contact info, agreements notice
+    │   └─ Bottom padding equal to the footer height
+    └─ footerComponent: persistent bottom section (service hours, two buttons)
 ```
 
-**Why one FlatList:** wrapping a FlatList in a ScrollView disables virtualization. Putting the header and footer content into `ListHeaderComponent` / `ListFooterComponent` keeps a single, virtualized scroll container. (ADR-005)
+**Sheet behaviour:** it appears already collapsed, with no opening animation, and can only grow: it never moves below the collapsed point and cannot be closed. Pulling down from the collapsed point leaves the sheet in place and stretches the list inside with resistance, springing back on release, like a scroll view's bounce (the shared `ElasticContentBottomSheet` in `shared/ui`, a BottomSheet wrapper that owns this gesture handling; reuse it for any future sheet). Dragging moves the sheet until it is expanded; after that the list scrolls (gorhom's built-in hand-off).
 
 **Back button:**
 
@@ -132,10 +125,11 @@ ConsultationScreen
 
 ### 4.4 Bottom section
 
-- Built with `BottomSheet` (not `BottomSheetModal`): always visible, persists at the bottom of the page (PRD)
-- `index={0}`, `enablePanDownToClose={false}`, `enableDynamicSizing` (height follows content)
+- The bottom sheet's `footerComponent` (ADR-012): persists at the bottom of the screen whether the sheet is collapsed or expanded (PRD)
 - White background; no liquid-glass / blur effect (PRD)
 - Respects the bottom safe-area inset
+- Service hours copy comes from the PRD ("Monday – Friday"), not the Figma text layer ("Monday- Friday"); both lines use the same Body 3 weight as Figma, although the PRD shows the Chinese heading in bold
+- Shadow: Figma's drop shadow 8 8 15 rgba(0, 0, 0, 0.08), drawn on iOS with shadowRadius 7.5 (half of Figma's CSS-style blur, the rule used for every shadow) and elevation on Android
 
 ### 4.5 Actions
 
@@ -482,7 +476,7 @@ src/
       specialists.fixture.ts
       RepositoryProvider.tsx
   shared/
-    ui/                         ThrottledPressable
+    ui/                         ThrottledPressable, PrimaryButton, ElasticContentBottomSheet
     navigation/                 guardedNavigate (v1.1.0)
     featureFlags/
     dialog/                     DialogManager

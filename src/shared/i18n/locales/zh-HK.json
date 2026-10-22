@@ -7,6 +7,12 @@
     },
     "specialists": {
       "empty": "暫時未有專家提供服務。"
+    },
+    "bottomSection": {
+      "serviceHours": "服務時間：\n星期一至五：上午9:30 - 下午5:30\n星期六、日及公眾假期：休息",
+      "bookAppointment": "立即預約諮詢",
+      "whatsAppUs": "WhatsApp",
+      "whatsAppMessage": "你好，我想了解更多有關強積金嘅資訊"
     }
   }
 }
