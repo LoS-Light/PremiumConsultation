@@ -4,7 +4,9 @@ export type FeatureFlag =
   | 'pressThrottle'
   // The DialogManager's two rules (SPEC §8); off shows what each prevents.
   | 'dialogDeduplication'
-  | 'dialogQueue';
+  | 'dialogQueue'
+  // Makes Specialist loading fail at random (SPEC §10), to demo the error view and Retry.
+  | 'simulateLoadingFailure';
 
 export type FeatureFlags = Record<FeatureFlag, boolean>;
 

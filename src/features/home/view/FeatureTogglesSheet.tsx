@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SIMULATED_FAILURE_RATE } from '../../../shared/config/specialists';
 import { COLORS, TYPOGRAPHY } from '../../../shared/theme';
 import { bottomControlsPadding } from '../../../shared/ui/bottomControlsPadding';
 import { ToggleSwitch } from '../../../shared/ui/ToggleSwitch';
@@ -66,6 +67,14 @@ export function FeatureTogglesSheet({ ref }: { ref: Ref<BottomSheetModal> }) {
           flag="pressThrottle"
           label={t('featureToggles.pressThrottle')}
           description={t('featureToggles.pressThrottleDescription')}
+        />
+        <FeatureToggleRow
+          flag="simulateLoadingFailure"
+          label={t('featureToggles.simulateLoadingFailure')}
+          description={t('featureToggles.simulateLoadingFailureDescription', {
+            // Rounded: 0.3 * 100 is 30.000000000000004 in floating point.
+            percent: Math.round(SIMULATED_FAILURE_RATE * 100),
+          })}
         />
       </BottomSheetView>
     </BottomSheetModal>

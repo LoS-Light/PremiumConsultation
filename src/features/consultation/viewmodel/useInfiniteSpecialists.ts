@@ -1,21 +1,31 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo } from 'react';
 
 import { useSpecialistRepository } from '../../../data/specialist/RepositoryProvider';
 import type { Specialist } from '../../../data/specialist/Specialist';
 import { SPECIALISTS_PAGE_SIZE } from '../../../shared/config/specialists';
 
+const INFINITE_SPECIALISTS_KEY = ['specialists', 'infinite'];
+
 // Infinite mode (SPEC §6.2): the Specialists page by page, by offset (ADR-007).
 export function useInfiniteSpecialists() {
   const repository = useSpecialistRepository();
+  const queryClient = useQueryClient();
   const query = useInfiniteQuery({
-    queryKey: ['specialists', 'infinite'],
+    queryKey: INFINITE_SPECIALISTS_KEY,
     queryFn: ({ pageParam }) =>
       repository.getSpecialists({ offset: pageParam, limit: SPECIALISTS_PAGE_SIZE }),
     initialPageParam: 0,
     getNextPageParam: (last) =>
       last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined,
   });
+
+  // Forget the pages when the screen goes, so entering again starts from the first page rather
+  // than reloading every cached page one by one (SPEC §6.2).
+  useEffect(
+    () => () => queryClient.removeQueries({ queryKey: INFINITE_SPECIALISTS_KEY }),
+    [queryClient],
+  );
 
   const pages = query.data?.pages;
   const specialists = useMemo(
@@ -25,11 +35,18 @@ export function useInfiniteSpecialists() {
 
   return {
     specialists,
-    isPending: query.isPending,
+    // The first page is loading: on entering, or on Retry after it failed.
+    isLoadingFirstPage: pages === undefined && query.isFetching,
     isError: query.isError,
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
-    hasNextPageFailed: query.isFetchNextPageError,
+    // TanStack Query keeps the error while Retry loads the page again; it's no longer failed then.
+    hasNextPageFailed: query.isFetchNextPageError && !query.isFetchingNextPage,
+    // Retry after the first page failed: load it again.
+    retry: () => query.refetch(),
+    // Retry after the next page failed: load that page again (unlike loadMore, which leaves a
+    // failed page to Retry).
+    retryNextPage: () => query.fetchNextPage({ cancelRefetch: false }),
     // Called by onEndReached, which can fire again before the next page arrives. Only fetch
     // when there is a next page, it isn't loading and it didn't just fail (onEndReached fires
     // again when the spinner's space goes, and only Retry should load a failed page again).

@@ -23,3 +23,30 @@ export function fakeRepository(specialists: Specialist[]) {
     ),
   } satisfies SpecialistRepository;
 }
+
+// A repository whose requests the test steers one by one: each answers at once, unless the
+// test has asked for the next requests to fail (failNext) or to wait until it releases them
+// (holdNext, releaseHeld). For error, Retry and loading states.
+export function steerableRepository(specialists: Specialist[]) {
+  const plan: ('fail' | 'hold')[] = [];
+  const held: (() => void)[] = [];
+  const repository = {
+    getSpecialists: jest.fn<Promise<Page<Specialist>>, [PageParams]>(async (params) => {
+      const step = plan.shift();
+      if (step === 'fail') {
+        throw new Error('network down');
+      }
+      if (step === 'hold') {
+        await new Promise<void>((resolve) => held.push(resolve));
+      }
+      return pageOf(specialists, params);
+    }),
+  } satisfies SpecialistRepository;
+
+  return {
+    repository,
+    failNext: () => plan.push('fail'),
+    holdNext: () => plan.push('hold'),
+    releaseHeld: () => held.shift()?.(),
+  };
+}

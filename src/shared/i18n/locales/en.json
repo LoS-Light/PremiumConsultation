@@ -25,7 +25,12 @@
       "whatsAppMessage": "Hello, I would like to learn more about MPF information."
     },
     "contactInfo": "For general enquiries, please feel free to reach out to us using the method below:\nHotline: <hotline>{{hotline}}</hotline>\nEmail address: <email>{{email}}</email>",
-    "agreements": "Your use of our appointment service or communication via WhatsApp constitutes your agreement to our collection and use of personal data as outlined in our privacy policy."
+    "agreements": "Your use of our appointment service or communication via WhatsApp constitutes your agreement to our collection and use of personal data as outlined in our privacy policy.",
+    "error": {
+      "title": "Oops!",
+      "body": "Something went wrong. Please try again.",
+      "retry": "Retry"
+    }
   },
   "dialogDemo": {
     "oneDialog": "One dialog",
@@ -50,7 +55,9 @@
     "dialogDeduplication": "Enable dialog de-duplication",
     "dialogDeduplicationDescription": "Off: a dialog asked for while it is already showing or waiting shows again.",
     "dialogQueue": "Enable dialog queue",
-    "dialogQueueDescription": "Off: dialogs no longer wait their turn; they stack on top of each other."
+    "dialogQueueDescription": "Off: dialogs no longer wait their turn; they stack on top of each other.",
+    "simulateLoadingFailure": "Simulate loading failure",
+    "simulateLoadingFailureDescription": "On: each Specialist load fails {{percent}}% of the time, to show the error view and Retry."
   },
   "toastDemo": {
     "button": "Toast {{name}}",

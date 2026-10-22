@@ -25,7 +25,12 @@
       "whatsAppMessage": "你好，我想了解更多有關強積金嘅資訊"
     },
     "contactInfo": "如有一般查詢，歡迎致電本公司熱線 <hotline>{{hotline}}</hotline> 或電郵至 <email>{{email}}</email> 與我們聯絡。",
-    "agreements": "閣下使用本公司之預約服務或透過 WhatsApp 與本公司聯絡，即表示同意本公司根據私隱政策所載條款，收集及使用閣下之個人資料。"
+    "agreements": "閣下使用本公司之預約服務或透過 WhatsApp 與本公司聯絡，即表示同意本公司根據私隱政策所載條款，收集及使用閣下之個人資料。",
+    "error": {
+      "title": "哎呀！",
+      "body": "出咗啲問題，請再試一次。",
+      "retry": "重試"
+    }
   },
   "dialogDemo": {
     "oneDialog": "一個對話框",
@@ -50,7 +55,9 @@
     "dialogDeduplication": "啟用對話框去重",
     "dialogDeduplicationDescription": "關閉時，同一個對話框正在顯示或排隊時再次觸發，會再出現一次。",
     "dialogQueue": "啟用對話框排隊",
-    "dialogQueueDescription": "關閉時，對話框不再依序出現，而是疊在一起。"
+    "dialogQueueDescription": "關閉時，對話框不再依序出現，而是疊在一起。",
+    "simulateLoadingFailure": "模擬載入失敗",
+    "simulateLoadingFailureDescription": "開啟時，每次載入專家有 {{percent}}% 機率失敗，用來展示錯誤畫面和重試。"
   },
   "toastDemo": {
     "button": "Toast {{name}}",

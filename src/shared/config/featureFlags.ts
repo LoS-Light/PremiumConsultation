@@ -10,4 +10,6 @@ export const FEATURE_FLAG_DEFAULTS: FeatureFlags = {
   // The DialogManager's rules start on; switch them off to show a dialog over-shown.
   dialogDeduplication: true,
   dialogQueue: true,
+  // Off: loading always succeeds. On, for the demo, it fails at random (SPEC §10).
+  simulateLoadingFailure: false,
 };

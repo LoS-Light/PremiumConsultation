@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { act, render, renderHook, screen, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
+import { Text } from 'react-native';
 
 import { RepositoryProvider } from '../../../data/specialist/RepositoryProvider';
 import type { Specialist } from '../../../data/specialist/Specialist';
@@ -116,5 +117,43 @@ describe('useInfiniteSpecialists', () => {
     await act(() => result.current.loadMore());
 
     expect(getSpecialists).toHaveBeenCalledTimes(2);
+  });
+
+  // Entering the Consultation screen again while the old one is still animating out: the old
+  // one leaving must not take the new one's Specialists away or leave it loading.
+  test('keeps a newer screen loaded when an older one goes', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+    });
+    // Answers once the test releases it, so the first page is still loading as screens change.
+    const list = numberedSpecialists(25);
+    const held: (() => void)[] = [];
+    const repository: SpecialistRepository = {
+      getSpecialists: (params) =>
+        new Promise((resolve) => held.push(() => resolve(pageOf(list, params)))),
+    };
+    function Screen({ name }: { name: string }) {
+      const { specialists, isLoadingFirstPage } = useInfiniteSpecialists();
+      return <Text>{`${name}: ${isLoadingFirstPage ? 'loading' : specialists.length}`}</Text>;
+    }
+    function App({ screens }: { screens: string[] }) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <RepositoryProvider repository={repository}>
+            {screens.map((name) => (
+              <Screen key={name} name={name} />
+            ))}
+          </RepositoryProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    const { rerender } = await render(<App screens={['old']} />);
+    expect(screen.getByText('old: loading')).toBeOnTheScreen();
+    await rerender(<App screens={['old', 'new']} />);
+    await rerender(<App screens={['new']} />);
+    await act(async () => held.forEach((release) => release()));
+
+    expect(await screen.findByText('new: 10')).toBeOnTheScreen();
   });
 });

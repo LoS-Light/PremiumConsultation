@@ -113,6 +113,20 @@ describe('HomeScreen dialog rule toggles', () => {
   });
 });
 
+describe('HomeScreen loading failure toggle', () => {
+  test('switches simulated loading failure on from the Feature toggles sheet', async () => {
+    const service = featureFlagServiceWith({ isPremiumConsultationEnabled: true });
+    await renderApp({ featureFlagService: service });
+    await fireEvent.press(screen.getByRole('button', { name: 'Feature Toggle' }));
+    const toggle = screen.getByRole('switch', { name: 'Simulate loading failure' });
+    expect(toggle).not.toBeChecked();
+
+    await fireEvent.press(toggle);
+
+    expect(service.isEnabled('simulateLoadingFailure')).toBe(true);
+  });
+});
+
 // With the press throttle off, every press runs: the other layers stop the duplicate alone
 // (SPEC §8a).
 describe('HomeScreen with the press throttle off', () => {

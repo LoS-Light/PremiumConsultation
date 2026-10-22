@@ -20,9 +20,9 @@ function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        // TEMPORARY: automatic retries are off while the data is hardcoded, so a failure reaches
-        // the screen at once instead of after several silent retries (SPEC §6; the error view
-        // arrives in v1.1.0). Restore retries when the app calls a real API.
+        // TEMPORARY: automatic retries are off while the data is hardcoded, so a (simulated)
+        // failure reaches the error view at once instead of after several silent retries
+        // (SPEC §6). Restore retries when the app calls a real API.
         retry: false,
       },
     },

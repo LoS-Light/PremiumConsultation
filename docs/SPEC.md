@@ -84,7 +84,7 @@ Minimal screen that exists to satisfy the senior requirement. It does not exist 
   - **Enable dialog de-duplication** / **「啟用對話框去重」** (`dialogDeduplication`): default **on**. Off, a dialog asked for while it is already showing or queued shows again (§8). Description: "Off: a dialog asked for while it is already showing or waiting shows again." / 「關閉時，同一個對話框正在顯示或排隊時再次觸發，會再出現一次。」
   - **Enable dialog queue** / **「啟用對話框排隊」** (`dialogQueue`): default **on**. Off, dialogs no longer wait their turn and stack at once (§8). Description: "Off: dialogs no longer wait their turn; they stack on top of each other." / 「關閉時，對話框不再依序出現，而是疊在一起。」
   - **Enable press throttle** / **「啟用按鈕節流」** (`pressThrottle`): default **on**; switches layer 1 of the duplicate-press protection off (§8a), to show that `navigate()` and the dialog queue stop a double press alone. Description: "Off: buttons react to every press, so a quick double press is stopped only by navigate() and the dialog queue." / 「關閉時，按鈕每次點擊都會反應，快速連點只靠 navigate() 和對話框佇列擋下。」
-  - **Simulate loading failure** (T-0013): default **off**; makes Specialist loading fail so the error view and Retry can be shown (§10)
+  - **Simulate loading failure** / **「模擬載入失敗」** (`simulateLoadingFailure`): default **off**; on, every Specialist request fails with probability 0.3, to show the error view and Retry (§10). Description: "On: each Specialist load fails {{percent}}% of the time, to show the error view and Retry." / 「開啟時，每次載入專家有 {{percent}}% 機率失敗，用來展示錯誤畫面和重試。」, with the percentage taken from the config rate
 
 The brief's general requirements make the Figma screen the entry point, while the senior section asks for a button-based entry. Both are met in turn (ADR-011): in **v1.0.0** the app opens straight on the Consultation screen; **v1.1.0** adds Home in front of it, because the flag gating, the coming-soon dialog and the double-press guard all need a button to press and to demo. The Figma screen stays the feature's main screen; Home only hosts the entry button, the feature toggles and the dialog and toast demos.
 
@@ -227,7 +227,9 @@ Hooks live in the viewmodel layer and depend only on `SpecialistRepository`.
 - `onEndReached` → `fetchNextPage({ cancelRefetch: false })` only if `hasNextPage && !isFetchingNextPage` and the last next page didn't fail (prevents duplicate fetches; after a failure, onEndReached fires again when the spinner's space goes, and only Retry, §10, loads the failed page again). `cancelRefetch: false` covers a second call in the same tick, before `isFetchingNextPage` updates: TanStack Query's default would cancel the request in flight and start it again
 - `onEndReachedThreshold` 0.2: the next page starts loading when a fifth of a screen of list is left, so the footer spinner is reached and seen. The hardcoded repository's simulated latency is 1500 ms (a config value) for the same reason; it applies to every request, so the first-page skeleton also shows for 1.5 s
 - Flattened items are de-duplicated by `id`, keeping the first
-- Tests hold the next page back to see the footer spinner. The list virtualizes its rows, so screen tests check the requests and the spinner rather than counting rendered rows
+- Tests hold the next page back to see the footer spinner.
+- Leaving the screen removes the query, so entering again starts from the first page (with the skeleton) instead of TanStack Query reloading every cached page one after another in the background (11 × 1.5 s at worst, and any failure turning the shown list into an error)
+- The list virtualizes its rows, so screen tests check the requests and the spinner rather than counting rendered rows
 - Footer shows a spinner while fetching the next page, or the inline error view with Retry if the next page fails
 
 ### 6.3 Required comparison (explain in PR and be ready to discuss)
@@ -278,7 +280,8 @@ type FeatureFlag =
   | 'premiumConsultation'
   | 'pressThrottle' // §8a, layer 1
   | 'dialogDeduplication' // §8, the DialogManager's rules
-  | 'dialogQueue';
+  | 'dialogQueue'
+  | 'simulateLoadingFailure'; // §10
 
 interface FeatureFlagService {
   isEnabled(flag: FeatureFlag): boolean;
@@ -407,10 +410,10 @@ Protection against repeated presses is layered. Each layer has one job and is te
 | State | Where | UI |
 |---|---|---|
 | Loading (first page) | List body | Skeleton cards (same size as SpecialistCard) |
-| Error (first page, v1.1.0) | List body | `InlineErrorView` full size: **Retry button only** → refetch |
+| Error (first page, v1.1.0) | List body | `InlineErrorView` (icon, title, body, Retry as its only action) → refetch; skeleton while it loads again |
 | Empty | List body | One line of centred grey text; no icon, no Retry |
 | Loading (next page) | List footer | `LoadingSpinner` (iOS's 12-spoke activity indicator, drawn the same on both platforms; React Native's `ActivityIndicator` is Material on Android. Like iOS's, the spokes stay still and only their opacities go round: rotating the view wobbled on Android) between the last card and the contact info, about 24 pt above and below. Its space appears when the page starts loading and stays until the new rows have made the list taller (or 0.5 s passes, or the page failed): the list renders new rows a moment after the page arrives, and removing the space before then would shorten the content and push the scroll position back. Known limitation: any growth of the list counts, so a layout change during that wait, or rows taking over 0.5 s to render on a slow device, could still give the space back early and nudge the scroll position |
-| Error (next page, v1.1.0) | List footer | `InlineErrorView` compact size; Retry → `fetchNextPage` |
+| Error (next page, v1.1.0) | List footer | `InlineErrorView`, below the Specialists already shown; Retry → `fetchNextPage`, with the spinner in its place while it loads again |
 
 - **Inline error view (v1.1.0).** The PRD has only a screenshot (with a "Close" button the PRD itself calls incorrect), no Figma frame, no Chinese copy, and text that tells the user to close the app while the only action is Retry. So this spec defines the view, using the PRD screenshot as the layout reference. This deliberately departs from the PRD's wording.
 
@@ -420,10 +423,8 @@ Protection against repeated presses is layered. Each layer has one job and is te
   | Body | Something went wrong. Please try again. | 出咗啲問題，請再試一次。 |
   | Button | Retry | 重試 |
 
-  - One component, `InlineErrorView`, in two sizes:
-    - **Full** (first page failed; fills the list body): circular "i" icon, title, body, full-width Retry button, as in the PRD screenshot.
-    - **Compact** (next page failed; in the list footer, below the Specialists already shown): body and Retry button only.
-  - The Retry button in both sizes uses the bottom section's black primary button style.
+  - One component, `InlineErrorView`, the same for a failed first page (in the list body) and a failed next page (below the Specialists already shown): a dark circled "i" icon, the title, the body and Retry, as in the PRD screenshot. (A compact next-page version, body and Retry only, was tried and dropped by the author.)
+  - Retry is a small black button (`PrimaryButton` size `small`: as wide as its label, 40 pt tall, Inter Bold 14), not the full-width primary button, so it doesn't dominate the list.
 - **Empty state.** Not defined by the PRD; hardcoded data is never empty, but a CMS with no Specialists configured would be. Copy:
 
   | | English | Chinese (`zh-HK`) |
@@ -434,11 +435,9 @@ Protection against repeated presses is layered. Each layer has one job and is te
 - Header, footer content and the bottom section stay visible in every state.
 - No pull-to-refresh: neither the PRD nor the brief asks for it, and hardcoded data never changes. Add it with the CMS.
 - **Simulated failure (v1.1.0).** When the Feature toggles switch "Simulate loading failure" is on (§4.1):
-  - The first request after entering `ConsultationScreen` always succeeds, so the first page always loads.
-  - Every later request, including Retry, fails with probability **0.3** (a config value).
-  - A failed next page shows the inline error view in the list footer; Retry loads that page again, and on success its Specialists are appended after those already shown.
-  - The random source is injected into the repository: `Math.random` in the app, a fixed sequence in tests.
-  - So the full-size error view (first page failed) never appears in the demo; it is covered by tests (§13).
+  - Every request, the first page and Retry included, fails with probability **0.3** (a config value). The author chose this over a rule that the first request after entering the screen always succeeds, so the error view comes up in both places (first and next page) in the demo.
+  - A failed first page shows the error view in the list body; a failed next page shows it in the list footer, and Retry loads that page again, appending its Specialists on success.
+  - The random source and the switch are injected into the repository (`failureSimulation`): `Math.random` and the feature flag in the app, fixed values in tests.
 - **Error handling ships in v1.1.0, not v1.0.0** (ADR-011). v1.0.0 reads hardcoded data that cannot fail, so it has no error state; v1.1.0 adds the inline error view, Retry, and a way to make the hardcoded repository fail for the demo. The README and the v1.0.0 release notes say so, because the brief lists error handling among the general requirements.
 
 ---
@@ -505,7 +504,7 @@ src/
       view/ConsultationBottomSection.tsx
       view/useContentSheetAnimationConfigs.ts  instant until the push transition ends, then the spring
       view/useNextPageSpinner.ts           when the next-page spinner keeps and gives back its space
-      view/states/              Skeleton, EmptyState; InlineErrorView (v1.1.0)
+      view/states/              Skeleton, EmptyState; InlineErrorView (v1.1.0, the same for a failed first and next page)
       viewmodel/useSpecialists.ts          plain (v1.0.0; removed in v1.1.0)
       viewmodel/useInfiniteSpecialists.ts  infinite (v1.1.0)
       viewmodel/useConsultationActions.ts  booking, WhatsApp, tel, mailto
@@ -524,7 +523,7 @@ src/
     featureFlags/               FeatureFlagService, LocalFeatureFlagService, FeatureFlagProvider + useFeatureFlag (v1.1.0)
     dialog/                     dialogQueue (the guard and queue), DialogProvider + useDialog, DialogView
     i18n/                       setup + locales/en.json, zh-HK.json
-    config/                     contact info, booking URL, flag defaults, press throttle, Specialists' page size and simulated latency
+    config/                     contact info, booking URL, flag defaults, press throttle, Specialists' page size, simulated latency and failure rate
     theme.ts
   test/
     renderApp.tsx               test helper: the app's providers and navigator, a fake repository, a clock past the press throttle
@@ -575,20 +574,20 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 | Seam | Type | Cases |
 |---|---|---|
 | `App` smoke test | Component | The app boots with its providers and opens on the Consultation screen (T-0004 to v1.0.0), then on the Home screen (v1.1.0, T-0009; in T-0003 it only proved the test setup worked) |
-| `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved; simulated failure (v1.1.0): first request after entering the screen succeeds, a later request fails when the injected random value is below 0.3 and succeeds otherwise; the extended dataset (v1.1.0): 103 Specialists starting with the base three, specialist-103 on the eleventh page of 10, unique IDs, a two-word name and no photo each |
+| `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved; simulated failure (v1.1.0): with simulation on, a request fails when the injected random value is below 0.3 and succeeds otherwise; with it off, never fails; the extended dataset (v1.1.0): 103 Specialists starting with the base three, specialist-103 on the eleventh page of 10, unique IDs, a two-word name and no photo each |
 
 | `ThrottledPressable` | Component | Two presses within 500 ms → one call; a press after 500 ms → a second call; the first press fires immediately; with the press throttle switched off (`pressThrottle`), a second press within 500 ms fires too |
 | `DialogManager` | Unit | `show` twice with the same ID (called directly, not through a button) → one dialog; same ID while queued → ignored; different IDs → queued; close → next shown; the same ID requested after it closed → shown again; closing an already closed dialog leaves the next one showing; with de-duplication off, the same ID twice → shown twice in turn; with the queue off, different IDs → stacked at once, closing the top one leaves the others; with both off, the same ID twice → stacked twice; a stacked dialog closed twice → the one below with the same ID stays; the queue switched while dialogs wait → they still close |
 | Dialog demo screen | Component | One dialog pressed twice quickly → A once; Press two buttons, same dialog → A once; Three dialogs at once → A, then B, then C as each closes; with de-duplication and the queue switched off, Press two buttons, same dialog → two A stacked |
 | Toast demo screen | Component | Two quick presses on Toast A → one toast with the press throttle on, two with it off; each toast fades out on its own schedule while new ones arrive |
 | `useConsultationEntry` | Hook (through the Home screen, its only caller) | Flag on → the Consultation screen opens; flag off → the coming-soon dialog shows |
-| Home screen | Component | Double press with flag off (past the press throttle) → exactly one dialog, and none after it closes; switching Premium consultation off in the Feature toggles sheet → the entry button shows the coming-soon dialog; the press throttle switched off there; dialog de-duplication and the dialog queue switched off there; with the press throttle off, a double press still opens the Consultation screen once |
+| Home screen | Component | Double press with flag off (past the press throttle) → exactly one dialog, and none after it closes; switching Premium consultation off in the Feature toggles sheet → the entry button shows the coming-soon dialog; the press throttle switched off there; dialog de-duplication and the dialog queue switched off there; with the press throttle off, a double press still opens the Consultation screen once; simulated loading failure switched on there |
 | `useInfiniteSpecialists` | Hook | Loads first page; `fetchNextPage` appends; no fetch when `!hasNextPage` or already fetching; duplicate IDs across pages are removed; no fetch after the next page failed (only Retry loads it again) |
 | `useNextPageSpinner` | Hook | Shows while the next page loads; after it arrives, stays until the list gets taller; goes 0.5 s after it arrives if the list never does; goes at once when the next page fails |
 
 | `useConsultationActions` | Hook | Book → `openBrowserAsync` with booking URL; WhatsApp → `wa.me` URL with encoded message in the current language; hotline → `tel:`; email → `mailto:`; an action whose link the device cannot open does not throw |
 | `ConsultationScreen` (v1.0.0, plain) | Component | Loading skeleton; empty; a failed load does not show the empty state; list renders the 3 base names in order; contact info and agreements present; back button has no effect |
-| `ConsultationScreen` (v1.1.0, infinite) | Component | Loading skeleton; first page renders; a failed first page shows the full-size inline error and Retry refetches; reaching the end loads the next page with a footer spinner; a failed next page shows the compact inline error in the footer with loaded Specialists still shown; Retry appends the page on success; back button returns to Home; a double press on it (press throttle off) goes back once; opened while the flag is off (a deep link) → coming-soon dialog and reset to Home; the flag turned off while it is open → coming-soon dialog and back to Home |
+| `ConsultationScreen` (v1.1.0, infinite) | Component | Loading skeleton; first page renders; reaching the end loads the next page with a footer spinner; back button returns to Home; a double press on it (press throttle off) goes back once; opened while the flag is off (a deep link) → coming-soon dialog and reset to Home; the flag turned off while it is open → coming-soon dialog and back to Home; a failed first page shows the error view and Retry loads it; a failed next page shows the error view below the loaded Specialists, the spinner replaces it while Retry loads, and the page is appended; entering the screen again starts from the first page |
 | i18n | Component | Key strings render in both languages; a string missing from `zh-HK` shows its English text; contact links remain tappable in both languages |
 | Locale resolution (T-0004) | Unit | Language `zh` with any script or region (`zh-Hant-HK`, `zh-Hant-TW`, `zh-Hant-MO`, `zh-Hans-CN`, `zh-Hans-SG`, `zh`) → `zh-HK`; `en-US`, `en-GB` → `en`; any other language (`ja-JP`, `fr-FR`, and `zha-CN`, Zhuang, whose code only starts with "zh") → `en` |
 
@@ -730,7 +729,7 @@ For each release (ADR-011), when all of its tickets are done and reviewed on `fe
 - [ ] Feature flag gates entry from Home and the route itself; coming-soon dialog when disabled
 - [ ] Rapid double press opens the dialog once, covered by a test
 - [ ] Infinite scroll over 103 Specialists (3 base + 100 generated) without duplicate page fetches
-- [ ] Inline error view with Retry only when the first page fails; Retry reloads
+- [ ] Inline error view, with Retry as its only action, when the first page fails; Retry reloads
 - [ ] Next-page loading indicator, and next-page inline error with Retry
 - [ ] Hardcoded repository can be made to fail for the demo
 - [ ] Plain vs infinite comparison documented

@@ -33,6 +33,7 @@ import { SpecialistCard } from './SpecialistCard';
 import { useContentSheetAnimationConfigs } from './useContentSheetAnimationConfigs';
 import { useNextPageSpinner } from './useNextPageSpinner';
 import { EmptyState } from './states/EmptyState';
+import { InlineErrorView } from './states/InlineErrorView';
 import { SpecialistSkeleton } from './states/SpecialistSkeleton';
 
 // The Consultation screen, behind the premiumConsultation flag (SPEC §7). While the flag is
@@ -46,8 +47,16 @@ export function ConsultationScreen() {
 // opens collapsed at Figma's card position and can only grow, up to just below the nav bar.
 // Once it is expanded, dragging scrolls its list. The service hours and buttons are its footer.
 function ConsultationContent() {
-  const { specialists, isPending, isError, isFetchingNextPage, hasNextPageFailed, loadMore } =
-    useInfiniteSpecialists();
+  const {
+    specialists,
+    isLoadingFirstPage,
+    isError,
+    isFetchingNextPage,
+    hasNextPageFailed,
+    loadMore,
+    retry,
+    retryNextPage,
+  } = useInfiniteSpecialists();
   const nextPageSpinner = useNextPageSpinner({ isFetchingNextPage, hasNextPageFailed });
   // The sheet measures its container, which fills the whole screen. useWindowDimensions() leaves
   // out the status and navigation bars on Android (edge-to-edge), which put the sheet about
@@ -103,8 +112,16 @@ function ConsultationContent() {
             </View>
           )}
           ListHeaderComponent={<ConsultationHeader />}
-          ListEmptyComponent={<ListBodyState isPending={isPending} isError={isError} />}
-          ListFooterComponent={<ListEnd isSpinnerShown={nextPageSpinner.isShown} />}
+          ListEmptyComponent={
+            <ListBodyState isLoading={isLoadingFirstPage} isError={isError} onRetry={retry} />
+          }
+          ListFooterComponent={
+            <ListEnd
+              isSpinnerShown={nextPageSpinner.isShown}
+              hasNextPageFailed={hasNextPageFailed}
+              onRetryNextPage={retryNextPage}
+            />
+          }
           // Load the next page when a fifth of a screen of list is left (SPEC §6.2).
           onEndReached={() => void loadMore()}
           onEndReachedThreshold={0.2}
@@ -124,7 +141,15 @@ function ConsultationContent() {
 
 // Below the Specialists: the next-page spinner while it shows, then the contact info and the
 // agreements notice (Figma 2:139), reached once every page is loaded (SPEC §6.5).
-function ListEnd({ isSpinnerShown }: { isSpinnerShown: boolean }) {
+function ListEnd({
+  isSpinnerShown,
+  hasNextPageFailed,
+  onRetryNextPage,
+}: {
+  isSpinnerShown: boolean;
+  hasNextPageFailed: boolean;
+  onRetryNextPage: () => void;
+}) {
   const { t } = useTranslation();
 
   return (
@@ -137,6 +162,7 @@ function ListEnd({ isSpinnerShown }: { isSpinnerShown: boolean }) {
           />
         </View>
       )}
+      {hasNextPageFailed && <InlineErrorView onRetry={onRetryNextPage} />}
       <View style={styles.listEnd}>
         <ContactInfo />
         <AgreementsNotice />
@@ -146,13 +172,20 @@ function ListEnd({ isSpinnerShown }: { isSpinnerShown: boolean }) {
 }
 
 // What the list body shows when there are no Specialists to list.
-function ListBodyState({ isPending, isError }: { isPending: boolean; isError: boolean }) {
-  if (isPending) {
+function ListBodyState({
+  isLoading,
+  isError,
+  onRetry,
+}: {
+  isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
+}) {
+  if (isLoading) {
     return <SpecialistSkeleton />;
   }
   if (isError) {
-    // A failed load is not an empty list. v1.0.0 has no error view (SPEC §10); v1.1.0 adds it.
-    return null;
+    return <InlineErrorView onRetry={onRetry} />;
   }
   return <EmptyState />;
 }

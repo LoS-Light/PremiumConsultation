@@ -99,4 +99,38 @@ describe('HardcodedSpecialistRepository', () => {
       }
     });
   });
+
+  // For the demo (SPEC §10): with simulation on, each request fails when the injected random
+  // value is below 0.3.
+  describe('simulating failures', () => {
+    function createFailingRepository({ isOn, random }: { isOn: boolean; random: number }) {
+      return new HardcodedSpecialistRepository({
+        specialists: DATASET,
+        latencyMs: 0,
+        failureSimulation: { isOn: () => isOn, random: () => random },
+      });
+    }
+
+    test('fails a request when the random value is below 0.3', async () => {
+      const repository = createFailingRepository({ isOn: true, random: 0.29 });
+
+      await expect(repository.getSpecialists({ offset: 0, limit: 2 })).rejects.toThrow();
+    });
+
+    test('succeeds when the random value is 0.3 or above', async () => {
+      const repository = createFailingRepository({ isOn: true, random: 0.3 });
+
+      const page = await repository.getSpecialists({ offset: 0, limit: 2 });
+
+      expect(page.items).toHaveLength(2);
+    });
+
+    test('never fails while simulation is off', async () => {
+      const repository = createFailingRepository({ isOn: false, random: 0 });
+
+      const page = await repository.getSpecialists({ offset: 0, limit: 2 });
+
+      expect(page.items).toHaveLength(2);
+    });
+  });
 });

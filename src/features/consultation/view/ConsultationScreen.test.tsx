@@ -7,8 +7,12 @@ import type { SpecialistRepository } from '../../../data/specialist/SpecialistRe
 import type { AppLanguage } from '../../../shared/i18n/resolveLanguage';
 import { FEATURE_FLAG_DEFAULTS } from '../../../shared/config/featureFlags';
 import { LocalFeatureFlagService } from '../../../shared/featureFlags/LocalFeatureFlagService';
-import { fakeRepository, numberedSpecialists, pageOf } from '../../../test/fakeSpecialists';
-import { renderApp } from '../../../test/renderApp';
+import {
+  fakeRepository,
+  numberedSpecialists,
+  steerableRepository,
+} from '../../../test/fakeSpecialists';
+import { controllableClock, renderApp } from '../../../test/renderApp';
 
 const FIGMA_SPECIALISTS: Specialist[] = [
   { id: '1', name: 'Kan Chung' },
@@ -96,21 +100,94 @@ const pendingRepository: SpecialistRepository = {
   getSpecialists: () => new Promise(() => {}),
 };
 
-// A repository whose first page answers at once and whose next pages wait until the test
-// releases them, so the loading footer can be seen.
-function repositoryWithHeldNextPages(list: Specialist[]) {
-  const held: (() => void)[] = [];
-  const repository: SpecialistRepository = {
-    getSpecialists: ({ offset, limit }) => {
-      const page = pageOf(list, { offset, limit });
-      if (offset === 0) {
-        return Promise.resolve(page);
-      }
-      return new Promise((resolve) => held.push(() => resolve(page)));
-    },
-  };
-  return { repository, releaseNextPage: () => held.shift()?.() };
-}
+// SPEC §10's error view copy.
+const ERROR_TITLE = 'Oops!';
+const ERROR_BODY = 'Something went wrong. Please try again.';
+
+describe('ConsultationScreen entering again', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  // Without this, the cached pages would all be reloaded one by one on the way back in.
+  test('starts again from the first page', async () => {
+    // The entry button is pressed twice, so move the clock past its press throttle in between.
+    const clock = controllableClock();
+    const repository = fakeRepository(numberedSpecialists(25));
+    await renderScreen('en', repository, 'Home');
+    await fireEvent.press(screen.getByText('Premium consultation'));
+    expect(await screen.findAllByTestId('specialist-name')).toHaveLength(10);
+    await fireEvent(screen.getByTestId('specialist-list'), 'endReached');
+    await waitFor(() => expect(repository.getSpecialists).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByTestId('next-page-spinner')).not.toBeOnTheScreen());
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    await waitFor(() =>
+      expect(screen.queryByText('GUM Specialists are here!')).not.toBeOnTheScreen(),
+    );
+    repository.getSpecialists.mockClear();
+    clock.passThrottle();
+
+    await fireEvent.press(screen.getByText('Premium consultation'));
+
+    expect(await screen.findAllByTestId('specialist-name')).toHaveLength(10);
+    expect(repository.getSpecialists).toHaveBeenCalledTimes(1);
+    expect(repository.getSpecialists).toHaveBeenCalledWith({ offset: 0, limit: 10 });
+  });
+});
+
+describe('ConsultationScreen errors', () => {
+  test('shows the error view when the first page fails, and Retry loads it', async () => {
+    const { repository, failNext, holdNext, releaseHeld } = steerableRepository(
+      numberedSpecialists(25),
+    );
+    failNext();
+    await renderScreen('en', repository);
+
+    expect(await screen.findByText(ERROR_TITLE)).toBeOnTheScreen();
+    expect(screen.getByText(ERROR_BODY)).toBeOnTheScreen();
+    expect(screen.queryByTestId('specialist-name')).not.toBeOnTheScreen();
+    // The icon is decoration: screen readers on both platforms skip its "i".
+    expect(screen.queryByText('i')).not.toBeOnTheScreen();
+
+    holdNext();
+    await fireEvent.press(screen.getByRole('button', { name: 'Retry' }));
+
+    // While it loads again, the skeleton replaces the error view.
+    expect(await screen.findAllByTestId('specialist-skeleton')).not.toHaveLength(0);
+    expect(screen.queryByText(ERROR_TITLE)).not.toBeOnTheScreen();
+    await act(async () => releaseHeld());
+    expect(await screen.findAllByTestId('specialist-name')).toHaveLength(10);
+    expect(screen.queryByText(ERROR_TITLE)).not.toBeOnTheScreen();
+  });
+
+  test('shows the error view below the loaded Specialists when the next page fails, and Retry appends it', async () => {
+    const { repository, failNext, holdNext, releaseHeld } = steerableRepository(
+      numberedSpecialists(25),
+    );
+    await renderScreen('en', repository);
+    expect(await screen.findAllByTestId('specialist-name')).toHaveLength(10);
+
+    failNext();
+    await fireEvent(screen.getByTestId('specialist-list'), 'endReached');
+
+    expect(await screen.findByText(ERROR_TITLE)).toBeOnTheScreen();
+    expect(screen.getAllByTestId('specialist-name')).toHaveLength(10);
+    // The contact info stays below it.
+    expect(screen.getByText(/For general enquiries/)).toBeOnTheScreen();
+
+    holdNext();
+    await fireEvent.press(screen.getByRole('button', { name: 'Retry' }));
+
+    // While it loads again, the spinner replaces the error view.
+    expect(await screen.findByTestId('next-page-spinner')).toBeOnTheScreen();
+    expect(screen.queryByText(ERROR_TITLE)).not.toBeOnTheScreen();
+    await act(async () => releaseHeld());
+    await waitFor(() => expect(screen.queryByTestId('next-page-spinner')).not.toBeOnTheScreen());
+    expect(screen.queryByText(ERROR_TITLE)).not.toBeOnTheScreen();
+    expect(repository.getSpecialists).toHaveBeenLastCalledWith({ offset: 10, limit: 10 });
+    expect(repository.getSpecialists).toHaveBeenCalledTimes(3);
+  });
+});
 
 describe('ConsultationScreen infinite list', () => {
   test('loads and shows the first page of 10 Specialists', async () => {
@@ -124,16 +201,16 @@ describe('ConsultationScreen infinite list', () => {
   });
 
   test('loads the next page with a footer spinner when the end of the list is reached', async () => {
-    const { repository, releaseNextPage } = repositoryWithHeldNextPages(numberedSpecialists(25));
-    const getSpecialists = jest.spyOn(repository, 'getSpecialists');
+    const { repository, holdNext, releaseHeld } = steerableRepository(numberedSpecialists(25));
     await renderScreen('en', repository);
     expect(await screen.findAllByTestId('specialist-name')).toHaveLength(10);
 
+    holdNext();
     await fireEvent(screen.getByTestId('specialist-list'), 'endReached');
 
-    expect(getSpecialists).toHaveBeenLastCalledWith({ offset: 10, limit: 10 });
+    expect(repository.getSpecialists).toHaveBeenLastCalledWith({ offset: 10, limit: 10 });
     expect(await screen.findByTestId('next-page-spinner')).toBeOnTheScreen();
-    await act(async () => releaseNextPage());
+    await act(async () => releaseHeld());
     // The list virtualizes its rows (only the first 10 render without layout here), so the
     // spinner going away is what shows the page arrived.
     await waitFor(() => expect(screen.queryByTestId('next-page-spinner')).not.toBeOnTheScreen());
