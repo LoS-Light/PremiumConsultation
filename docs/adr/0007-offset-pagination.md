@@ -1,0 +1,3 @@
+# ADR-007: Offset pagination, not cursor
+
+The repository pages with `offset` and `limit` and returns `total`, rather than an opaque cursor. Offset maps directly onto most CMS APIs, is simple to implement over hardcoded data, and lets the client know the total up front. Its known weakness is data changing while the user scrolls, which the PRD makes possible because the CMS can reorder Specialists; for a list of about a hundred records edited occasionally, de-duplicating pages by `id` is enough, and cursor pagination is the upgrade path if the list becomes large or changes often. This is the contract the Q2 CMS integration must honour.
