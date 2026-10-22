@@ -430,7 +430,7 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 > **TODO — branching:** `main` ← `dev` ← `feats/T-XXXX-[TicketName]`
 > - `main`: initial commit with `README.md` only (no code). `.gitignore`, `CLAUDE.md` and this spec land through ticket `T-0001` (ADR-008)
 > - `dev`: branched from `main`; integration branch
-> - `feats/T-XXXX-[TicketName]`: one branch per ticket, merged into `dev` via PR. `XXXX` is an auto-incrementing, zero-padded 4-digit sequence number (`T-0001`, `T-0002`, …), assigned in ticket order and never reused (e.g. `feats/T-0003-SpecialistRepository`)
+> - `feats/T-XXXX-[TicketName]`: one branch per ticket, merged into `dev` via PR. `XXXX` is an auto-incrementing, zero-padded 4-digit sequence number (`T-0001`, `T-0002`, …), assigned in ticket order and never reused (e.g. `feats/T-0003-ProjectScaffolding`)
 > - Submission: PR `dev` → `main`, reviewed by the interviewer **[ASSUMPTION]**
 > - Small Conventional Commits; respond to review with new commits (no force-push during review)
 > - PRs merge with a merge commit (`--no-ff`); squash and rebase merges are disabled on GitHub. Ticket branches are kept after merge, locally and on `origin`, so reviewers can clone and inspect each PR's branch (ADR-009)
@@ -473,13 +473,13 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 
 - Source: this spec (`docs/SPEC.md`). Do not run `/to-spec`; this file is the single spec.
 - Ticket ID: `T-XXXX`, an auto-incrementing, zero-padded 4-digit number starting at `T-0001`, assigned in implementation order and never reused.
-- Ticket name: short PascalCase, used in the branch name (e.g. `T-0003 SpecialistRepository`).
+- Ticket name: short PascalCase, used in the branch name (e.g. `T-0003 ProjectScaffolding`).
 - Each ticket lists: the spec sections it covers, its acceptance criteria (from §16), its TDD seams (from §13), and the tickets it is blocked by.
 - One ticket = one branch = one PR. Keep tickets small enough to review in one sitting.
 - Fixed opening tickets (ADR-008):
   - `T-0001 RepoSetup`: `.gitignore`, `CLAUDE.md`, agent skills config, PR template and this spec. No app code.
   - `T-0002 SpecRefinement`: refine this spec with `/grill-with-docs` against the PRD, assignment brief and Figma. No app code.
-  - `T-0003`: project scaffolding (Expo, TypeScript, lint, test, CI, `.nvmrc`, merging the `.gitignore`).
+  - `T-0003 ProjectScaffolding`: project scaffolding (Expo, TypeScript, lint, test, CI, `.nvmrc`, merging the `.gitignore`).
 - The last ticket covers README, final docs and the `dev` → `main` PR description.
 
 ### `/implement` — per ticket
@@ -489,7 +489,7 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 2. Do not start a ticket until every ticket it is blocked by has been merged into `dev`.
 3. Implement only this ticket's scope; use `/tdd` at the seams listed in the ticket.
 4. Before each commit: `npx tsc --noEmit`, lint, and the relevant test files. Before opening the PR: the full test suite.
-5. Commit with Conventional Commits, referencing the ticket (e.g. `feat(T-0003): add offset pagination to repository`).
+5. Commit with Conventional Commits, referencing the ticket (e.g. `chore(T-0003): add Jest and React Native Testing Library`).
 6. Push the branch and open a PR **into `dev`** titled `T-XXXX: [TicketName]`. PR body: summary, spec sections covered, acceptance criteria checklist, tests added, screenshots/video for UI changes, decisions (link ADRs).
 7. Stop and wait for the author to review and merge (merge commit, `--no-ff`). **Do not merge PRs yourself.** Keep the branch after merge (ADR-009).
 

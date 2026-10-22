@@ -16,7 +16,7 @@ The spec is also still a draft. It needs a full pass against the PRD, the assign
 
 1. `T-0001 RepoSetup`: `.gitignore`, `CLAUDE.md`, the agent skills config (`docs/agents/`), the PR template and `docs/SPEC.md`, as a normal PR into `dev`.
 2. `T-0002 SpecRefinement`: refine the spec with `/grill-with-docs`, recording decisions as ADRs.
-3. `T-0003`: project scaffolding, which the spec originally placed first.
+3. `T-0003 ProjectScaffolding`: project scaffolding, which the spec originally placed first.
 
 The spec already reserves ADR-002 to ADR-007 for decisions not yet written down, so this ADR takes the next free number after them, 008. ADR-001 stays unused for now.
 
