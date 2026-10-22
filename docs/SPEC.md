@@ -91,32 +91,25 @@ One screen, `ConsultationScreen`, written once.
 - **v1.1.0:** infinite scroll with `useInfiniteSpecialists` (§6.2), which **replaces** the plain list; there is no mode switch. Layout, cards and sections are unchanged; the list footer adds the next-page spinner and next-page error.
 - The two behaviours are compared by checking out the `v1.0.0` and `v1.1.0` tags; the README shows screenshots of both side by side (§6.3).
 
-Structure (top to bottom):
+Structure (ADR-012, superseding ADR-005):
 
 ```
 ConsultationScreen
+├─ Hero photo banner — fixed background, does not scroll
 ├─ Fixed nav bar with back icon — does nothing in v1.0.0 (PRD); returns to Home in v1.1.0
-├─ FlatList (single scroll container for the whole page)
-│   ├─ ListHeaderComponent
-│   │   ├─ Hero photo banner of Specialists
-│   │   └─ White content card with rounded top corners, overlapping the hero
-│   │       ├─ Overline:   "Got more questions?"
-│   │       ├─ Title:      "GUM Specialists are here!" + divider
-│   │       └─ Description
-│   ├─ data → SpecialistCard × N
-│   ├─ ListEmptyComponent → loading skeleton / empty (first page); inline error from v1.1.0
-│   └─ ListFooterComponent
-│       ├─ Next-page loading indicator or next-page inline error (v1.1.0)
-│       ├─ Contact info with tappable hotline and email
-│       └─ Agreements notice (privacy statement)
-│   └─ Bottom padding equal to the bottom section height
-└─ Persistent bottom section (white background)
-    ├─ Service hours
-    ├─ Primary button (black): "Book appointment"
-    └─ Primary button (black): "WhatsApp us"
+└─ BottomSheet (white, top corners radius 32)
+    ├─ Snap points: collapsed (top at Figma y = 230 pt, scaled to the screen width)
+    │               expanded (top just below the nav bar, so the back arrow stays visible)
+    ├─ BottomSheetFlatList (single virtualized list)
+    │   ├─ ListHeaderComponent: overline, title + divider, description
+    │   ├─ data → SpecialistCard × N
+    │   ├─ ListEmptyComponent → loading skeleton / empty (first page); inline error from v1.1.0
+    │   └─ ListFooterComponent: next-page indicator/error (v1.1.0), contact info, agreements notice
+    │   └─ Bottom padding equal to the footer height
+    └─ footerComponent: persistent bottom section (service hours, two buttons)
 ```
 
-**Why one FlatList:** wrapping a FlatList in a ScrollView disables virtualization. Putting the header and footer content into `ListHeaderComponent` / `ListFooterComponent` keeps a single, virtualized scroll container. (ADR-005)
+**Sheet behaviour:** it appears already collapsed, with no opening animation, and can only grow: it never rests below the collapsed point and cannot be closed. Pulling down at the collapsed point stretches the sheet a little with resistance and springs it back (gorhom's over-drag). Once a drag starts with the list scrolled, it only scrolls the list; collapsing needs a new drag (gorhom's design). Dragging moves the sheet until it is expanded; after that the list scrolls (gorhom's built-in hand-off).
 
 **Back button:**
 
@@ -132,10 +125,11 @@ ConsultationScreen
 
 ### 4.4 Bottom section
 
-- Built with `BottomSheet` (not `BottomSheetModal`): always visible, persists at the bottom of the page (PRD)
-- `index={0}`, `enablePanDownToClose={false}`, `enableDynamicSizing` (height follows content)
+- The bottom sheet's `footerComponent` (ADR-012): persists at the bottom of the screen whether the sheet is collapsed or expanded (PRD)
 - White background; no liquid-glass / blur effect (PRD)
 - Respects the bottom safe-area inset
+- Service hours copy comes from the PRD ("Monday – Friday"), not the Figma text layer ("Monday- Friday"); both lines use the same Body 3 weight as Figma, although the PRD shows the Chinese heading in bold
+- Shadow: Figma's drop shadow 8 8 15 rgba(0, 0, 0, 0.08), drawn on iOS with shadowRadius 7.5 (half of Figma's CSS-style blur, the rule used for every shadow) and elevation on Android
 
 ### 4.5 Actions
 
@@ -148,6 +142,8 @@ ConsultationScreen
 | Back (nav bar) | v1.0.0: does nothing (PRD). v1.1.0: returns to Home | v1.0.0: no handler. v1.1.0: `navigation.goBack()` |
 
 Booking URL, WhatsApp number, hotline and email come from the PRD and live in a single config module, never inline in components.
+
+If the device cannot open a link (no app handles it: for example, the iOS simulator has no Phone or Mail app, or the user deleted Mail), the action catches the failure and the user stays on the screen with nothing shown. A message for this case would need copy the PRD doesn't have.
 
 > The PRD contains two different pre-filled WhatsApp messages. The "Universal link URL Format" example carries "Hi GUM Specialist! I am contacting via the app." (English only); the dedicated "Whatsapp Pre-filled Message" section gives localized EN/ZH text and matches the PRD screenshot. This spec uses the **dedicated section's message in the current language**, and takes only the URL **format** from the example: `https://wa.me/85260300900?text=<URL-encoded message>`. Trade-off: the dedicated message does not say it comes from the app, which the PRD overview lists as a goal.
 
@@ -372,7 +368,7 @@ Protection against repeated presses is layered. Each layer has one job and is te
 - **Every user-visible string** goes through i18n, including dialog text, error messages, button labels and accessibility labels
 - Phone numbers and email are data, not translated
 - The contact-info paragraph has a **different sentence structure per language** (EN: multi-line list; ZH: one sentence with the number and email inline). Use `<Trans>` with link components so each language controls its own word order while the hotline and email stay tappable
-- Typography per language follows the Figma text styles (read via MCP, §11)
+- Typography per language follows the Figma text styles (read via MCP, §11). Figma defines only one Chinese style (Chinese/Header/Header 2, Noto Sans TC Bold) for the title; Chinese text in the English body styles (Inter, which has no CJK glyphs) uses the system font (PingFang on iOS). Each extra Noto Sans TC weight would add about 7 MB
 - **Copy comes from the PRD** (EN + ZH for every section); it is not duplicated here (§11a)
 - The error view's copy is defined by this spec, not the PRD (§10)
 - Copy not defined by the PRD (Home screen, coming-soon dialog, demo settings menu) is written by the author in both languages and listed in the PR; the error view and empty state copy is in §10
@@ -438,6 +434,8 @@ Visual details (colors, typography, spacing, radii, shadows, assets) are **not d
 
 MCP calls are rate-limited on the author's plan: read variables once, then fetch design context only for the components being built.
 
+**Visual checks** use a 390 pt wide device (e.g. the iPhone 17e simulator), the width of the Figma frames. Text columns follow the screen width, so on wider screens lines wrap later than in Figma; that is expected.
+
 ## 11a. PRD source (PDF)
 
 - The PRD is `.private/PRD-PremiumConsultation.pdf`: a single-page image capture of the Confluence page, with no text layer. Unlike Figma, it includes the PRD's UI screenshots.
@@ -480,7 +478,7 @@ src/
       specialists.fixture.ts
       RepositoryProvider.tsx
   shared/
-    ui/                         ThrottledPressable
+    ui/                         ThrottledPressable, PrimaryButton
     navigation/                 guardedNavigate (v1.1.0)
     featureFlags/
     dialog/                     DialogManager
@@ -509,6 +507,7 @@ Code follows common TypeScript / React Native conventions, and domain names foll
 | Booleans | `is` / `has` / `should` / `can` prefix | `isEnabled`, `hasNextPage` |
 | Event props / handlers | `onX` for props, `handleX` for handlers | `onPress`, `handleRetry` |
 | Module-level constants | SCREAMING_SNAKE_CASE | `BOOKING_URL`, `PAGE_SIZE` |
+| React Native style sheets | camelCase `styles`, the React Native idiom (exception to the row above) | `const styles = StyleSheet.create({ … })` |
 | Enum-like unions and string literals | camelCase values | `'premiumConsultation'` |
 | Folders | camelCase | `featureFlags/`, `specialist/` |
 | Tests | `*.test.ts(x)` next to the code under test | `HardcodedSpecialistRepository.test.ts` |
@@ -532,6 +531,7 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 
 | Seam | Type | Cases |
 |---|---|---|
+| `App` smoke test | Component | The app boots with its providers and opens on the Consultation screen (since T-0004; in T-0003 it only proved the test setup worked) |
 | `HardcodedSpecialistRepository` | Unit | First page (`offset: 0`), next page by offset, last page (`offset + items.length === total`), offset beyond total returns empty items, order preserved; simulated failure (v1.1.0): first request after entering the screen succeeds, a later request fails when the injected random value is below 0.3 and succeeds otherwise |
 | `ThrottledPressable` | Component | Two presses within 300 ms → one call; a press after 300 ms → a second call; the first press fires immediately |
 | `guardedNavigate` (v1.1.0) | Unit | Called twice in the same tick (directly, not through a button) → one navigation; called from a screen that is not focused → ignored; after the target screen is focused and its transition ends → a new call navigates |
@@ -539,10 +539,11 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 | `useConsultationEntry` | Hook | Flag on → navigate; flag off → dialog |
 | Home screen | Component | Double press with flag off → exactly one dialog |
 | `useInfiniteSpecialists` | Hook | Loads first page; `fetchNextPage` appends; no fetch when `!hasNextPage` or already fetching; duplicate IDs across pages are removed |
-| `useConsultationActions` | Hook | Book → `openBrowserAsync` with booking URL; WhatsApp → `wa.me` URL with encoded message in the current language; hotline → `tel:`; email → `mailto:` |
-| `ConsultationScreen` (v1.0.0, plain) | Component | Loading skeleton; empty; list renders the 3 base names in order; contact info and agreements present; back button has no effect |
+| `useConsultationActions` | Hook | Book → `openBrowserAsync` with booking URL; WhatsApp → `wa.me` URL with encoded message in the current language; hotline → `tel:`; email → `mailto:`; an action whose link the device cannot open does not throw |
+| `ConsultationScreen` (v1.0.0, plain) | Component | Loading skeleton; empty; a failed load does not show the empty state; list renders the 3 base names in order; contact info and agreements present; back button has no effect |
 | `ConsultationScreen` (v1.1.0, infinite) | Component | Loading skeleton; first page renders; a failed first page shows the full-size inline error and Retry refetches; reaching the end loads the next page with a footer spinner; a failed next page shows the compact inline error in the footer with loaded Specialists still shown; Retry appends the page on success; back button returns to Home |
-| i18n | Component | Key strings render in both languages; contact links remain tappable in both languages |
+| i18n | Component | Key strings render in both languages; a string missing from `zh-HK` shows its English text; contact links remain tappable in both languages |
+| Locale resolution (T-0004) | Unit | Language `zh` with any script or region (`zh-Hant-HK`, `zh-Hant-TW`, `zh-Hant-MO`, `zh-Hans-CN`, `zh-Hans-SG`, `zh`) → `zh-HK`; `en-US`, `en-GB` → `en`; any other language (`ja-JP`, `fr-FR`, and `zha-CN`, Zhuang, whose code only starts with "zh") → `en` |
 
 Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (retries disabled). `Linking` and `expo-web-browser` are mocked.
 
@@ -552,15 +553,20 @@ Tests inject a fake `SpecialistRepository` and a fresh `QueryClient` per test (r
 
 ### Repository and PR
 
-> **Branching:** `main` ← `dev` ← `feats/T-XXXX-[TicketName]`
+> **Branching:** `main` ← `dev` ← `feats/vX.Y.Z`
 > - `main`: initial commit with `README.md` only (no code). `.gitignore`, `CLAUDE.md` and this spec land through ticket `T-0001` (ADR-008)
 > - `dev`: branched from `main`; integration branch
-> - `feats/T-XXXX-[TicketName]`: one branch per ticket, merged into `dev` via PR. `XXXX` is an auto-incrementing, zero-padded 4-digit sequence number (`T-0001`, `T-0002`, …), assigned in ticket order and never reused (e.g. `feats/T-0003-ProjectScaffolding`)
-> - Releases (ADR-011): when every ticket of a release is merged into `dev`, open a PR `dev` → `main`, merge it with a merge commit, tag the merge commit with an annotated tag (`v1.0.0`, then `v1.1.0`) and publish a GitHub Release with release notes and demo videos. Development then continues on `dev`
-> - Each ticket belongs to a GitHub Milestone named after its release (`v1.0.0` or `v1.1.0`)
+> - `feats/vX.Y.Z`: **one branch per release** (`feats/v1.0.0`, then `feats/v1.1.0`), cut from an up-to-date `dev`. Every ticket of that release is built on it as a group of commits; tickets do not get their own branches. (`T-0001` and `T-0002`, done before this rule, kept their own `feats/T-XXXX-[TicketName]` branches.)
+> - Tickets: `T-XXXX`, an auto-incrementing, zero-padded 4-digit number (`T-0001`, `T-0002`, …), assigned in ticket order and never reused. Each ticket is a GitHub issue in the Milestone named after its release (`v1.0.0` or `v1.1.0`)
+> - Releases (ADR-011): when every ticket of a release is done and reviewed on its branch:
+>   1. PR `feats/vX.Y.Z` → `dev`, merged with GitHub's **default merge commit message**
+>   2. PR `dev` → `main`, merged with the merge commit message **"Release vX.Y.Z"**
+>   3. Annotated tag `vX.Y.Z` on that merge commit, and a GitHub Release with release notes and demo videos
+>      - `v1.0.0` is released without videos. The author records the videos and screenshots of both releases once `v1.1.0` is done, puts them in the final README, and the `v1.0.0` Release is then edited to attach its videos (the tag does not move)
+>   4. The next release branch is cut from `dev`
 > - Submission: the `v1.1.0` PR `dev` → `main` is the one handed to the interviewer. `v1.0.0` is merged and released by the author beforehand; the README explains both releases so the interviewer can check out either tag
-> - Small Conventional Commits; respond to review with new commits (no force-push during review)
-> - PRs merge with a merge commit (`--no-ff`); squash and rebase merges are disabled on GitHub. Ticket branches are kept after merge, locally and on `origin`, so reviewers can clone and inspect each PR's branch (ADR-009)
+> - Small Conventional Commits while a ticket is in progress. Before a release branch is first pushed, each ticket's commits are squashed into one commit per ticket, so the release PR reads ticket by ticket. After that, respond to review with new commits (no force-push during review)
+> - PRs merge with a merge commit (`--no-ff`); squash and rebase merges are disabled on GitHub. Release branches (and the earlier ticket branches) are kept after merge, locally and on `origin`, so reviewers can clone and inspect each PR's branch (ADR-009)
 > - Code owner: `.github/CODEOWNERS` assigns every path to `@LoS-Light`, so PRs mark owned files and request the owner's review. Not enforced as a required review: the repo is private on a free plan, so branch protection is unavailable
 
 ### .gitignore
@@ -603,30 +609,31 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 
 - Source: this spec (`docs/SPEC.md`). Do not run `/to-spec`; this file is the single spec.
 - Ticket ID: `T-XXXX`, an auto-incrementing, zero-padded 4-digit number starting at `T-0001`, assigned in implementation order and never reused.
-- Ticket name: short PascalCase, used in the branch name (e.g. `T-0003 ProjectScaffolding`).
+- Ticket name: short PascalCase, used in the issue title `T-XXXX: [TicketName]` (e.g. `T-0003: ProjectScaffolding`).
 - Each ticket lists: the spec sections it covers, its acceptance criteria (from §15), its TDD seams (from §13), and the tickets it is blocked by.
-- One ticket = one branch = one PR. Keep tickets small enough to review in one sitting.
+- Tickets are built in order on their release branch (`feats/vX.Y.Z`); one ticket is a group of commits, not a branch or a PR. Keep tickets small enough to review in one sitting.
 - Fixed opening tickets (ADR-008):
   - `T-0001 RepoSetup`: `.gitignore`, `CLAUDE.md`, agent skills config, PR template and this spec. No app code.
   - `T-0002 SpecRefinement`: refine this spec with `/grill-with-docs` against the PRD, assignment brief and Figma. No app code.
   - `T-0003 ProjectScaffolding`: project scaffolding (Expo, TypeScript, lint, test, CI, `.nvmrc`, merging the `.gitignore`).
-- The last ticket covers README, final docs and the `dev` → `main` PR description.
+- The last ticket of each release covers the README, final docs and that release's PR descriptions (`T-0008 ReadmeAndDemo`, `T-0014 SeniorDocsAndDemo`).
 
 ### `/implement` — per ticket
 
-1. Start from an up-to-date `dev`:
-   `git checkout dev && git pull && git checkout -b feats/T-XXXX-[TicketName]`
-2. Do not start a ticket until every ticket it is blocked by has been merged into `dev`.
+1. Work on the release branch. The first ticket of a release creates it from an up-to-date `dev`:
+   `git checkout dev && git pull && git checkout -b feats/vX.Y.Z`
+2. Do not start a ticket until every ticket it is blocked by is done and reviewed.
 3. Implement only this ticket's scope, **test-first with `/tdd`** at the seams listed in the ticket, following the rules in §13 (ADR-010).
 4. Before each commit: `npx tsc --noEmit`, lint, and the relevant test files. Before opening the PR: the full test suite.
 5. Commit with Conventional Commits, referencing the ticket (e.g. `chore(T-0003): add Jest and React Native Testing Library`).
-6. Push the branch and open a PR **into `dev`** titled `T-XXXX: [TicketName]`. PR body: summary, spec sections covered, acceptance criteria checklist, tests added, screenshots/video for UI changes, decisions (link ADRs).
-7. Stop and wait for the author to review and merge (merge commit, `--no-ff`). **Do not merge PRs yourself.** Keep the branch after merge (ADR-009).
+6. **Stop after each ticket.** Commit locally and report to the author; do not push. Start the next ticket only after the author has reviewed this one.
+7. Push and open PRs only when the author asks. The release PR `feats/vX.Y.Z` → `dev` lists every ticket it closes; its body follows the PR template: summary, spec sections covered, acceptance criteria per ticket, tests added, screenshots/video for UI changes, decisions (link ADRs).
+8. **Do not merge PRs yourself.** The author merges with a merge commit (`--no-ff`); branches are kept after merge (ADR-009).
 
 ### Always
 
 - Never commit directly to `main` or `dev`; never force-push a branch that has an open PR.
-- Never delete a ticket branch, locally or on `origin`, unless the author asks.
+- Never delete a release branch (or an earlier ticket branch), locally or on `origin`, unless the author asks.
 - Never commit anything from `.private/` or secrets.
 - Record every new or changed decision in this spec, in the same PR, and list it in the PR's Decisions section.
 - Also write an ADR in `docs/adr/` only when all three hold: hard to reverse, surprising without context, and the result of a real trade-off. Otherwise the spec is enough.
@@ -639,11 +646,12 @@ Summary · Demo (screenshots + videos: feature flag on/off, double-press, infini
 
 ### Final submission
 
-For each release (ADR-011), when all of its tickets are merged into `dev`:
+For each release (ADR-011), when all of its tickets are done and reviewed on `feats/vX.Y.Z`:
 
 1. Complete the pre-submit checklist (§14).
-2. Open the PR `dev` → `main` titled `Release vX.Y.Z`, using the PR description outline in §14.
-3. After the author merges it: tag the merge commit (`git tag -a vX.Y.Z`), push the tag, and publish the GitHub Release.
+2. When the author asks: open the PR `feats/vX.Y.Z` → `dev`. The author merges it with GitHub's default merge message.
+3. Open the PR `dev` → `main` titled `Release vX.Y.Z`, using the PR description outline in §14. The author merges it with the merge commit message "Release vX.Y.Z".
+4. Tag that merge commit (`git tag -a vX.Y.Z`), push the tag, and publish the GitHub Release.
 
 `v1.0.0` covers the general requirements; `v1.1.0` covers the senior requirements and is the PR handed to the interviewer.
 
@@ -666,7 +674,7 @@ For each release (ADR-011), when all of its tickets are merged into `dev`:
 - [ ] All visible text localized in English and Chinese (Hong Kong) using PRD copy, following the device language
 - [ ] Swapping hardcoded data for CMS requires changing only the provider setup
 - [ ] Reproducible build, CI green, README explains both releases and that error handling ships in v1.1.0
-- [ ] Release PR merged into `main`, tagged `v1.0.0`, GitHub Release published with demo videos
+- [ ] Release PR merged into `main`, tagged `v1.0.0`, GitHub Release published (demo videos attached after `v1.1.0`, §14)
 
 ### v1.1.0 — senior requirements
 

@@ -1,6 +1,6 @@
-<!-- Title: T-XXXX: [TicketName] · Base: dev · Merge with a merge commit (no squash, no rebase). Keep the branch after merge. -->
+<!-- Release branch PR: feats/vX.Y.Z → dev, default merge message. Release PR: dev → main, titled "Release vX.Y.Z", merge message "Release vX.Y.Z". Merge commits only (no squash, no rebase); keep branches after merge. -->
 
-Ticket: #<!-- issue number -->
+Tickets: <!-- e.g. Closes #7, Closes #8 -->
 
 ## Summary
 
@@ -11,6 +11,8 @@ Ticket: #<!-- issue number -->
 - §
 
 ## Acceptance criteria
+
+<!-- Per ticket. -->
 
 - [ ]
 
