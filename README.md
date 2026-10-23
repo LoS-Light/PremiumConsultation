@@ -25,7 +25,7 @@ The demo videos, recorded on an iPhone (also in [`demo/`](demo/)):
 
 <table>
   <tr>
-    <th><code>v1.1.1</code>, 3 min 52 s</th>
+    <th><code>v1.1.2</code>, 3 min 52 s</th>
     <th width="24"></th>
     <th><code>v1.0.0</code>, 1 min 4 s</th>
   </tr>
@@ -36,7 +36,7 @@ The demo videos, recorded on an iPhone (also in [`demo/`](demo/)):
   </tr>
 </table>
 
-What the `v1.1.1` video shows:
+What the `v1.1.2` video shows:
 
 | From | What it shows |
 |---|---|
@@ -337,7 +337,7 @@ The assignment's general and senior requirements disagree on the entry point (th
 | `v1.0.0` (general requirements) | The Consultation screen | Hero and content bottom sheet matching Figma; the three base Specialists loaded in one request through TanStack Query from a swappable repository; loading skeleton and empty state; Book appointment (in-app browser), WhatsApp us (pre-filled message per language), tappable hotline and email; English and Chinese (Hong Kong) copy from the PRD; a back button that is shown but does nothing |
 | `v1.1.2` (senior requirements, latest) | A Home screen | The Consultation screen behind a feature flag, with a de-duplicated "coming soon" dialog; infinite scroll over 103 Specialists; **error handling** (error view and Retry); a working back button; a Feature toggles sheet and two demo screens for duplicate-press protection; Android matching iOS (transitions, swipe back, fonts, spinner, switches) |
 
-`v1.1.0` and `v1.1.1` are the same app as `v1.1.2`: `v1.1.1` added the demo screenshots, the videos and the quick start to this README, and `v1.1.2` the notes on the expected warnings.
+`v1.1.0` is the same app as `v1.1.2`, released before the demo, the quick start and the notes on the expected warnings were added to this README.
 
 **Error handling ships in `v1.1.2`, not `v1.0.0`.** `v1.0.0` reads hardcoded data that cannot fail, so the error view, Retry and the switch that simulates failures arrive together in the senior release ([ADR-011](docs/adr/0011-two-releases.md)).
 
