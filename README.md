@@ -30,7 +30,7 @@ The demo videos, recorded on an iPhone (also in [`demo/`](demo/)):
     <th><code>v1.0.0</code>, 1 min 4 s</th>
   </tr>
   <tr>
-    <td><video src="https://github.com/user-attachments/assets/afec765b-be11-4283-a7c4-b0bdfa1e1e2f" controls></video></td>
+    <td><video src="https://github.com/user-attachments/assets/36d7889e-905e-4035-9241-3f0147160600" controls></video></td>
     <td width="24"></td>
     <td><video src="https://github.com/user-attachments/assets/b7251e2b-9eae-4d74-a805-68791c25cc78" controls></video></td>
   </tr>
