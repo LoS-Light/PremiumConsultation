@@ -25,18 +25,18 @@ The demo videos, recorded on an iPhone (also in [`demo/`](demo/)):
 
 <table>
   <tr>
-    <th><code>v1.1.1</code>, 3 min 52 s</th>
+    <th><code>v1.1.2</code>, 3 min 52 s</th>
     <th width="24"></th>
     <th><code>v1.0.0</code>, 1 min 4 s</th>
   </tr>
   <tr>
-    <td><video src="https://github.com/user-attachments/assets/afec765b-be11-4283-a7c4-b0bdfa1e1e2f" controls></video></td>
+    <td><video src="https://github.com/user-attachments/assets/36d7889e-905e-4035-9241-3f0147160600" controls></video></td>
     <td width="24"></td>
     <td><video src="https://github.com/user-attachments/assets/b7251e2b-9eae-4d74-a805-68791c25cc78" controls></video></td>
   </tr>
 </table>
 
-What the `v1.1.1` video shows:
+What the `v1.1.2` video shows:
 
 | From | What it shows |
 |---|---|
@@ -61,6 +61,9 @@ What the `v1.0.0` video shows:
 
 ## Quick start
 
+> [!WARNING]
+> **Known warnings from third-party packages.** `npm ci` reports **29 high-severity vulnerabilities**, and on launch Metro logs **`[Reanimated] Dependencies should only be used on the web and are always ignored on native.`** Both come from third-party packages with no fix released yet; neither package ships in the app or changes how it behaves. See [Known limitations](#known-limitations) for the details. Don't run `npm audit fix --force`: it would downgrade Expo to SDK 44 and break the project.
+
 You need:
 
 - **Node 24**: the exact version is in [`.nvmrc`](.nvmrc). With [nvm](https://github.com/nvm-sh/nvm), step 1 installs it.
@@ -83,13 +86,13 @@ You need:
 
 3. In the same terminal, press **`i`** for the iOS simulator or **`a`** for the Android emulator. Expo CLI installs the matching Expo Go and opens the app on Home.
 
-Then see [Trying `v1.1.1`](#trying-v111) for what each button does.
+Then see [Trying `v1.1.2`](#trying-v112) for what each button does.
 
-### `v1.1.1` or `v1.0.0`
+### `v1.1.2` or `v1.0.0`
 
-`main` is `v1.1.1`, the latest. The assignment's general and senior requirements disagree on the entry point, so they ship as two releases (see [Releases](#releases)):
+`main` is `v1.1.2`, the latest. The assignment's general and senior requirements disagree on the entry point, so they ship as two releases (see [Releases](#releases)):
 
-| | `v1.1.1` (`main`): senior requirements | `v1.0.0`: general requirements |
+| | `v1.1.2` (`main`): senior requirements | `v1.0.0`: general requirements |
 |---|---|---|
 | Opens on | Home, with four buttons | The Consultation screen, as in Figma |
 | Specialists | 103, loaded 10 at a time as you scroll | The 3 from the PRD, loaded in one request |
@@ -119,7 +122,7 @@ The project uses Expo SDK 58, and each Expo Go release supports one SDK only.
 
 To see the Chinese copy, set the device language to Chinese (any `zh` locale shows Traditional Chinese, Hong Kong); every other language shows English.
 
-## Trying `v1.1.1`
+## Trying `v1.1.2`
 
 Home has four buttons:
 
@@ -181,9 +184,9 @@ Layer 1 only smooths out jitter; layers 2 and 3 are the guarantees. The back but
 
 ### Plain vs infinite list ([SPEC §6.3](docs/SPEC.md))
 
-`v1.0.0` loads every Specialist in one request (`useQuery`); `v1.1.1` loads them 10 at a time (`useInfiniteQuery`, offset pagination, [ADR-007](docs/adr/0007-offset-pagination.md)).
+`v1.0.0` loads every Specialist in one request (`useQuery`); `v1.1.2` loads them 10 at a time (`useInfiniteQuery`, offset pagination, [ADR-007](docs/adr/0007-offset-pagination.md)).
 
-| | Plain (`v1.0.0`) | Infinite (`v1.1.1`) |
+| | Plain (`v1.0.0`) | Infinite (`v1.1.2`) |
 |---|---|---|
 | Fetching | One request, all items | One request per page, when a fifth of a screen of list is left |
 | Time to first content | Grows with the list | Constant: the first page only |
@@ -201,7 +204,7 @@ Virtualization limits rendered views; pagination limits fetched data and network
 |---|---|---|
 | Framework | [Expo](https://docs.expo.dev/versions/v58.0.0/) SDK 58 (managed workflow), React Native 0.88, React 19.3 | The app on iOS and Android from one codebase; no native folders are committed |
 | Language | TypeScript 6.0, `strict` | Every source and test file |
-| Server state | [TanStack Query](https://tanstack.com/query/v5) v5 | Loading, caching and errors for the Specialist list: `useQuery` in `v1.0.0`, `useInfiniteQuery` (10 per page) in `v1.1.1` |
+| Server state | [TanStack Query](https://tanstack.com/query/v5) v5 | Loading, caching and errors for the Specialist list: `useQuery` in `v1.0.0`, `useInfiniteQuery` (10 per page) in `v1.1.2` |
 | Navigation | [React Navigation](https://reactnavigation.org/) 7, JS stack (`@react-navigation/stack`) | Home → Consultation and the demo screens, with iOS's push, pop and swipe back on both platforms ([ADR-013](docs/adr/0013-js-stack-with-ios-transitions.md)). Not Expo Router: two screens don't need file-based routes |
 | Bottom sheets | [`@gorhom/bottom-sheet`](https://gorhom.dev/react-native-bottom-sheet/) 5, on Reanimated 4 and Gesture Handler 3 | The Consultation content sheet over the hero ([ADR-012](docs/adr/0012-content-bottom-sheet.md)) and the Feature toggles sheet |
 | Localization | i18next, react-i18next, `expo-localization` | English and Chinese (Hong Kong) copy, following the device language |
@@ -295,7 +298,7 @@ Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Da
 
 Tests sit beside the code they cover (`*.test.ts` / `*.test.tsx`).
 
-- **Data** ([ADR-002](docs/adr/0002-specialist-repository.md)): screens read Specialists only through `SpecialistRepository`, provided by `RepositoryProvider`. The interface is paginated by offset, so infinite scroll needed no new interface. The hardcoded repository adds a simulated delay (800 ms in `v1.0.0`, 1500 ms in `v1.1.1`) so the loading states are visible, and can fail at random for the demo.
+- **Data** ([ADR-002](docs/adr/0002-specialist-repository.md)): screens read Specialists only through `SpecialistRepository`, provided by `RepositoryProvider`. The interface is paginated by offset, so infinite scroll needed no new interface. The hardcoded repository adds a simulated delay (800 ms in `v1.0.0`, 1500 ms in `v1.1.2`) so the loading states are visible, and can fail at random for the demo.
 - **Layout** ([ADR-012](docs/adr/0012-content-bottom-sheet.md)): the hero image stays fixed and the content is a `@gorhom/bottom-sheet` over it. The sheet opens at Figma's card position, can grow up to the nav bar and never closes. Its list holds the header, Specialists, contact info and agreements notice; its footer is the persistent bottom section with the service hours and the two buttons.
 - **Navigation** ([ADR-013](docs/adr/0013-js-stack-with-ios-transitions.md)): React Navigation's JS stack with iOS's push, pop and swipe back on both platforms.
 - **Actions**: every side effect (`expo-web-browser`, `Linking`) goes through `useConsultationActions`, so tests can mock it.
@@ -327,23 +330,29 @@ Behaviour is developed test-first at agreed seams ([ADR-010](docs/adr/0010-test-
 
 ## Releases
 
-The assignment's general and senior requirements disagree on the entry point (the Figma screen versus a flag-gated Home button), so the work ships in two releases ([ADR-011](docs/adr/0011-two-releases.md)). The latest is `v1.1.1`.
+The assignment's general and senior requirements disagree on the entry point (the Figma screen versus a flag-gated Home button), so the work ships in two releases ([ADR-011](docs/adr/0011-two-releases.md)). The latest is `v1.1.2`.
 
 | Release | Entry point | Contents |
 |---|---|---|
 | `v1.0.0` (general requirements) | The Consultation screen | Hero and content bottom sheet matching Figma; the three base Specialists loaded in one request through TanStack Query from a swappable repository; loading skeleton and empty state; Book appointment (in-app browser), WhatsApp us (pre-filled message per language), tappable hotline and email; English and Chinese (Hong Kong) copy from the PRD; a back button that is shown but does nothing |
-| `v1.1.1` (senior requirements, latest) | A Home screen | The Consultation screen behind a feature flag, with a de-duplicated "coming soon" dialog; infinite scroll over 103 Specialists; **error handling** (error view and Retry); a working back button; a Feature toggles sheet and two demo screens for duplicate-press protection; Android matching iOS (transitions, swipe back, fonts, spinner, switches) |
+| `v1.1.2` (senior requirements, latest) | A Home screen | The Consultation screen behind a feature flag, with a de-duplicated "coming soon" dialog; infinite scroll over 103 Specialists; **error handling** (error view and Retry); a working back button; a Feature toggles sheet and two demo screens for duplicate-press protection; Android matching iOS (transitions, swipe back, fonts, spinner, switches) |
 
-`v1.1.0` is the same app as `v1.1.1`, released before the demo screenshots, the video and the quick start were added to this README.
+`v1.1.0` is the same app as `v1.1.2`, released before the demo, the quick start and the notes on the expected warnings were added to this README.
 
-**Error handling ships in `v1.1.1`, not `v1.0.0`.** `v1.0.0` reads hardcoded data that cannot fail, so the error view, Retry and the switch that simulates failures arrive together in the senior release ([ADR-011](docs/adr/0011-two-releases.md)).
+**Error handling ships in `v1.1.2`, not `v1.0.0`.** `v1.0.0` reads hardcoded data that cannot fail, so the error view, Retry and the switch that simulates failures arrive together in the senior release ([ADR-011](docs/adr/0011-two-releases.md)).
 
-To run a release, check out its tag (`git checkout v1.0.0` or `v1.1.1`), then `npm ci` and `npx expo start` as in [Quick start](#quick-start).
+To run a release, check out its tag (`git checkout v1.0.0` or `v1.1.2`), then `npm ci` and `npx expo start` as in [Quick start](#quick-start).
 
 ## Known limitations
 
+- **`npm audit` reports 29 high-severity vulnerabilities, all in development tools.** They trace back to two packages with no patched version released yet:
+  - `braces` ([GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)): deeply nested patterns can exhaust the stack. Metro and Jest use it to match file paths against the project's own patterns, never user input.
+  - `node-forge` ([GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv)): RSA signature verification accepts extra nested fields. The Expo CLI uses it for code signing of EAS Update, which this app doesn't use.
+
+  The other 27 are packages that depend on these two (`expo`, `react-native`, `metro`, `jest-expo`, …). Neither package is in the app: the exported iOS and Android bundles contain neither. `npm audit fix --force` would "fix" them by downgrading Expo to SDK 44 and React Native to 0.72, so don't run it; update when Expo ships patched versions.
+- **A Reanimated warning in development.** On launch, Metro logs `[Reanimated] Dependencies should only be used on the web and are always ignored on native.` once. It comes from `@gorhom/bottom-sheet` 5.2.14, the latest, which passes dependency arrays to 28 Reanimated hooks; Reanimated 4.6 and later warns about that because native ignores them. The sheets behave the same, and release builds don't log it. It is reported upstream as [gorhom/react-native-bottom-sheet#2785](https://github.com/gorhom/react-native-bottom-sheet/issues/2785).
 - Once the list inside the expanded sheet has been scrolled, collapsing the sheet needs a new drag that starts at the top of the list. This is how `@gorhom/bottom-sheet` hands gestures between the sheet and its list.
-- The contact info and agreements notice are at the end of the list, so in `v1.1.1` they are reached only after all 103 Specialists have loaded (SPEC §6.5).
+- The contact info and agreements notice are at the end of the list, so in `v1.1.2` they are reached only after all 103 Specialists have loaded (SPEC §6.5).
 - The hotline is shown as "+852 2893 4402" in both languages, from one config value; the PRD's Chinese copy writes it as "28934402".
 - If the system cannot open a link (for example, no mail app is set up), nothing is shown to the user.
 - The in-app feature toggles are for the demo (see above).
