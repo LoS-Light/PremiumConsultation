@@ -32,6 +32,7 @@ Delivered in two releases (ADR-011):
 - **v1.0.0 — general requirements:** everything below except the senior bullet. The Consultation screen is the app's entry point.
 - **v1.1.0 — senior requirements:** Home entry button, feature flag, de-duplicated dialog, infinite scroll. Also error handling, moved from v1.0.0 (ADR-011).
 - **v1.1.1 — docs only:** the v1.1.0 app, unchanged, with the demo screenshots and video and a quick start in the README, so `main` shows them (§14).
+- **v1.1.2 — docs only:** the same app; the README explains the expected `npm audit` and Reanimated warnings before the quick start and in its known limitations.
 
 - Consultation screen matching the Figma design and PRD behaviour
 - Data loading via TanStack Query, with loading and empty states (error state in v1.1.0)
