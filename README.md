@@ -62,7 +62,7 @@ What the `v1.0.0` video shows:
 ## Quick start
 
 > [!WARNING]
-> **Two warnings to expect, both harmless.** `npm ci` reports **29 high-severity vulnerabilities**, and on launch Metro logs **`[Reanimated] Dependencies should only be used on the web and are always ignored on native.`** Both come from third-party packages that have no fix released yet, and neither affects the app: see [Known limitations](#known-limitations). Don't run `npm audit fix --force`: it would downgrade Expo to SDK 44 and break the project.
+> **Known warnings from third-party packages.** `npm ci` reports **29 high-severity vulnerabilities**, and on launch Metro logs **`[Reanimated] Dependencies should only be used on the web and are always ignored on native.`** Both come from third-party packages with no fix released yet; neither package ships in the app or changes how it behaves. See [Known limitations](#known-limitations) for the details. Don't run `npm audit fix --force`: it would downgrade Expo to SDK 44 and break the project.
 
 You need:
 
