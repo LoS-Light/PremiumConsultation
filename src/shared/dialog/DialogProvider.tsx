@@ -1,4 +1,12 @@
-import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { useFeatureFlagService } from '../featureFlags/FeatureFlagProvider';
 import { createDialogQueue, type DialogRequest } from './dialogQueue';
@@ -31,11 +39,12 @@ export function DialogProvider({ children }: { children: ReactNode }) {
     () => ({ show: (id, content) => queue.show({ id, content }) }),
     [queue],
   );
+  const handleClose = useCallback((key: number) => queue.close(key), [queue]);
 
   return (
     <DialogContext.Provider value={manager}>
       {children}
-      <DialogView dialogs={visible} onClose={(key) => queue.close(key)} />
+      <DialogView dialogs={visible} onClose={handleClose} />
     </DialogContext.Provider>
   );
 }

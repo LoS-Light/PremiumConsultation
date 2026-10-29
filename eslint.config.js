@@ -16,6 +16,10 @@ module.exports = defineConfig([
       // Import modules and assets with `import`, which TypeScript checks; `require` returns `any`.
       // Expo's config allows `require` for assets (images, fonts); this takes that exception out.
       '@typescript-eslint/no-require-imports': ['error', { allow: [] }],
+      // No functions created inline in JSX props: define them outside the JSX (useCallback, or
+      // at module level) and pass them by name, so a child doesn't get a new function on every
+      // render.
+      'react/jsx-no-bind': ['error', { ignoreRefs: true }],
       '@typescript-eslint/naming-convention': [
         'error',
         { selector: 'default', format: ['camelCase'], leadingUnderscore: 'allow' },

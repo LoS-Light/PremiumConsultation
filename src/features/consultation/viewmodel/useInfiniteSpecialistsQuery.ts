@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { useSpecialistRepository } from '../../../data/specialist/RepositoryProvider';
 import type { Specialist } from '../../../domain/specialist/Specialist';
@@ -27,6 +27,32 @@ export function useInfiniteSpecialistsQuery() {
     [queryClient],
   );
 
+  const { refetch, fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError } = query;
+
+  // The three loaders below start a request and return; the query's state (isFetching,
+  // isFetchingNextPage, the pages) shows it arriving, so callers such as onEndReached and a
+  // Retry button don't wait for it.
+
+  // Retry after the first page failed: load it again.
+  const retry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+  // Retry after the next page failed: load that page again (unlike loadMore, which leaves a
+  // failed page to Retry).
+  const retryNextPage = useCallback(() => {
+    void fetchNextPage({ cancelRefetch: false });
+  }, [fetchNextPage]);
+  // Called by onEndReached, which can fire again before the next page arrives. Only fetch
+  // when there is a next page, it isn't loading and it didn't just fail (onEndReached fires
+  // again when the spinner's space goes, and only Retry should load a failed page again).
+  // cancelRefetch: false also makes a call in the same tick (before isFetchingNextPage
+  // updates) join the request in flight.
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage && !isFetchNextPageError) {
+      void fetchNextPage({ cancelRefetch: false });
+    }
+  }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
+
   const pages = query.data?.pages;
   const specialists = useMemo(
     () => uniqueById(pages?.flatMap((page) => page.items) ?? []),
@@ -38,25 +64,13 @@ export function useInfiniteSpecialistsQuery() {
     // The first page is loading: on entering, or on Retry after it failed.
     isLoadingFirstPage: pages === undefined && query.isFetching,
     isError: query.isError,
-    hasNextPage: query.hasNextPage,
-    isFetchingNextPage: query.isFetchingNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     // TanStack Query keeps the error while Retry loads the page again; it's no longer failed then.
-    hasNextPageFailed: query.isFetchNextPageError && !query.isFetchingNextPage,
-    // Retry after the first page failed: load it again.
-    retry: () => query.refetch(),
-    // Retry after the next page failed: load that page again (unlike loadMore, which leaves a
-    // failed page to Retry).
-    retryNextPage: () => query.fetchNextPage({ cancelRefetch: false }),
-    // Called by onEndReached, which can fire again before the next page arrives. Only fetch
-    // when there is a next page, it isn't loading and it didn't just fail (onEndReached fires
-    // again when the spinner's space goes, and only Retry should load a failed page again).
-    // cancelRefetch: false also makes a call in the same tick (before isFetchingNextPage
-    // updates) join the request in flight.
-    loadMore: async () => {
-      if (query.hasNextPage && !query.isFetchingNextPage && !query.isFetchNextPageError) {
-        await query.fetchNextPage({ cancelRefetch: false });
-      }
-    },
+    hasNextPageFailed: isFetchNextPageError && !isFetchingNextPage,
+    retry,
+    retryNextPage,
+    loadMore,
   };
 }
 

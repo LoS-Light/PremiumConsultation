@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 
 import { COLORS, SHADOWS } from '../theme';
@@ -39,6 +39,8 @@ export function ToggleSwitch({
     }).start();
   }, [isOn, position]);
 
+  const handlePress = useCallback(() => onChange(!isOn), [onChange, isOn]);
+
   return (
     <ThrottledPressable
       accessibilityRole="switch"
@@ -46,7 +48,7 @@ export function ToggleSwitch({
       accessibilityHint={accessibilityHint}
       accessibilityState={{ checked: isOn }}
       hitSlop={HIT_SLOP}
-      onPress={() => onChange(!isOn)}
+      onPress={handlePress}
     >
       <Animated.View
         style={[

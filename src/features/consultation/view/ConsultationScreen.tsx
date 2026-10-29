@@ -6,9 +6,10 @@ import BottomSheet, {
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { type ListRenderItemInfo, StyleSheet, View } from 'react-native';
 import { useSafeAreaFrame, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { Specialist } from '../../../domain/specialist/Specialist';
 import { COLORS } from '../../../shared/theme';
 import {
   BackNavBar,
@@ -105,12 +106,8 @@ function ConsultationContent() {
       >
         <BottomSheetFlatList
           data={specialists}
-          keyExtractor={(specialist) => specialist.id}
-          renderItem={({ item }) => (
-            <View style={styles.cell}>
-              <SpecialistCard specialist={item} />
-            </View>
-          )}
+          keyExtractor={specialistKey}
+          renderItem={renderSpecialist}
           ListHeaderComponent={<ConsultationHeader />}
           ListEmptyComponent={
             <ListBodyState isLoading={isLoadingFirstPage} isError={isError} onRetry={retry} />
@@ -123,7 +120,7 @@ function ConsultationContent() {
             />
           }
           // Load the next page when a fifth of a screen of list is left (SPEC §6.2).
-          onEndReached={() => void loadMore()}
+          onEndReached={loadMore}
           onEndReachedThreshold={0.2}
           onContentSizeChange={nextPageSpinner.handleContentSizeChange}
           testID="specialist-list"
@@ -135,6 +132,18 @@ function ConsultationContent() {
       </BottomSheet>
       <BackNavBar />
       <StatusBar style="dark" />
+    </View>
+  );
+}
+
+function specialistKey(specialist: Specialist) {
+  return specialist.id;
+}
+
+function renderSpecialist({ item }: ListRenderItemInfo<Specialist>) {
+  return (
+    <View style={styles.cell}>
+      <SpecialistCard specialist={item} />
     </View>
   );
 }

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -28,12 +28,16 @@ export function ConsultationBottomSection({
     () => Gesture.Pan().activeOffsetY(VERTICAL_DRAG_THRESHOLD).failOffsetX(VERTICAL_DRAG_THRESHOLD),
     [],
   );
+  const handleLayout = useCallback(
+    (event: LayoutChangeEvent) => onHeightChange(event.nativeEvent.layout.height),
+    [onHeightChange],
+  );
 
   return (
     <GestureDetector gesture={blockSheetDrag}>
       <View
         style={[styles.section, { paddingBottom: bottomControlsPadding(insets.bottom) }]}
-        onLayout={(event: LayoutChangeEvent) => onHeightChange(event.nativeEvent.layout.height)}
+        onLayout={handleLayout}
       >
         <Text style={styles.serviceHours}>{t('consultation.bottomSection.serviceHours')}</Text>
         <PrimaryButton

@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useNavigation } from '@react-navigation/native';
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { HeroActionsScreen } from '../../../shared/ui/HeroActionsScreen';
@@ -15,6 +15,9 @@ export function HomeScreen() {
   const navigation = useNavigation();
   const openConsultation = useConsultationEntry();
   const featureTogglesRef = useRef<BottomSheetModal>(null);
+  const handleFeatureTogglesPress = useCallback(() => featureTogglesRef.current?.present(), []);
+  const handleDialogDemoPress = useCallback(() => navigation.navigate('DialogDemo'), [navigation]);
+  const handleToastDemoPress = useCallback(() => navigation.navigate('ToastDemo'), [navigation]);
 
   return (
     <>
@@ -22,18 +25,9 @@ export function HomeScreen() {
         actions={
           <>
             <PrimaryButton label={t('home.premiumConsultation')} onPress={openConsultation} />
-            <PrimaryButton
-              label={t('home.featureToggle')}
-              onPress={() => featureTogglesRef.current?.present()}
-            />
-            <PrimaryButton
-              label={t('home.testMultipleDialogs')}
-              onPress={() => navigation.navigate('DialogDemo')}
-            />
-            <PrimaryButton
-              label={t('home.testToasts')}
-              onPress={() => navigation.navigate('ToastDemo')}
-            />
+            <PrimaryButton label={t('home.featureToggle')} onPress={handleFeatureTogglesPress} />
+            <PrimaryButton label={t('home.testMultipleDialogs')} onPress={handleDialogDemoPress} />
+            <PrimaryButton label={t('home.testToasts')} onPress={handleToastDemoPress} />
           </>
         }
       />

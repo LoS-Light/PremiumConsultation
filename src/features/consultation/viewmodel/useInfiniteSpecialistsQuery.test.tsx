@@ -64,9 +64,9 @@ describe('useInfiniteSpecialistsQuery', () => {
     await waitFor(() => expect(result.current.specialists).toHaveLength(10));
 
     await act(async () => {
-      void result.current.loadMore();
+      result.current.loadMore();
       await Promise.resolve();
-      void result.current.loadMore();
+      result.current.loadMore();
     });
 
     await waitFor(() => expect(result.current.specialists).toHaveLength(20));

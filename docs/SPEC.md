@@ -556,6 +556,7 @@ Code follows common TypeScript / React Native conventions, and domain names foll
 | Functions and variables | camelCase | `openConsultation`, `pageSize` |
 | Booleans | `is` / `has` / `should` / `can` prefix | `isEnabled`, `hasNextPage` |
 | Event props / handlers | `onX` for props, `handleX` for handlers | `onPress`, `handleRetry` |
+| Functions passed to JSX props | Defined outside the JSX (`useCallback`, or at module level when they need nothing from the component) and passed by name; ESLint `react/jsx-no-bind` | `onPress={handleBackPress}`, `keyExtractor={specialistKey}` |
 | Module-level constants | SCREAMING_SNAKE_CASE | `BOOKING_URL`, `PAGE_SIZE` |
 | React Native style sheets | camelCase `styles`, the React Native idiom (exception to the row above) | `const styles = StyleSheet.create({ … })` |
 | Enum-like unions and string literals | camelCase values | `'premiumConsultation'` |

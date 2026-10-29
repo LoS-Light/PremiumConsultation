@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 
 import { COLORS, SHADOWS, TYPOGRAPHY } from '../theme';
@@ -28,6 +29,11 @@ export function DialogView({
   onClose: (key: number) => void;
 }) {
   const top = dialogs[dialogs.length - 1];
+  const handleRequestClose = useCallback(() => {
+    if (top !== undefined) {
+      onClose(top.key);
+    }
+  }, [top, onClose]);
 
   return (
     <Modal
@@ -36,11 +42,7 @@ export function DialogView({
       animationType="fade"
       statusBarTranslucent
       navigationBarTranslucent
-      onRequestClose={() => {
-        if (top !== undefined) {
-          onClose(top.key);
-        }
-      }}
+      onRequestClose={handleRequestClose}
     >
       <View style={styles.backdrop}>
         {dialogs.map(({ key, content }, index) => {
@@ -62,18 +64,37 @@ export function DialogView({
               importantForAccessibility={isTop ? 'auto' : 'no-hide-descendants'}
               accessibilityElementsHidden={!isTop}
             >
-              <View style={styles.card} accessibilityViewIsModal={isTop}>
-                <Text style={styles.title} accessibilityRole="header">
-                  {content.title}
-                </Text>
-                <Text style={styles.body}>{content.body}</Text>
-                <PrimaryButton label={content.buttonLabel} onPress={() => onClose(key)} />
-              </View>
+              <DialogCard dialogKey={key} content={content} isTop={isTop} onClose={onClose} />
             </View>
           );
         })}
       </View>
     </Modal>
+  );
+}
+
+// One dialog's card. Its own component so the button's handler knows which dialog to close.
+function DialogCard({
+  dialogKey,
+  content,
+  isTop,
+  onClose,
+}: {
+  dialogKey: number;
+  content: DialogContent;
+  isTop: boolean;
+  onClose: (key: number) => void;
+}) {
+  const handleButtonPress = useCallback(() => onClose(dialogKey), [onClose, dialogKey]);
+
+  return (
+    <View style={styles.card} accessibilityViewIsModal={isTop}>
+      <Text style={styles.title} accessibilityRole="header">
+        {content.title}
+      </Text>
+      <Text style={styles.body}>{content.body}</Text>
+      <PrimaryButton label={content.buttonLabel} onPress={handleButtonPress} />
+    </View>
   );
 }
 

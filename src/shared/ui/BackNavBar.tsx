@@ -1,5 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { Image } from 'expo-image';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,11 +24,11 @@ export function BackNavBar() {
   // while its screen is leaving (it depends on timing); it would then go back from a screen that
   // is gone (a dev-mode "GO_BACK was not handled" error). The screen is no longer focused then,
   // so ignore the press.
-  const handleBackPress = () => {
+  const handleBackPress = useCallback(() => {
     if (navigation.isFocused()) {
       navigation.goBack();
     }
-  };
+  }, [navigation]);
 
   return (
     <View style={[styles.bar, { paddingTop: insets.top }]} pointerEvents="box-none">

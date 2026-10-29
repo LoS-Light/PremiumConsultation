@@ -1,4 +1,5 @@
-import { StyleSheet, Text } from 'react-native';
+import { useCallback } from 'react';
+import { type PressableStateCallbackType, StyleSheet, Text } from 'react-native';
 
 import { COLORS, TYPOGRAPHY } from '../theme';
 import { ThrottledPressable } from './ThrottledPressable';
@@ -16,16 +17,17 @@ export function PrimaryButton({
   size?: 'regular' | 'small';
 }) {
   const isSmall = size === 'small';
+  const pressableStyle = useCallback(
+    ({ pressed }: PressableStateCallbackType) => [
+      styles.button,
+      isSmall && styles.smallButton,
+      pressed && styles.pressed,
+    ],
+    [isSmall],
+  );
+
   return (
-    <ThrottledPressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        isSmall && styles.smallButton,
-        pressed && styles.pressed,
-      ]}
-    >
+    <ThrottledPressable accessibilityRole="button" onPress={onPress} style={pressableStyle}>
       <Text style={[styles.label, isSmall && styles.smallLabel]}>{label}</Text>
     </ThrottledPressable>
   );

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -19,11 +20,7 @@ export function ToastDemoScreen() {
     <HeroActionsScreen
       hasBackButton
       actions={TOAST_NAMES.map((name) => (
-        <PrimaryButton
-          key={name}
-          label={t('toastDemo.button', { name })}
-          onPress={() => show(name)}
-        />
+        <ToastButton key={name} name={name} onShow={show} />
       ))}
     >
       <View style={styles.toasts} pointerEvents="none">
@@ -38,6 +35,14 @@ export function ToastDemoScreen() {
       </View>
     </HeroActionsScreen>
   );
+}
+
+// One toast button. Its own component so its handler knows which toast to show.
+function ToastButton({ name, onShow }: { name: ToastName; onShow: (name: ToastName) => void }) {
+  const { t } = useTranslation();
+  const handlePress = useCallback(() => onShow(name), [onShow, name]);
+
+  return <PrimaryButton label={t('toastDemo.button', { name })} onPress={handlePress} />;
 }
 
 const styles = StyleSheet.create({
