@@ -395,6 +395,7 @@ Protection against repeated presses is layered. Each layer has one job and is te
 
 - Languages: **English (`en`)** and **Traditional Chinese, Hong Kong (`zh-HK`)** — the PRD's Chinese copy is written Cantonese, so it is `zh-HK`, not generic `zh-Hant`
 - Default: device language via `expo-localization`. **Every Chinese locale** (`zh`, `zh-Hant`, `zh-HK`, `zh-TW`, `zh-MO`, and Simplified `zh-Hans`, `zh-CN`, `zh-SG`) → `zh-HK`, because it is the only Chinese the app has and Chinese readers are better served by it than by English. `en-*` → `en`
+- **The device language is read leniently.** Its language is the part before the first `-` or `_`, in any letter case, so Android's `zh_TW` and an upper-case `ZH-TW` show Chinese. Anything else shows English, including a value that isn't a language tag (empty, `abc`)
 - **Fallback is English** (`fallbackLng: 'en'`): a device language with no matching translation shows English, and a string missing from `zh-HK` shows its English text instead of a blank or a key name
 - **The app follows the system language.** There is no in-app language switch. Changing the device language changes the app's language (on iOS the system restarts the app; on Android the app picks up the new locale)
 - **Every user-visible string** goes through i18n, including dialog text, error messages, button labels and accessibility labels

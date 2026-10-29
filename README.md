@@ -209,7 +209,7 @@ Virtualization limits rendered views; pagination limits fetched data and network
 | Bottom sheets | [`@gorhom/bottom-sheet`](https://gorhom.dev/react-native-bottom-sheet/) 5, on Reanimated 4 and Gesture Handler 3 | The Consultation content sheet over the hero ([ADR-012](docs/adr/0012-content-bottom-sheet.md)) and the Feature toggles sheet |
 | Localization | i18next, react-i18next, `expo-localization` | English and Chinese (Hong Kong) copy, following the device language |
 | Expo modules | `expo-image`, `expo-linear-gradient`, `expo-web-browser`, `expo-font` with Inter and Noto Sans TC (`@expo-google-fonts`), `expo-splash-screen`, `expo-status-bar` | Images and SVG icons, the hero's fade, the booking page in an in-app browser, the Figma fonts, holding the splash screen until the fonts load |
-| Tests | Jest 30 (`jest-expo`), React Native Testing Library 14 | 94 tests, written test-first at agreed seams ([ADR-010](docs/adr/0010-test-driven-development.md)) |
+| Tests | Jest 30 (`jest-expo`), React Native Testing Library 14 | 105 tests, written test-first at agreed seams ([ADR-010](docs/adr/0010-test-driven-development.md)) |
 | Code quality | ESLint 9 (`eslint-config-expo`), Prettier 3, GitHub Actions | Lint and formatting; CI runs the type check, lint and tests on every pull request |
 | Tooling | Node 24.22.1 ([`.nvmrc`](.nvmrc)), npm | `npm ci` installs the exact versions in `package-lock.json` |
 
