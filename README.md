@@ -292,6 +292,7 @@ Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Da
     │                             HeroActionsScreen (the layout of Home and the demo screens),
     │                             useSheetAnimationConfigs, bottomControlsPadding
     │
+    ├── types/assets.d.ts         Types for imported images: a .png or .svg is a Metro asset ID
     └── test/                     renderApp (the app opened on any screen), controllableClock,
                                   fake and steerable repositories
 ```

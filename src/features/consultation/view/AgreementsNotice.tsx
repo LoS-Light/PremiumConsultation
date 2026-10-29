@@ -2,9 +2,8 @@ import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
+import infoIcon from '../../../../assets/icons/info.svg';
 import { COLORS, TYPOGRAPHY } from '../../../shared/theme';
-
-const INFO_ICON = require('../../../../assets/icons/info.svg');
 
 // Privacy notice in a pale yellow box (Figma 2:208).
 export function AgreementsNotice() {
@@ -12,7 +11,7 @@ export function AgreementsNotice() {
 
   return (
     <View style={styles.box}>
-      <Image source={INFO_ICON} style={styles.icon} contentFit="contain" />
+      <Image source={infoIcon} style={styles.icon} contentFit="contain" />
       <Text style={styles.text}>{t('consultation.agreements')}</Text>
     </View>
   );

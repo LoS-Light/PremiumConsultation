@@ -13,6 +13,9 @@ module.exports = defineConfig([
     // (e.g. boolean prefixes) are left to review.
     files: ['**/*.{ts,tsx}'],
     rules: {
+      // Import modules and assets with `import`, which TypeScript checks; `require` returns `any`.
+      // Expo's config allows `require` for assets (images, fonts); this takes that exception out.
+      '@typescript-eslint/no-require-imports': ['error', { allow: [] }],
       '@typescript-eslint/naming-convention': [
         'error',
         { selector: 'default', format: ['camelCase'], leadingUnderscore: 'allow' },
