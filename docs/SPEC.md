@@ -296,7 +296,7 @@ interface SwitchableFeatureFlagService extends FeatureFlagService {
 }
 ```
 
-- Current implementation: `LocalFeatureFlagService`, in-memory flags with defaults from config, switched at runtime from the Feature toggles sheet on Home (§4.1). The app's instance is created in one statement (`src/app/featureFlagService.ts`); swapping to a remote source changes only that statement
+- Current implementation: `LocalFeatureFlagService`, in-memory flags with defaults from config, switched at runtime from the Feature toggles sheet on Home (§4.1). The app's instance is created in one statement (`src/app/services.ts`); swapping to a remote source changes only that statement
 - **This is a demo shortcut, not the recommended production approach.** In production the flag should come from a remote source the business controls without an app release: **Firebase Remote Config**, or the **CMS** back office planned for Q2. Either plugs in as another `FeatureFlagService` implementation, with a safe default (off) when the remote value is unavailable; UI and hooks do not change. The README says so
 - Exposed through a context (`FeatureFlagProvider`) + `useFeatureFlag(flag)` hook, which re-renders on change (`useSyncExternalStore`)
 - **Guarded in two places:**
@@ -483,7 +483,7 @@ src/
   app/
     App.tsx                     fonts, splash, the app's services; renders AppProviders + RootNavigator
     navigation.tsx              v1.1.0
-    featureFlagService.ts       the app's flags: the one statement to swap for a remote source (v1.1.0)
+    services.ts                 the app's flag service and Specialist repository: one statement each to swap (v1.1.0)
     AppProviders.tsx            every provider, shared by App and the test helper
   features/
     home/
@@ -522,7 +522,7 @@ src/
     specialist/
       HardcodedSpecialistRepository.ts
       CmsSpecialistRepository.ts           stub
-      specialists.fixture.ts
+      hardcodedSpecialists.ts
       RepositoryProvider.tsx
   shared/
     ui/                         ThrottledPressable, PrimaryButton, ToggleSwitch, LoadingSpinner, HeroBanner, BackNavBar, HeroActionsScreen (Home and demo layout), bottomControlsPadding, useSheetAnimationConfigs (both sheets' spring)

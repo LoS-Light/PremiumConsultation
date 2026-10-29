@@ -9,9 +9,8 @@ import { useEffect, useState } from 'react';
 
 import { useAppLanguage } from '../shared/i18n/useAppLanguage';
 import { AppProviders } from './AppProviders';
-import { featureFlagService } from './featureFlagService';
 import { RootNavigator } from './navigation';
-import { specialistRepository } from './specialistRepository';
+import { featureFlagService, specialistRepository } from './services';
 
 // Keep the splash screen up until the Figma fonts are ready.
 void SplashScreen.preventAutoHideAsync();

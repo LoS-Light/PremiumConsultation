@@ -145,7 +145,7 @@ Every switch lives in memory only: restarting the app resets it.
 | Enable press throttle | on | Off: buttons react to every press |
 | Simulate loading failure | off | On: each Specialist request fails 30% of the time, to show the error view and Retry |
 
-**The in-app flag switch is a demo shortcut, not the production approach.** In production, whether the screen is enabled would come from a source the business controls without an app release: the Q2 CMS, Firebase Remote Config or similar. The app reads flags only through the `FeatureFlagService` interface, so a remote implementation replaces the in-memory one in one statement ([`src/app/featureFlagService.ts`](src/app/featureFlagService.ts)), with a safe default (off) when the remote value is unavailable. No screen or hook changes.
+**The in-app flag switch is a demo shortcut, not the production approach.** In production, whether the screen is enabled would come from a source the business controls without an app release: the Q2 CMS, Firebase Remote Config or similar. The app reads flags only through the `FeatureFlagService` interface, so a remote implementation replaces the in-memory one in one statement ([`src/app/services.ts`](src/app/services.ts)), with a safe default (off) when the remote value is unavailable. No screen or hook changes.
 
 ### Demo walkthroughs
 
@@ -236,8 +236,9 @@ Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Da
     │   ├── App.tsx               Fonts, splash screen, the QueryClient
     │   ├── AppProviders.tsx      Every provider in one place, shared by App and the tests
     │   ├── navigation.tsx        The stack: Home → Consultation, Dialog demo, Toast demo
-    │   ├── specialistRepository.ts   Picks the repository: hardcoded today, the CMS later
-    │   └── featureFlagService.ts     Picks the flag service: in memory today, remote later
+    │   └── services.ts           Picks the implementations: the Specialist repository (hardcoded
+    │                             today, the CMS later) and the flag service (in memory today,
+    │                             remote later)
     │
     ├── domain/                   Domain: the core concepts; depends on nothing
     │   ├── pagination.ts         Page / PageParams for offset pagination
@@ -249,7 +250,7 @@ Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Da
     │   ├── HardcodedSpecialistRepository.ts  Pages a local list, simulated latency and failure
     │   ├── CmsSpecialistRepository.ts        Stub for the Q2 CMS
     │   ├── RepositoryProvider.tsx            Provides the repository (useSpecialistRepository)
-    │   └── specialists.fixture.ts            The 3 Figma Specialists and 100 generated ones
+    │   └── hardcodedSpecialists.ts           The 3 Figma Specialists and 100 generated ones
     │
     ├── features/                 One folder per screen, each split into view/ and viewmodel/
     │   ├── home/
@@ -312,7 +313,7 @@ Tests sit beside the code they cover (`*.test.ts` / `*.test.tsx`).
 
 ### Swapping to the CMS
 
-The data source is chosen in one statement in [`src/app/specialistRepository.ts`](src/app/specialistRepository.ts). When the Q2 CMS exists, implement `CmsSpecialistRepository.getSpecialists` and replace that statement:
+The data source is chosen in one statement in [`src/app/services.ts`](src/app/services.ts). When the Q2 CMS exists, implement `CmsSpecialistRepository.getSpecialists` and replace that statement:
 
 ```ts
 export const specialistRepository: SpecialistRepository = new CmsSpecialistRepository();

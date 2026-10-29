@@ -1,5 +1,5 @@
 import { HardcodedSpecialistRepository } from './HardcodedSpecialistRepository';
-import { BASE_SPECIALISTS, EXTENDED_SPECIALISTS } from './specialists.fixture';
+import { BASE_SPECIALISTS, EXTENDED_SPECIALISTS } from './hardcodedSpecialists';
 
 const DATASET = [
   { id: 'a', name: 'Specialist A' },
