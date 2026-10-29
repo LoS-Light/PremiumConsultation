@@ -1,12 +1,13 @@
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import infoIcon from '../../../../assets/icons/info.svg';
-import { COLORS, TYPOGRAPHY } from '../../../shared/theme';
+import { makeStyles, TYPOGRAPHY } from '../../../shared/theme';
 
 // Privacy notice in a pale yellow box (Figma 2:208).
 export function AgreementsNotice() {
+  const styles = useStyles();
   const { t } = useTranslation();
 
   return (
@@ -17,7 +18,7 @@ export function AgreementsNotice() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   box: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -26,8 +27,8 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: COLORS.noticeBorder,
-    backgroundColor: COLORS.noticeBackground,
+    borderColor: colors.noticeBorder,
+    backgroundColor: colors.noticeBackground,
   },
   icon: {
     width: 16,
@@ -39,7 +40,7 @@ const styles = StyleSheet.create({
   text: {
     ...TYPOGRAPHY.body3,
     width: 260,
-    color: COLORS.textStrong,
+    color: colors.textStrong,
     textAlign: 'justify',
   },
-});
+}));

@@ -1,9 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { COLORS } from '../theme';
+import { makeStyles } from '../theme';
 import { BackNavBar } from './BackNavBar';
 import { bottomControlsPadding } from './bottomControlsPadding';
 import { HeroBanner } from './HeroBanner';
@@ -22,6 +22,7 @@ export function HeroActionsScreen({
   // What fills the space between the hero and the buttons, if anything.
   children?: ReactNode;
 }) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
 
   return (
@@ -32,15 +33,16 @@ export function HeroActionsScreen({
         {actions}
       </View>
       {hasBackButton && <BackNavBar />}
-      <StatusBar style="dark" />
+      {/* Dark text on the light hero, light text on the dark one. */}
+      <StatusBar style="auto" />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   screen: {
     flex: 1,
-    backgroundColor: COLORS.heroBackground,
+    backgroundColor: colors.heroBackground,
   },
   content: {
     flex: 1,
@@ -49,4 +51,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 20,
   },
-});
+}));

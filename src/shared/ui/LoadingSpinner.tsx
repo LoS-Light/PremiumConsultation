@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, View } from 'react-native';
 
-import { COLORS } from '../theme';
+import { makeStyles } from '../theme';
 
 // iOS's activity indicator: 12 spokes, 20 pt, the bright spoke going round once a second.
 const SIZE = 20;
@@ -38,6 +38,7 @@ export function LoadingSpinner({
   accessibilityLabel: string;
   testID?: string;
 }) {
+  const styles = useStyles();
   const [turn] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
@@ -85,7 +86,7 @@ export function LoadingSpinner({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   box: {
     width: SIZE,
     height: SIZE,
@@ -97,6 +98,6 @@ const styles = StyleSheet.create({
     width: SPOKE_WIDTH,
     height: SPOKE_LENGTH,
     borderRadius: SPOKE_WIDTH / 2,
-    backgroundColor: COLORS.spinner,
+    backgroundColor: colors.spinner,
   },
-});
+}));

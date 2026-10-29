@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import { Animated } from 'react-native';
 
-import { COLORS, SHADOWS } from '../theme';
+import { makeStyles, useTheme } from '../theme';
 import { ThrottledPressable } from './ThrottledPressable';
 
 const TRACK_WIDTH = 51;
@@ -28,6 +28,8 @@ export function ToggleSwitch({
   // What switching does, read after the label (e.g. the row's description).
   accessibilityHint?: string;
 }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   // Created once; kept in state rather than a ref so it can be read while rendering.
   const [position] = useState(() => new Animated.Value(isOn ? 1 : 0));
 
@@ -56,7 +58,7 @@ export function ToggleSwitch({
           {
             backgroundColor: position.interpolate({
               inputRange: [0, 1],
-              outputRange: [COLORS.switchOff, COLORS.switchOn],
+              outputRange: [colors.switchOff, colors.switchOn],
             }),
           },
         ]}
@@ -81,7 +83,7 @@ export function ToggleSwitch({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors, shadows }) => ({
   track: {
     width: TRACK_WIDTH,
     height: TRACK_HEIGHT,
@@ -89,10 +91,10 @@ const styles = StyleSheet.create({
     padding: THUMB_INSET,
   },
   thumb: {
-    ...SHADOWS.switchThumb,
+    ...shadows.switchThumb,
     width: THUMB_SIZE,
     height: THUMB_SIZE,
     borderRadius: THUMB_SIZE / 2,
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.switchThumb,
   },
-});
+}));

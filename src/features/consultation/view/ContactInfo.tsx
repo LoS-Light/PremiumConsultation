@@ -1,8 +1,8 @@
 import { Trans } from 'react-i18next';
-import { StyleSheet, Text } from 'react-native';
+import { Text } from 'react-native';
 
 import { EMAIL, HOTLINE_DISPLAY } from '../../../shared/config/contact';
-import { COLORS, TYPOGRAPHY } from '../../../shared/theme';
+import { makeStyles, TYPOGRAPHY } from '../../../shared/theme';
 import { useThrottledPress } from '../../../shared/ui/useThrottledPress';
 import { useConsultationActions } from '../viewmodel/useConsultationActions';
 
@@ -10,6 +10,7 @@ import { useConsultationActions } from '../viewmodel/useConsultationActions';
 // lists the hotline and email on their own lines; Chinese puts them inline) while both stay
 // tappable links. The links use the shared press throttle (SPEC §8a).
 export function ContactInfo() {
+  const styles = useStyles();
   const actions = useConsultationActions();
   const handleHotlinePress = useThrottledPress(actions.callHotline);
   const handleEmailPress = useThrottledPress(actions.emailUs);
@@ -30,12 +31,12 @@ export function ContactInfo() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   text: {
     ...TYPOGRAPHY.body3,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   link: {
-    color: COLORS.link,
+    color: colors.link,
   },
-});
+}));

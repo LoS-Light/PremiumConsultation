@@ -6,11 +6,11 @@ import {
 } from '@gorhom/bottom-sheet';
 import { type Ref, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SIMULATED_FAILURE_RATE } from '../../../shared/config/specialists';
-import { COLORS, TYPOGRAPHY } from '../../../shared/theme';
+import { makeStyles, TYPOGRAPHY } from '../../../shared/theme';
 import { bottomControlsPadding } from '../../../shared/ui/bottomControlsPadding';
 import { ToggleSwitch } from '../../../shared/ui/ToggleSwitch';
 import { useSheetAnimationConfigs } from '../../../shared/ui/useSheetAnimationConfigs';
@@ -22,6 +22,7 @@ import { useFeatureToggle } from '../viewmodel/useFeatureToggle';
 // in-app switch is a demo shortcut; production flags would come from Firebase Remote Config
 // or the CMS.
 export function FeatureTogglesSheet({ ref }: { ref: Ref<BottomSheetModal> }) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const animationConfigs = useSheetAnimationConfigs();
@@ -91,6 +92,7 @@ function FeatureToggleRow({
   label: string;
   description: string;
 }) {
+  const styles = useStyles();
   const toggle = useFeatureToggle(flag);
 
   return (
@@ -109,14 +111,14 @@ function FeatureToggleRow({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   background: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
   },
   handle: {
-    backgroundColor: COLORS.sheetHandle,
+    backgroundColor: colors.sheetHandle,
   },
   content: {
     paddingTop: 8,
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.header6,
-    color: COLORS.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
   },
   row: {
@@ -139,14 +141,14 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY.subtitle1,
-    color: COLORS.textPrimary,
+    color: colors.textPrimary,
   },
   description: {
     ...TYPOGRAPHY.body3,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   tip: {
     ...TYPOGRAPHY.body3,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
-});
+}));

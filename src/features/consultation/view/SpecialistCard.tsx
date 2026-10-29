@@ -1,11 +1,13 @@
 import { Image } from 'expo-image';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import type { Specialist } from '../../../domain/specialist/Specialist';
-import { COLORS, SHADOWS, TYPOGRAPHY } from '../../../shared/theme';
+import { makeStyles, TYPOGRAPHY } from '../../../shared/theme';
 
 // Static card: photo and name, no interaction (PRD). Figma card 2:155.
 export function SpecialistCard({ specialist }: { specialist: Specialist }) {
+  const styles = useStyles();
+  const cardStyles = useCardStyles();
   return (
     <View style={cardStyles.card}>
       <View style={cardStyles.row}>
@@ -27,10 +29,10 @@ export function SpecialistCard({ specialist }: { specialist: Specialist }) {
 }
 
 // Shared with the loading skeleton, which mirrors the card's size.
-export const cardStyles = StyleSheet.create({
+export const useCardStyles = makeStyles(({ colors, shadows }) => ({
   card: {
-    ...SHADOWS.card,
-    backgroundColor: COLORS.surface,
+    ...shadows.card,
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 13.5,
@@ -45,15 +47,15 @@ export const cardStyles = StyleSheet.create({
     height: 80,
     borderRadius: 6.667,
   },
-});
+}));
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   placeholder: {
-    backgroundColor: COLORS.placeholder,
+    backgroundColor: colors.placeholder,
   },
   name: {
     ...TYPOGRAPHY.subtitle1,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     flex: 1,
   },
-});
+}));

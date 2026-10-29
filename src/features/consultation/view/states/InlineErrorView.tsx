@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { COLORS, TYPOGRAPHY } from '../../../../shared/theme';
+import { makeStyles, TYPOGRAPHY } from '../../../../shared/theme';
 import { PrimaryButton } from '../../../../shared/ui/PrimaryButton';
 import { CONTENT_PADDING_HORIZONTAL } from '../layout';
 
@@ -12,6 +12,7 @@ const ICON_SIZE = 40;
 // a title, a body and the one action, Retry. The same view for a failed first page (in the list
 // body) and a failed next page (below the Specialists already shown).
 export function InlineErrorView({ onRetry }: { onRetry: () => void }) {
+  const styles = useStyles();
   const { t } = useTranslation();
 
   return (
@@ -34,7 +35,7 @@ export function InlineErrorView({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   view: {
     alignItems: 'center',
     gap: 12,
@@ -47,20 +48,20 @@ const styles = StyleSheet.create({
     borderRadius: ICON_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.textStrong,
+    backgroundColor: colors.textStrong,
   },
   iconText: {
     ...TYPOGRAPHY.header6,
-    color: COLORS.textOnPrimary,
+    color: colors.textOnPrimary,
   },
   title: {
     ...TYPOGRAPHY.header6,
-    color: COLORS.textPrimary,
+    color: colors.textPrimary,
   },
   body: {
     ...TYPOGRAPHY.body3,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 8,
   },
-});
+}));

@@ -454,12 +454,13 @@ Visual details (colors, typography, spacing, radii, shadows, assets) are **not d
 
 ### Procedure
 
-1. Read the design variables (colors, fonts, effects) and generate `src/shared/theme.ts` from them; use semantic token names, not raw hex values in components
+1. Read the design variables (colors, fonts, effects) and generate `src/shared/theme/` from them; use semantic token names, not raw hex values in components
 2. Read design context per component (SpecialistCard, bottom section, agreements box, header) and translate to React Native `View` / `Text` / `StyleSheet` — no HTML elements, no Tailwind
 3. Export the hero image and icons as assets
 4. Ignore leftover layers: hidden layers (tags, timestamps and icons on the cards, an MPF/Manulife card, time slots) and layers outside the frame bounds (e.g. "Insurance material 1")
 5. Copy comes from the PRD (§11a), not from Figma text layers; never inline strings
 6. Bottom section uses a plain white background regardless of any glass/blur styling in Figma (PRD)
+7. **Dark mode:** the app follows the system appearance (`userInterfaceStyle: "automatic"`, with `expo-system-ui` for Android). Figma has only the light design, so `palettes.ts` defines a dark palette with the same semantic names: iOS's dark system colours for the greys, blue and green, darker versions of the yellows, and a lighter `surfaceElevated` for cards and dialogs, since shadows barely show on a dark surface. Colours, gradients and shadows are read only through `useTheme` or `makeStyles`, never module-level constants, so a component re-renders when the user switches; text styles carry no colour and stay constants. The splash screen has a dark background too (`expo-splash-screen` in `app.json`), so a dark-mode launch doesn't flash white
 
 MCP calls are rate-limited on the author's plan: read variables once, then fetch design context only for the components being built.
 
@@ -530,7 +531,7 @@ src/
     dialog/                     dialogQueue (the guard and queue), DialogProvider + useDialog, DialogView
     i18n/                       setup + locales/en.json, zh-HK.json
     config/                     contact info, booking URL, flag defaults, press throttle, Specialists' page size, simulated latency and failure rate
-    theme.ts
+    theme/                      palettes.ts (light, dark), theme.ts (useTheme, makeStyles), typography.ts
   test/
     renderApp.tsx               test helper: the app's providers and navigator, a fake repository, a clock past the press throttle
 docs/
@@ -550,7 +551,7 @@ Code follows common TypeScript / React Native conventions, and domain names foll
 |---|---|---|
 | Components, screens, types, interfaces, classes | PascalCase | `SpecialistCard`, `ConsultationScreen`, `SpecialistRepository` |
 | Files | Named after their main export, in its case | `SpecialistCard.tsx`, `SpecialistRepository.ts`, `resolveLanguage.ts` |
-| Files with several exports and no main one | camelCase, named for their topic | `theme.ts`, `pagination.ts`, `dialogQueue.ts` |
+| Files with several exports and no main one | camelCase, named for their topic | `palettes.ts`, `pagination.ts`, `dialogQueue.ts` |
 | Hooks | camelCase with `use` prefix, file named the same | `useInfiniteSpecialistsQuery.ts` |
 | TanStack Query hooks | `Query` suffix for queries, `Mutation` suffix for mutations | `useInfiniteSpecialistsQuery`, `useBookConsultationMutation` |
 | Functions and variables | camelCase | `openConsultation`, `pageSize` |

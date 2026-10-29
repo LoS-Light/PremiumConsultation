@@ -208,8 +208,8 @@ Virtualization limits rendered views; pagination limits fetched data and network
 | Navigation | [React Navigation](https://reactnavigation.org/) 7, JS stack (`@react-navigation/stack`) | Home → Consultation and the demo screens, with iOS's push, pop and swipe back on both platforms ([ADR-013](docs/adr/0013-js-stack-with-ios-transitions.md)). Not Expo Router: two screens don't need file-based routes |
 | Bottom sheets | [`@gorhom/bottom-sheet`](https://gorhom.dev/react-native-bottom-sheet/) 5, on Reanimated 4 and Gesture Handler 3 | The Consultation content sheet over the hero ([ADR-012](docs/adr/0012-content-bottom-sheet.md)) and the Feature toggles sheet |
 | Localization | i18next, react-i18next, `expo-localization` | English and Chinese (Hong Kong) copy, following the device language |
-| Expo modules | `expo-image`, `expo-linear-gradient`, `expo-web-browser`, `expo-font` with Inter and Noto Sans TC (`@expo-google-fonts`), `expo-splash-screen`, `expo-status-bar` | Images and SVG icons, the hero's fade, the booking page in an in-app browser, the Figma fonts, holding the splash screen until the fonts load |
-| Tests | Jest 30 (`jest-expo`), React Native Testing Library 14 | 105 tests, written test-first at agreed seams ([ADR-010](docs/adr/0010-test-driven-development.md)) |
+| Expo modules | `expo-image`, `expo-linear-gradient`, `expo-web-browser`, `expo-font` with Inter and Noto Sans TC (`@expo-google-fonts`), `expo-splash-screen`, `expo-status-bar`, `expo-system-ui` | Images and SVG icons, the hero's fade, the booking page in an in-app browser, the Figma fonts, holding the splash screen until the fonts load, following dark mode on Android |
+| Tests | Jest 30 (`jest-expo`), React Native Testing Library 14 | 108 tests, written test-first at agreed seams ([ADR-010](docs/adr/0010-test-driven-development.md)) |
 | Code quality | ESLint 9 (`eslint-config-expo`), Prettier 3, GitHub Actions | Lint and formatting; CI runs the type check, lint and tests on every pull request |
 | Tooling | Node 24.22.1 ([`.nvmrc`](.nvmrc)), npm | `npm ci` installs the exact versions in `package-lock.json` |
 
@@ -282,7 +282,8 @@ Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Da
     │       └── viewmodel/useToastStack.ts         No queue, so only the press throttle stops repeats
     │
     ├── shared/                   Used by more than one feature
-    │   ├── theme.ts              Colours, gradients, text styles and shadows from the Figma variables
+    │   ├── theme/                Light and dark palettes, useTheme and makeStyles (colours,
+    │   │                         gradients and shadows that follow dark mode), text styles
     │   ├── config/               contact.ts (booking URL, WhatsApp, hotline, email),
     │   │                         featureFlags.ts (defaults), specialists.ts (latency, page size,
     │   │                         failure rate), ui.ts (the 500 ms press throttle)
@@ -309,6 +310,7 @@ Tests sit beside the code they cover (`*.test.ts` / `*.test.tsx`).
 - **Navigation** ([ADR-013](docs/adr/0013-js-stack-with-ios-transitions.md)): React Navigation's JS stack with iOS's push, pop and swipe back on both platforms.
 - **Actions**: every side effect (`expo-web-browser`, `Linking`) goes through `useConsultationActions`, so tests can mock it.
 - **Localization**: `i18next` with `expo-localization`. Copy comes from the PRD; the contact sentence uses `<Trans>` so each language keeps its own sentence structure with tappable links.
+- **Dark mode**: the app follows the phone's light or dark mode. Components read colours, gradients and shadows through `useTheme` or `makeStyles`, so they re-render when the user switches. Figma has only the light design: the dark palette uses iOS's dark system colours and darker versions of the hero's yellows, with lighter cards and dialogs, since shadows barely show on a dark screen. The splash screen follows too, so a dark-mode launch doesn't flash white.
 - **Android matches iOS:** the sheet's position, font weights, bottom insets, list overscroll, the bottom sheets' spring, the stack transitions, the switch and the loading spinner are all made to look and behave like iOS.
 
 ### Swapping to the CMS

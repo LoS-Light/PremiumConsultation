@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 
-import { COLORS, SHADOWS, TYPOGRAPHY } from '../theme';
+import { makeStyles, TYPOGRAPHY } from '../theme';
 import { PrimaryButton } from '../ui/PrimaryButton';
 
 export interface DialogContent {
@@ -28,6 +28,7 @@ export function DialogView({
   dialogs: { key: number; content: DialogContent }[];
   onClose: (key: number) => void;
 }) {
+  const styles = useStyles();
   const top = dialogs[dialogs.length - 1];
   const handleRequestClose = useCallback(() => {
     if (top !== undefined) {
@@ -85,6 +86,7 @@ function DialogCard({
   isTop: boolean;
   onClose: (key: number) => void;
 }) {
+  const styles = useStyles();
   const handleButtonPress = useCallback(() => onClose(dialogKey), [onClose, dialogKey]);
 
   return (
@@ -98,10 +100,10 @@ function DialogCard({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors, shadows }) => ({
   backdrop: {
     flex: 1,
-    backgroundColor: COLORS.dialogBackdrop,
+    backgroundColor: colors.dialogBackdrop,
   },
   // Each dialog is centred on its own layer, so stacked ones line up.
   layer: {
@@ -110,23 +112,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   card: {
-    ...SHADOWS.card,
+    ...shadows.card,
     width: '100%',
     maxWidth: 343,
     alignSelf: 'center',
     gap: 16,
     padding: 24,
     borderRadius: 16,
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surfaceElevated,
   },
   title: {
     ...TYPOGRAPHY.header6,
-    color: COLORS.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
   },
   body: {
     ...TYPOGRAPHY.body3,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
-});
+}));

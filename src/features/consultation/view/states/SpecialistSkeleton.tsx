@@ -1,7 +1,7 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
-import { COLORS } from '../../../../shared/theme';
-import { cardStyles } from '../SpecialistCard';
+import { makeStyles } from '../../../../shared/theme';
+import { useCardStyles } from '../SpecialistCard';
 import { CONTENT_GAP, CONTENT_PADDING_HORIZONTAL } from '../layout';
 
 const SKELETON_COUNT = 3;
@@ -9,6 +9,8 @@ const SKELETON_COUNT = 3;
 // Placeholder cards, the same size as SpecialistCard, shown while the Specialists load
 // (SPEC §10).
 export function SpecialistSkeleton() {
+  const styles = useStyles();
+  const cardStyles = useCardStyles();
   return (
     <View style={styles.list}>
       {Array.from({ length: SKELETON_COUNT }, (_, index) => (
@@ -23,17 +25,17 @@ export function SpecialistSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   list: {
     paddingHorizontal: CONTENT_PADDING_HORIZONTAL,
     gap: CONTENT_GAP,
   },
   block: {
-    backgroundColor: COLORS.skeleton,
+    backgroundColor: colors.skeleton,
   },
   nameLine: {
     width: 96,
     height: 14,
     borderRadius: 4,
   },
-});
+}));

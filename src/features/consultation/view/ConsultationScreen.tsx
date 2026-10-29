@@ -6,11 +6,11 @@ import BottomSheet, {
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type ListRenderItemInfo, StyleSheet, View } from 'react-native';
+import { type ListRenderItemInfo, View } from 'react-native';
 import { useSafeAreaFrame, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Specialist } from '../../../domain/specialist/Specialist';
-import { COLORS } from '../../../shared/theme';
+import { makeStyles } from '../../../shared/theme';
 import {
   BackNavBar,
   NAV_BAR_BOTTOM_PADDING,
@@ -40,6 +40,7 @@ import { SpecialistSkeleton } from './states/SpecialistSkeleton';
 // The Consultation screen, behind the premiumConsultation flag (SPEC §7). While the flag is
 // off it shows nothing and leaves (useConsultationGate), so it never loads the Specialists.
 export function ConsultationScreen() {
+  const styles = useStyles();
   const isEnabled = useConsultationGate();
   return isEnabled ? <ConsultationContent /> : <View style={styles.screen} />;
 }
@@ -48,6 +49,7 @@ export function ConsultationScreen() {
 // opens collapsed at Figma's card position and can only grow, up to just below the nav bar.
 // Once it is expanded, dragging scrolls its list. The service hours and buttons are its footer.
 function ConsultationContent() {
+  const styles = useStyles();
   const {
     specialists,
     isLoadingFirstPage,
@@ -131,7 +133,8 @@ function ConsultationContent() {
         />
       </BottomSheet>
       <BackNavBar />
-      <StatusBar style="dark" />
+      {/* Dark text on the light hero, light text on the dark one. */}
+      <StatusBar style="auto" />
     </View>
   );
 }
@@ -141,9 +144,14 @@ function specialistKey(specialist: Specialist) {
 }
 
 function renderSpecialist({ item }: ListRenderItemInfo<Specialist>) {
+  return <SpecialistCell specialist={item} />;
+}
+
+function SpecialistCell({ specialist }: { specialist: Specialist }) {
+  const styles = useStyles();
   return (
     <View style={styles.cell}>
-      <SpecialistCard specialist={item} />
+      <SpecialistCard specialist={specialist} />
     </View>
   );
 }
@@ -159,6 +167,7 @@ function ListEnd({
   hasNextPageFailed: boolean;
   onRetryNextPage: () => void;
 }) {
+  const styles = useStyles();
   const { t } = useTranslation();
 
   return (
@@ -202,13 +211,13 @@ function ListBodyState({
 // Space above and below the next-page spinner (the list end's own top space adds the gap below).
 const SPINNER_SPACE = 24;
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   screen: {
     flex: 1,
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surface,
   },
   sheetBackground: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
   },
@@ -229,4 +238,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: CONTENT_PADDING_HORIZONTAL,
     paddingBottom: CONTENT_GAP,
   },
-});
+}));

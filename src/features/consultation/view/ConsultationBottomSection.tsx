@@ -1,10 +1,10 @@
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
+import { type LayoutChangeEvent, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { COLORS, SHADOWS, TYPOGRAPHY } from '../../../shared/theme';
+import { makeStyles, TYPOGRAPHY } from '../../../shared/theme';
 import { bottomControlsPadding } from '../../../shared/ui/bottomControlsPadding';
 import { PrimaryButton } from '../../../shared/ui/PrimaryButton';
 import { useConsultationActions } from '../viewmodel/useConsultationActions';
@@ -17,6 +17,7 @@ export function ConsultationBottomSection({
 }: {
   onHeightChange: (height: number) => void;
 }) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const actions = useConsultationActions();
@@ -53,10 +54,10 @@ export function ConsultationBottomSection({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors, shadows }) => ({
   section: {
-    ...SHADOWS.bottomSection,
-    backgroundColor: COLORS.surface,
+    ...shadows.bottomSection,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingTop: 16,
@@ -65,7 +66,7 @@ const styles = StyleSheet.create({
   },
   serviceHours: {
     ...TYPOGRAPHY.body3,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
-});
+}));

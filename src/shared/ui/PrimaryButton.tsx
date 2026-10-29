@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import { type PressableStateCallbackType, StyleSheet, Text } from 'react-native';
+import { type PressableStateCallbackType, Text } from 'react-native';
 
-import { COLORS, TYPOGRAPHY } from '../theme';
+import { makeStyles, TYPOGRAPHY } from '../theme';
 import { ThrottledPressable } from './ThrottledPressable';
 
 // Figma "primary button": black, 56 pt tall, radius 12, white Inter SemiBold 16 label, full
@@ -16,6 +16,7 @@ export function PrimaryButton({
   onPress: () => void;
   size?: 'regular' | 'small';
 }) {
+  const styles = useStyles();
   const isSmall = size === 'small';
   const pressableStyle = useCallback(
     ({ pressed }: PressableStateCallbackType) => [
@@ -23,7 +24,7 @@ export function PrimaryButton({
       isSmall && styles.smallButton,
       pressed && styles.pressed,
     ],
-    [isSmall],
+    [isSmall, styles],
   );
 
   return (
@@ -33,7 +34,7 @@ export function PrimaryButton({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   button: {
     height: 56,
     width: '100%',
@@ -43,7 +44,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.actionBackground,
+    backgroundColor: colors.actionBackground,
   },
   // Not in Figma: 40 pt (the iOS small control height), with the full button's look scaled down.
   smallButton: {
@@ -57,10 +58,10 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY.header6,
-    color: COLORS.textOnPrimary,
+    color: colors.actionText,
     textAlign: 'center',
   },
   smallLabel: {
     ...TYPOGRAPHY.subtitle1,
   },
-});
+}));

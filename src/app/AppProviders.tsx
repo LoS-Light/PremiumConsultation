@@ -1,5 +1,5 @@
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { NavigationContainer } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { i18n as I18n } from 'i18next';
 import type { ReactNode } from 'react';
@@ -13,6 +13,7 @@ import { RepositoryProvider } from '../data/specialist/RepositoryProvider';
 import { DialogProvider } from '../shared/dialog/DialogProvider';
 import { FeatureFlagProvider } from '../shared/featureFlags/FeatureFlagProvider';
 import type { FeatureFlagService } from '../shared/featureFlags/FeatureFlagService';
+import { useTheme } from '../shared/theme';
 
 // Every provider the app runs under, in one place, so App and the tests (src/test/renderApp)
 // wrap the navigator the same way. The gesture handler root is needed by the bottom sheets.
@@ -29,6 +30,9 @@ export function AppProviders({
   featureFlagService: FeatureFlagService;
   children: ReactNode;
 }) {
+  // The navigator's own colours (behind a screen while it slides) follow light or dark mode.
+  const navigationTheme = useTheme().scheme === 'dark' ? DarkTheme : DefaultTheme;
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
@@ -38,7 +42,7 @@ export function AppProviders({
               <FeatureFlagProvider service={featureFlagService}>
                 <BottomSheetModalProvider>
                   <DialogProvider>
-                    <NavigationContainer>{children}</NavigationContainer>
+                    <NavigationContainer theme={navigationTheme}>{children}</NavigationContainer>
                   </DialogProvider>
                 </BottomSheetModalProvider>
               </FeatureFlagProvider>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Animated, StyleSheet, Text } from 'react-native';
+import { Animated, Text } from 'react-native';
 
-import { COLORS, TYPOGRAPHY } from '../../../shared/theme';
+import { makeStyles, TYPOGRAPHY } from '../../../shared/theme';
 
 const FADE_MS = 200;
 const VISIBLE_MS = 2000;
@@ -19,6 +19,7 @@ export function ToastMessage({
   text: string;
   onDone: (toastKey: number) => void;
 }) {
+  const styles = useStyles();
   const [opacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
@@ -42,16 +43,16 @@ export function ToastMessage({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   toast: {
     alignSelf: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: COLORS.toastBackground,
+    backgroundColor: colors.toastBackground,
   },
   text: {
     ...TYPOGRAPHY.subtitle3,
-    color: COLORS.textOnPrimary,
+    color: colors.toastText,
   },
-});
+}));

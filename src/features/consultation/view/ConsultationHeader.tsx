@@ -1,12 +1,13 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { COLORS, TYPOGRAPHY } from '../../../shared/theme';
+import { makeStyles, TYPOGRAPHY } from '../../../shared/theme';
 import { CONTENT_GAP, CONTENT_PADDING_HORIZONTAL } from './layout';
 
 // Top of the content sheet: overline, title, divider and description (Figma 2:139). Rendered
 // as the header of the sheet's list.
 export function ConsultationHeader() {
+  const styles = useStyles();
   const { t } = useTranslation();
 
   return (
@@ -19,7 +20,7 @@ export function ConsultationHeader() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(({ colors }) => ({
   header: {
     paddingTop: 32,
     paddingBottom: CONTENT_GAP,
@@ -28,20 +29,20 @@ const styles = StyleSheet.create({
   },
   overline: {
     ...TYPOGRAPHY.subtitle3,
-    color: COLORS.textPrimary,
+    color: colors.textPrimary,
   },
   title: {
     ...TYPOGRAPHY.header2,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   // In Figma the divider is a 1 pt stroke on a zero-height line, so it takes no space.
   divider: {
     height: 1,
     marginVertical: -0.5,
-    backgroundColor: COLORS.divider,
+    backgroundColor: colors.divider,
   },
   description: {
     ...TYPOGRAPHY.body3,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
-});
+}));
