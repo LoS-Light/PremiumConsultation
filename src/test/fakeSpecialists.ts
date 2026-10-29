@@ -1,5 +1,6 @@
-import type { Page, PageParams, Specialist } from '../data/specialist/Specialist';
-import type { SpecialistRepository } from '../data/specialist/SpecialistRepository';
+import type { Page, PageParams } from '../domain/pagination';
+import type { Specialist } from '../domain/specialist/Specialist';
+import type { SpecialistRepository } from '../domain/specialist/SpecialistRepository';
 
 // Specialists s1, s2, … in order, for tests that page through a list.
 export function numberedSpecialists(count: number): Specialist[] {

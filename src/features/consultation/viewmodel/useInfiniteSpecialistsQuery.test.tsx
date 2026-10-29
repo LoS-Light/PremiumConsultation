@@ -4,8 +4,7 @@ import type { ReactNode } from 'react';
 import { Text } from 'react-native';
 
 import { RepositoryProvider } from '../../../data/specialist/RepositoryProvider';
-import type { Specialist } from '../../../data/specialist/Specialist';
-import type { SpecialistRepository } from '../../../data/specialist/SpecialistRepository';
+import type { SpecialistRepository } from '../../../domain/specialist/SpecialistRepository';
 import { fakeRepository, numberedSpecialists, pageOf } from '../../../test/fakeSpecialists';
 import { useInfiniteSpecialistsQuery } from './useInfiniteSpecialistsQuery';
 

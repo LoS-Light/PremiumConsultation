@@ -1,6 +1,6 @@
 import { HardcodedSpecialistRepository } from '../data/specialist/HardcodedSpecialistRepository';
-import type { SpecialistRepository } from '../data/specialist/SpecialistRepository';
 import { EXTENDED_SPECIALISTS } from '../data/specialist/specialists.fixture';
+import type { SpecialistRepository } from '../domain/specialist/SpecialistRepository';
 import { SPECIALISTS_LATENCY_MS } from '../shared/config/specialists';
 import { featureFlagService } from './featureFlagService';
 

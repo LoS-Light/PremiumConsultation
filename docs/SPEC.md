@@ -513,10 +513,13 @@ src/
       viewmodel/useConsultationActions.ts  booking, WhatsApp, tel, mailto
       viewmodel/useConsultationGate.ts     the route's own flag guard (v1.1.0)
       viewmodel/useComingSoonDialog.ts     the coming-soon dialog (v1.1.0)
-  data/
+  domain/                       core concepts; depends on nothing
+    pagination.ts               Page, PageParams (ADR-007)
     specialist/
       Specialist.ts
-      SpecialistRepository.ts
+      SpecialistRepository.ts   the contract the data layer implements
+  data/
+    specialist/
       HardcodedSpecialistRepository.ts
       CmsSpecialistRepository.ts           stub
       specialists.fixture.ts
@@ -535,7 +538,7 @@ docs/
 GLOSSARY.md                     repo root, read by the agent skills
 ```
 
-Layering: **View** (components, no logic) → **ViewModel** (custom hooks) → **Data** (repository interface). UI and hooks never import a concrete repository. Side-effecting actions (`Linking`, `WebBrowser`) are wrapped in `useConsultationActions` so they can be mocked in tests.
+Layering: **View** (components, no logic) → **ViewModel** (custom hooks) → **Data** (repository implementations), all depending on the **Domain** (the `Specialist` model, the `SpecialistRepository` contract and the pagination types), which depends on nothing. UI and hooks never import a concrete repository. Side-effecting actions (`Linking`, `WebBrowser`) are wrapped in `useConsultationActions` so they can be mocked in tests.
 
 ---
 
@@ -546,7 +549,8 @@ Code follows common TypeScript / React Native conventions, and domain names foll
 | Kind | Convention | Example |
 |---|---|---|
 | Components, screens, types, interfaces, classes | PascalCase | `SpecialistCard`, `ConsultationScreen`, `SpecialistRepository` |
-| Component and screen files | PascalCase, matching the export | `SpecialistCard.tsx` |
+| Files | Named after their main export, in its case | `SpecialistCard.tsx`, `SpecialistRepository.ts`, `resolveLanguage.ts` |
+| Files with several exports and no main one | camelCase, named for their topic | `theme.ts`, `pagination.ts`, `dialogQueue.ts` |
 | Hooks | camelCase with `use` prefix, file named the same | `useInfiniteSpecialistsQuery.ts` |
 | TanStack Query hooks | `Query` suffix for queries, `Mutation` suffix for mutations | `useInfiniteSpecialistsQuery`, `useBookConsultationMutation` |
 | Functions and variables | camelCase | `openConsultation`, `pageSize` |

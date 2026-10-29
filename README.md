@@ -217,7 +217,7 @@ No global state library: server data lives in TanStack Query, the feature flags 
 
 ## Architecture
 
-Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Data** (a repository interface). Views and hooks never import a concrete repository.
+Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Data** (repository implementations). All three depend on the **Domain**: the `Specialist` model, the `SpecialistRepository` contract the data layer implements, and the pagination types. The domain depends on nothing. Views and hooks never import a concrete repository.
 
 ```
 .
@@ -239,9 +239,13 @@ Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Da
     │   ├── specialistRepository.ts   Picks the repository: hardcoded today, the CMS later
     │   └── featureFlagService.ts     Picks the flag service: in memory today, remote later
     │
-    ├── data/specialist/          Data layer
-    │   ├── Specialist.ts         The model, and Page / PageParams for offset pagination
-    │   ├── SpecialistRepository.ts           The interface screens depend on
+    ├── domain/                   Domain: the core concepts; depends on nothing
+    │   ├── pagination.ts         Page / PageParams for offset pagination
+    │   └── specialist/
+    │       ├── Specialist.ts     The model
+    │       └── SpecialistRepository.ts  The contract screens depend on and the data layer implements
+    │
+    ├── data/specialist/          Data layer: the repository implementations
     │   ├── HardcodedSpecialistRepository.ts  Pages a local list, simulated latency and failure
     │   ├── CmsSpecialistRepository.ts        Stub for the Q2 CMS
     │   ├── RepositoryProvider.tsx            Provides the repository (useSpecialistRepository)

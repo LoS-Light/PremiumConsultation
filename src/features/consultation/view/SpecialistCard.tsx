@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { Specialist } from '../../../data/specialist/Specialist';
+import type { Specialist } from '../../../domain/specialist/Specialist';
 import { COLORS, SHADOWS, TYPOGRAPHY } from '../../../shared/theme';
 
 // Static card: photo and name, no interaction (PRD). Figma card 2:155.

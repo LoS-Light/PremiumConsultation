@@ -1,4 +1,4 @@
-import type { Specialist } from './Specialist';
+import type { Specialist } from '../../domain/specialist/Specialist';
 
 // The three Specialists from Figma, in display order (SPEC §5.3). No photos yet, so the
 // card shows its placeholder.

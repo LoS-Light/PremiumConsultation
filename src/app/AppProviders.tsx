@@ -8,7 +8,7 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import type { SpecialistRepository } from '../data/specialist/SpecialistRepository';
+import type { SpecialistRepository } from '../domain/specialist/SpecialistRepository';
 import { RepositoryProvider } from '../data/specialist/RepositoryProvider';
 import { DialogProvider } from '../shared/dialog/DialogProvider';
 import { FeatureFlagProvider } from '../shared/featureFlags/FeatureFlagProvider';

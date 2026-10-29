@@ -1,6 +1,7 @@
 import { SIMULATED_FAILURE_RATE } from '../../shared/config/specialists';
-import type { Page, PageParams, Specialist } from './Specialist';
-import type { SpecialistRepository } from './SpecialistRepository';
+import type { Page, PageParams } from '../../domain/pagination';
+import type { Specialist } from '../../domain/specialist/Specialist';
+import type { SpecialistRepository } from '../../domain/specialist/SpecialistRepository';
 
 // Makes requests fail at random for the demo (SPEC §10), so the error view and Retry can be
 // shown. The random source is injected: Math.random in the app, fixed values in tests.

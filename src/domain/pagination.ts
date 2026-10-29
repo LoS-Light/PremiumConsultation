@@ -1,10 +1,5 @@
-// A person on the ES team who gives users one-to-one consultations (GLOSSARY.md).
-export interface Specialist {
-  id: string;
-  name: string;
-  avatarUrl?: string;
-}
-
+// Offset pagination (ADR-007): a page is asked for by offset and size, and says how many
+// items the source holds in total.
 export interface PageParams {
   offset: number;
   limit: number;

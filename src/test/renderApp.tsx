@@ -3,7 +3,7 @@ import { render } from '@testing-library/react-native';
 
 import { AppProviders } from '../app/AppProviders';
 import { type RootStackParamList, RootNavigator } from '../app/navigation';
-import type { SpecialistRepository } from '../data/specialist/SpecialistRepository';
+import type { SpecialistRepository } from '../domain/specialist/SpecialistRepository';
 import { FEATURE_FLAG_DEFAULTS } from '../shared/config/featureFlags';
 import type { FeatureFlagService } from '../shared/featureFlags/FeatureFlagService';
 import { LocalFeatureFlagService } from '../shared/featureFlags/LocalFeatureFlagService';

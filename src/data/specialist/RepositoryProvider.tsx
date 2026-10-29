@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext } from 'react';
 
-import type { SpecialistRepository } from './SpecialistRepository';
+import type { SpecialistRepository } from '../../domain/specialist/SpecialistRepository';
 
 const RepositoryContext = createContext<SpecialistRepository | null>(null);
 

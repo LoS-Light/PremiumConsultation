@@ -2,8 +2,8 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Linking } from 'react-native';
 
 import type { RootStackParamList } from '../../../app/navigation';
-import type { Specialist } from '../../../data/specialist/Specialist';
-import type { SpecialistRepository } from '../../../data/specialist/SpecialistRepository';
+import type { Specialist } from '../../../domain/specialist/Specialist';
+import type { SpecialistRepository } from '../../../domain/specialist/SpecialistRepository';
 import type { AppLanguage } from '../../../shared/i18n/resolveLanguage';
 import { FEATURE_FLAG_DEFAULTS } from '../../../shared/config/featureFlags';
 import { LocalFeatureFlagService } from '../../../shared/featureFlags/LocalFeatureFlagService';
