@@ -1,0 +1,88 @@
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo } from 'react';
+
+import { useSpecialistRepository } from '../../../data/specialist/RepositoryProvider';
+import type { Specialist } from '../../../domain/specialist/Specialist';
+import { SPECIALISTS_PAGE_SIZE } from '../../../shared/config/specialists';
+
+const INFINITE_SPECIALISTS_QUERY_KEY = ['specialists', 'infinite'];
+
+// Infinite mode (SPEC §6.2): the Specialists page by page, by offset (ADR-007).
+export function useInfiniteSpecialistsQuery() {
+  const repository = useSpecialistRepository();
+  const queryClient = useQueryClient();
+  const query = useInfiniteQuery({
+    queryKey: INFINITE_SPECIALISTS_QUERY_KEY,
+    queryFn: ({ pageParam }) =>
+      repository.getSpecialists({ offset: pageParam, limit: SPECIALISTS_PAGE_SIZE }),
+    initialPageParam: 0,
+    getNextPageParam: (last) =>
+      last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined,
+  });
+
+  // Forget the pages when the screen goes, so entering again starts from the first page rather
+  // than reloading every cached page one by one (SPEC §6.2).
+  useEffect(
+    () => () => queryClient.removeQueries({ queryKey: INFINITE_SPECIALISTS_QUERY_KEY }),
+    [queryClient],
+  );
+
+  const { refetch, fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError } = query;
+
+  // The three loaders below start a request and return; the query's state (isFetching,
+  // isFetchingNextPage, the pages) shows it arriving, so callers such as onEndReached and a
+  // Retry button don't wait for it.
+
+  // Retry after the first page failed: load it again.
+  const retry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+  // Retry after the next page failed: load that page again (unlike loadMore, which leaves a
+  // failed page to Retry).
+  const retryNextPage = useCallback(() => {
+    void fetchNextPage({ cancelRefetch: false });
+  }, [fetchNextPage]);
+  // Called by onEndReached, which can fire again before the next page arrives. Only fetch
+  // when there is a next page, it isn't loading and it didn't just fail (onEndReached fires
+  // again when the spinner's space goes, and only Retry should load a failed page again).
+  // cancelRefetch: false also makes a call in the same tick (before isFetchingNextPage
+  // updates) join the request in flight.
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage && !isFetchNextPageError) {
+      void fetchNextPage({ cancelRefetch: false });
+    }
+  }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
+
+  const pages = query.data?.pages;
+  const specialists = useMemo(
+    () => uniqueById(pages?.flatMap((page) => page.items) ?? []),
+    [pages],
+  );
+
+  return {
+    specialists,
+    // The first page is loading: on entering, or on Retry after it failed.
+    isLoadingFirstPage: pages === undefined && query.isFetching,
+    isError: query.isError,
+    hasNextPage,
+    isFetchingNextPage,
+    // TanStack Query keeps the error while Retry loads the page again; it's no longer failed then.
+    hasNextPageFailed: isFetchNextPageError && !isFetchingNextPage,
+    retry,
+    retryNextPage,
+    loadMore,
+  };
+}
+
+// Offset pages can overlap when the source changes between requests (an insert shifts the next
+// page back), so keep the first of each ID (SPEC §6.4).
+function uniqueById(specialists: Specialist[]): Specialist[] {
+  const seen = new Set<string>();
+  return specialists.filter(({ id }) => {
+    if (seen.has(id)) {
+      return false;
+    }
+    seen.add(id);
+    return true;
+  });
+}

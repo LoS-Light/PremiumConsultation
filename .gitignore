@@ -1,0 +1,47 @@
+# Private material (PRD PDF and transcription, assignment brief PDF) — never commit
+.private/
+__MACOSX/
+
+# Secrets and signing
+.env
+.env*
+!.env.example
+*.pem
+*.p8
+*.p12
+*.key
+*.jks
+*.mobileprovision
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Dependencies (package-lock.json is committed on purpose)
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Generated native folders (Continuous Native Generation)
+/ios
+/android
+.kotlin/
+*.orig.*
+
+# Metro
+.metro-health-check*
+
+# Debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# TypeScript
+*.tsbuildinfo
+
+# Test coverage
+coverage/

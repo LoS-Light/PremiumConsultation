@@ -1,0 +1,66 @@
+{
+  "navBar": {
+    "back": "Back"
+  },
+  "home": {
+    "featureToggle": "Feature Toggle",
+    "premiumConsultation": "Premium consultation",
+    "testMultipleDialogs": "Test multiple dialogs",
+    "testToasts": "Test toasts"
+  },
+  "consultation": {
+    "header": {
+      "overline": "Got more questions?",
+      "title": "GUM Specialists are here!",
+      "description": "We provide professional, impartial advice to help you find what's best for you"
+    },
+    "specialists": {
+      "empty": "No Specialists are available right now.",
+      "loadingMore": "Loading more Specialists"
+    },
+    "bottomSection": {
+      "serviceHours": "Service Hours:\nMonday – Friday: 9:30am - 5:30pm\nSaturday, Sunday & Public Holidays: Closed",
+      "bookAppointment": "Book appointment",
+      "whatsAppUs": "WhatsApp us",
+      "whatsAppMessage": "Hello, I would like to learn more about MPF information."
+    },
+    "contactInfo": "For general enquiries, please feel free to reach out to us using the method below:\nHotline: <hotline>{{hotline}}</hotline>\nEmail address: <email>{{email}}</email>",
+    "agreements": "Your use of our appointment service or communication via WhatsApp constitutes your agreement to our collection and use of personal data as outlined in our privacy policy.",
+    "error": {
+      "title": "Oops!",
+      "body": "Something went wrong. Please try again.",
+      "retry": "Retry"
+    }
+  },
+  "dialogDemo": {
+    "oneDialog": "One dialog",
+    "dialogTitle": "Dialog {{name}}",
+    "dialogBody": "Test dialog {{name}} (ID: {{id}}).",
+    "ok": "OK",
+    "sameFromTwoButtons": "Press two buttons, same dialog",
+    "threeAtOnce": "Three dialogs at once"
+  },
+  "comingSoon": {
+    "title": "Coming soon",
+    "body": "Premium consultation will be available soon.",
+    "ok": "OK"
+  },
+  "featureToggles": {
+    "title": "Feature toggles",
+    "premiumConsultation": "Enable Premium consultation",
+    "premiumConsultationDescription": "Off: the entry button shows a coming-soon dialog.",
+    "premiumConsultationTip": "Tip: this switch is a quick way to enable or disable the Premium consultation screen for the demo, not the recommended practice. In production, control whether the screen is enabled with the CMS, Firebase Remote Config or similar.",
+    "pressThrottle": "Enable press throttle",
+    "pressThrottleDescription": "Off: buttons react to every press, so a quick double press is stopped only by navigate() and the dialog queue.",
+    "dialogDeduplication": "Enable dialog de-duplication",
+    "dialogDeduplicationDescription": "Off: a dialog asked for while it is already showing or waiting shows again.",
+    "dialogQueue": "Enable dialog queue",
+    "dialogQueueDescription": "Off: dialogs no longer wait their turn; they stack on top of each other.",
+    "simulateLoadingFailure": "Simulate loading failure",
+    "simulateLoadingFailureDescription": "On: each Specialist load fails {{percent}}% of the time, to show the error view and Retry."
+  },
+  "toastDemo": {
+    "button": "Toast {{name}}",
+    "message": "Toast {{name}} (press {{count}})"
+  }
+}

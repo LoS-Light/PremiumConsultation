@@ -1,0 +1,16 @@
+name: Do not merge
+
+# Fails while the pull request has the do-not-merge label. A ruleset makes this
+# check required, so a labeled pull request can't be merged.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  do-not-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - if: contains(github.event.pull_request.labels.*.name, 'do-not-merge')
+        run: |
+          echo "This pull request has the do-not-merge label. Remove the label to allow merging."
+          exit 1

@@ -1,0 +1,134 @@
+import { useCallback } from 'react';
+import { Modal, StyleSheet, Text, View } from 'react-native';
+
+import { makeStyles, TYPOGRAPHY } from '../theme';
+import { PrimaryButton } from '../ui/PrimaryButton';
+
+export interface DialogContent {
+  title: string;
+  body: string;
+  buttonLabel: string;
+}
+
+// How far each dialog under the top one peeks out above it, and how much smaller it is.
+const STACK_OFFSET = 14;
+const STACK_SCALE_STEP = 0.04;
+
+// Centred dialogs with one button (SPEC §8). Not in Figma: a white card on a dimmed screen,
+// with the Figma text styles and the black primary button. A custom component rather than
+// Alert.alert, so it looks the same on iOS and Android and the DialogManager decides when it
+// shows. Normally one dialog shows at a time; with the queue switched off for the demo, they
+// stack, each older one peeking out above the next, and only the top one can be pressed. The
+// Android back button closes the top one, like its button.
+export function DialogView({
+  dialogs,
+  onClose,
+}: {
+  // Oldest first: the last one is on top. The key tells the queue which one to close.
+  dialogs: { key: number; content: DialogContent }[];
+  onClose: (key: number) => void;
+}) {
+  const styles = useStyles();
+  const top = dialogs[dialogs.length - 1];
+  const handleRequestClose = useCallback(() => {
+    if (top !== undefined) {
+      onClose(top.key);
+    }
+  }, [top, onClose]);
+
+  return (
+    <Modal
+      visible={dialogs.length > 0}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={handleRequestClose}
+    >
+      <View style={styles.backdrop}>
+        {dialogs.map(({ key, content }, index) => {
+          const depth = dialogs.length - 1 - index;
+          const isTop = depth === 0;
+          return (
+            <View
+              key={key}
+              style={[
+                styles.layer,
+                {
+                  transform: [
+                    { translateY: -STACK_OFFSET * depth },
+                    { scale: 1 - STACK_SCALE_STEP * depth },
+                  ],
+                },
+              ]}
+              pointerEvents={isTop ? 'box-none' : 'none'}
+              importantForAccessibility={isTop ? 'auto' : 'no-hide-descendants'}
+              accessibilityElementsHidden={!isTop}
+            >
+              <DialogCard dialogKey={key} content={content} isTop={isTop} onClose={onClose} />
+            </View>
+          );
+        })}
+      </View>
+    </Modal>
+  );
+}
+
+// One dialog's card. Its own component so the button's handler knows which dialog to close.
+function DialogCard({
+  dialogKey,
+  content,
+  isTop,
+  onClose,
+}: {
+  dialogKey: number;
+  content: DialogContent;
+  isTop: boolean;
+  onClose: (key: number) => void;
+}) {
+  const styles = useStyles();
+  const handleButtonPress = useCallback(() => onClose(dialogKey), [onClose, dialogKey]);
+
+  return (
+    <View style={styles.card} accessibilityViewIsModal={isTop}>
+      <Text style={styles.title} accessibilityRole="header">
+        {content.title}
+      </Text>
+      <Text style={styles.body}>{content.body}</Text>
+      <PrimaryButton label={content.buttonLabel} onPress={handleButtonPress} />
+    </View>
+  );
+}
+
+const useStyles = makeStyles(({ colors, shadows }) => ({
+  backdrop: {
+    flex: 1,
+    backgroundColor: colors.dialogBackdrop,
+  },
+  // Each dialog is centred on its own layer, so stacked ones line up.
+  layer: {
+    ...StyleSheet.absoluteFill,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  card: {
+    ...shadows.card,
+    width: '100%',
+    maxWidth: 343,
+    alignSelf: 'center',
+    gap: 16,
+    padding: 24,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceElevated,
+  },
+  title: {
+    ...TYPOGRAPHY.header6,
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  body: {
+    ...TYPOGRAPHY.body3,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+}));
