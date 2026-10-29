@@ -95,7 +95,7 @@ The brief's general requirements make the Figma screen the entry point, while th
 One screen, `ConsultationScreen`, written once.
 
 - **v1.0.0:** plain list, loaded in one request with `useSpecialists` (§6.1).
-- **v1.1.0:** infinite scroll with `useInfiniteSpecialists` (§6.2), which **replaces** the plain list; there is no mode switch. Layout, cards and sections are unchanged; the list footer adds the next-page spinner and next-page error.
+- **v1.1.0:** infinite scroll with `useInfiniteSpecialistsQuery` (§6.2), which **replaces** the plain list; there is no mode switch. Layout, cards and sections are unchanged; the list footer adds the next-page spinner and next-page error.
 - The two behaviours are compared by checking out the `v1.0.0` and `v1.1.0` tags; the README shows the screenshots and both releases' demo videos (§6.3, §14).
 
 Structure (ADR-012, superseding ADR-005):
@@ -508,7 +508,7 @@ src/
       view/useNextPageSpinner.ts           when the next-page spinner keeps and gives back its space
       view/states/              Skeleton, EmptyState; InlineErrorView (v1.1.0, the same for a failed first and next page)
       viewmodel/useSpecialists.ts          plain (v1.0.0; removed in v1.1.0)
-      viewmodel/useInfiniteSpecialists.ts  infinite (v1.1.0)
+      viewmodel/useInfiniteSpecialistsQuery.ts  infinite (v1.1.0)
       viewmodel/useConsultationActions.ts  booking, WhatsApp, tel, mailto
       viewmodel/useConsultationGate.ts     the route's own flag guard (v1.1.0)
       viewmodel/useComingSoonDialog.ts     the coming-soon dialog (v1.1.0)
@@ -546,7 +546,8 @@ Code follows common TypeScript / React Native conventions, and domain names foll
 |---|---|---|
 | Components, screens, types, interfaces, classes | PascalCase | `SpecialistCard`, `ConsultationScreen`, `SpecialistRepository` |
 | Component and screen files | PascalCase, matching the export | `SpecialistCard.tsx` |
-| Hooks | camelCase with `use` prefix, file named the same | `useInfiniteSpecialists.ts` |
+| Hooks | camelCase with `use` prefix, file named the same | `useInfiniteSpecialistsQuery.ts` |
+| TanStack Query hooks | `Query` suffix for queries, `Mutation` suffix for mutations | `useInfiniteSpecialistsQuery`, `useBookConsultationMutation` |
 | Functions and variables | camelCase | `openConsultation`, `pageSize` |
 | Booleans | `is` / `has` / `should` / `can` prefix | `isEnabled`, `hasNextPage` |
 | Event props / handlers | `onX` for props, `handleX` for handlers | `onPress`, `handleRetry` |
@@ -584,7 +585,7 @@ All behaviour is developed **test-first** with `/tdd` (ADR-010):
 | Toast demo screen | Component | Two quick presses on Toast A → one toast with the press throttle on, two with it off; each toast fades out on its own schedule while new ones arrive |
 | `useConsultationEntry` | Hook (through the Home screen, its only caller) | Flag on → the Consultation screen opens; flag off → the coming-soon dialog shows |
 | Home screen | Component | Double press with flag off (past the press throttle) → exactly one dialog, and none after it closes; switching Premium consultation off in the Feature toggles sheet → the entry button shows the coming-soon dialog; the press throttle switched off there; dialog de-duplication and the dialog queue switched off there; with the press throttle off, a double press still opens the Consultation screen once; simulated loading failure switched on there |
-| `useInfiniteSpecialists` | Hook | Loads first page; `fetchNextPage` appends; no fetch when `!hasNextPage` or already fetching; duplicate IDs across pages are removed; no fetch after the next page failed (only Retry loads it again) |
+| `useInfiniteSpecialistsQuery` | Hook | Loads first page; `fetchNextPage` appends; no fetch when `!hasNextPage` or already fetching; duplicate IDs across pages are removed; no fetch after the next page failed (only Retry loads it again) |
 | `useNextPageSpinner` | Hook | Shows while the next page loads; after it arrives, stays until the list gets taller; goes 0.5 s after it arrives if the list never does; goes at once when the next page fails |
 
 | `useConsultationActions` | Hook | Book → `openBrowserAsync` with booking URL; WhatsApp → `wa.me` URL with encoded message in the current language; hotline → `tel:`; email → `mailto:`; an action whose link the device cannot open does not throw |

@@ -18,7 +18,7 @@ import {
 import { HeroBanner } from '../../../shared/ui/HeroBanner';
 import { LoadingSpinner } from '../../../shared/ui/LoadingSpinner';
 import { useConsultationGate } from '../viewmodel/useConsultationGate';
-import { useInfiniteSpecialists } from '../viewmodel/useInfiniteSpecialists';
+import { useInfiniteSpecialistsQuery } from '../viewmodel/useInfiniteSpecialistsQuery';
 import { AgreementsNotice } from './AgreementsNotice';
 import { ConsultationBottomSection } from './ConsultationBottomSection';
 import { ConsultationHeader } from './ConsultationHeader';
@@ -56,7 +56,7 @@ function ConsultationContent() {
     loadMore,
     retry,
     retryNextPage,
-  } = useInfiniteSpecialists();
+  } = useInfiniteSpecialistsQuery();
   const nextPageSpinner = useNextPageSpinner({ isFetchingNextPage, hasNextPageFailed });
   // The sheet measures its container, which fills the whole screen. useWindowDimensions() leaves
   // out the status and navigation bars on Android (edge-to-edge), which put the sheet about

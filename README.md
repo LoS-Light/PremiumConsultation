@@ -264,7 +264,7 @@ Three layers: **View** (components, no logic) → **ViewModel** (hooks) → **Da
     │   │   ├── view/layout.ts                     Figma measurements: padding, sheet position
     │   │   ├── view/useNextPageSpinner.ts         Keeps the spinner's space until the list grows
     │   │   ├── view/useContentSheetAnimationConfigs.ts  No sheet animation during the push
-    │   │   ├── viewmodel/useInfiniteSpecialists.ts  Pages of 10 through useInfiniteQuery
+    │   │   ├── viewmodel/useInfiniteSpecialistsQuery.ts  Pages of 10 through useInfiniteQuery
     │   │   ├── viewmodel/useConsultationActions.ts  Booking, WhatsApp, phone and email
     │   │   ├── viewmodel/useConsultationGate.ts     The route's own feature-flag guard
     │   │   └── viewmodel/useComingSoonDialog.ts     The Coming soon dialog, by ID

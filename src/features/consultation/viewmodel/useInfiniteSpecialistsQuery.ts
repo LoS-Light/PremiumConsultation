@@ -5,14 +5,14 @@ import { useSpecialistRepository } from '../../../data/specialist/RepositoryProv
 import type { Specialist } from '../../../data/specialist/Specialist';
 import { SPECIALISTS_PAGE_SIZE } from '../../../shared/config/specialists';
 
-const INFINITE_SPECIALISTS_KEY = ['specialists', 'infinite'];
+const INFINITE_SPECIALISTS_QUERY_KEY = ['specialists', 'infinite'];
 
 // Infinite mode (SPEC §6.2): the Specialists page by page, by offset (ADR-007).
-export function useInfiniteSpecialists() {
+export function useInfiniteSpecialistsQuery() {
   const repository = useSpecialistRepository();
   const queryClient = useQueryClient();
   const query = useInfiniteQuery({
-    queryKey: INFINITE_SPECIALISTS_KEY,
+    queryKey: INFINITE_SPECIALISTS_QUERY_KEY,
     queryFn: ({ pageParam }) =>
       repository.getSpecialists({ offset: pageParam, limit: SPECIALISTS_PAGE_SIZE }),
     initialPageParam: 0,
@@ -23,7 +23,7 @@ export function useInfiniteSpecialists() {
   // Forget the pages when the screen goes, so entering again starts from the first page rather
   // than reloading every cached page one by one (SPEC §6.2).
   useEffect(
-    () => () => queryClient.removeQueries({ queryKey: INFINITE_SPECIALISTS_KEY }),
+    () => () => queryClient.removeQueries({ queryKey: INFINITE_SPECIALISTS_QUERY_KEY }),
     [queryClient],
   );
 

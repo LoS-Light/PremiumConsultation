@@ -7,7 +7,7 @@ import { RepositoryProvider } from '../../../data/specialist/RepositoryProvider'
 import type { Specialist } from '../../../data/specialist/Specialist';
 import type { SpecialistRepository } from '../../../data/specialist/SpecialistRepository';
 import { fakeRepository, numberedSpecialists, pageOf } from '../../../test/fakeSpecialists';
-import { useInfiniteSpecialists } from './useInfiniteSpecialists';
+import { useInfiniteSpecialistsQuery } from './useInfiniteSpecialistsQuery';
 
 async function renderInfiniteSpecialists(repository: SpecialistRepository) {
   // A fresh QueryClient per test, with retries off (SPEC §13).
@@ -19,11 +19,11 @@ async function renderInfiniteSpecialists(repository: SpecialistRepository) {
       <RepositoryProvider repository={repository}>{children}</RepositoryProvider>
     </QueryClientProvider>
   );
-  const { result } = await renderHook(() => useInfiniteSpecialists(), { wrapper });
+  const { result } = await renderHook(() => useInfiniteSpecialistsQuery(), { wrapper });
   return result;
 }
 
-describe('useInfiniteSpecialists', () => {
+describe('useInfiniteSpecialistsQuery', () => {
   test('loads the first page of 10', async () => {
     const repository = fakeRepository(numberedSpecialists(25));
 
@@ -133,7 +133,7 @@ describe('useInfiniteSpecialists', () => {
         new Promise((resolve) => held.push(() => resolve(pageOf(list, params)))),
     };
     function Screen({ name }: { name: string }) {
-      const { specialists, isLoadingFirstPage } = useInfiniteSpecialists();
+      const { specialists, isLoadingFirstPage } = useInfiniteSpecialistsQuery();
       return <Text>{`${name}: ${isLoadingFirstPage ? 'loading' : specialists.length}`}</Text>;
     }
     function App({ screens }: { screens: string[] }) {
